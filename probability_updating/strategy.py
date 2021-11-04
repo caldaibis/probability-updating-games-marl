@@ -5,9 +5,6 @@ import math
 from typing import Dict
 import probability_updating as pu
 
-YgivenX = Dict[pu.outcome.Outcome, Dict[pu.message.Message, float]]
-XgivenY = Dict[pu.message.Message, Dict[pu.outcome.Outcome, float]]
-
 OutcomeId = int
 MessageId = int
 

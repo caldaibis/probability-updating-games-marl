@@ -1,22 +1,30 @@
 from __future__ import annotations
 
+from typing import Dict, List, Callable
+
 from . import probability_updating_env
+from . import strategy
 from . import loss
-from . import loss_type
 from . import message
 from . import outcome
-from . import strategy
 from . import pre_strategy
 from . import game
 from . import util
 from . import agent
+from . import simulation_wrapper
 
-from .probability_updating_env import env, raw_env
+from .probability_updating_env import env, ProbabilityUpdatingEnv
 from .game import Game
-from .loss import Loss
-from .loss_type import LossType, randomised_zero_one, brier, logarithmic
+from .loss import randomised_zero_one, brier, logarithmic, randomised_zero_one_entropy, brier_entropy, logarithmic_entropy, get_entropy_fn
 from .message import Message
 from .outcome import Outcome
-from .strategy import Strategy, XgivenY, YgivenX
+from .strategy import Strategy
 from .pre_strategy import PreStrategy
 from .agent import Agent, agents, quiz, cont
+from .simulation_wrapper import SimulationWrapper
+
+YgivenX = Dict[Outcome, Dict[Message, float]]
+XgivenY = Dict[Message, Dict[Outcome, float]]
+
+LossFunc = Callable[[XgivenY, List[Outcome], Outcome, Message], float]
+EntropyFunc = Callable[[XgivenY, List[Outcome], Message], float]

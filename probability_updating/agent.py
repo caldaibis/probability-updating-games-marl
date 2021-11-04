@@ -14,4 +14,4 @@ def cont() -> str:
 
 
 def agents() -> List[str]:
-    return [quiz(), cont()]
+    return [cont(), quiz()]

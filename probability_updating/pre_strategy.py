@@ -11,3 +11,5 @@ class PreStrategy:
         self.name = name
         self.strategy = strategy
 
+    def __str__(self) -> str:
+        return self.strategy.__str__()

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import numpy as np
-import random
+import math
 from abc import abstractmethod
-from statistics import mean
-from typing import List, Dict, Union
+from typing import List, Dict, Callable
+
+import numpy as np
 
 import probability_updating as pu
 
@@ -51,35 +51,45 @@ class Game:
     marginal_outcome: Dict[pu.Outcome, float]
     marginal_message: Dict[pu.Message, float]
 
-    loss: pu.Loss
-    _loss_type: pu.LossType
+    _loss_cont_fn: Callable[[pu.Outcome, pu.Message], float]
+    _loss_quiz_fn: Callable[[pu.Outcome, pu.Message], float]
+
+    _entropy_cont_fn: Callable[[pu.Message], float]
+    _entropy_quiz_fn: Callable[[pu.Message], float]
 
     strategy: pu.Strategy
     _quiz: pu.YgivenX
     quiz_reverse: pu.XgivenY
     _cont: pu.XgivenY
 
-    def __init__(self, name: str, outcomes: List[pu.Outcome], messages: List[pu.Message], marginal_outcome: Dict[pu.Outcome, float]):
+    def __init__(self,
+                 name: str,
+                 outcomes: List[pu.Outcome],
+                 messages: List[pu.Message],
+                 marginal_outcome: Dict[pu.Outcome, float],
+                 loss_cont_fn: pu.LossFunc,
+                 loss_quiz_fn: pu.LossFunc,
+                 entropy_cont_fn: pu.): # koppel entropy function met loss!!
         self.strategy = pu.Strategy(self)
-        self.loss = pu.Loss(self)
 
         self._name = name
         self.outcomes = outcomes
         self.messages = messages
         self.marginal_outcome = marginal_outcome
 
+        self._loss_cont_fn = lambda x, y: loss_cont_fn(self.cont, self.outcomes, x, y)
+        self._loss_quiz_fn = lambda x, y: loss_quiz_fn(self.cont, self.outcomes, x, y)
+
+        entropy_cont_fn = pu.get_entropy_fn(loss_cont_fn.__name__)
+        self._entropy_cont_fn = lambda y: entropy_cont_fn(self.quiz_reverse, self.outcomes, y)
+
+        entropy_quiz_fn = pu.get_entropy_fn(loss_quiz_fn.__name__)
+        self._entropy_quiz_fn = lambda y: entropy_quiz_fn(self.quiz_reverse, self.outcomes, y)
+
     @property
     @abstractmethod
     def name(self) -> str:
         return self._name
-
-    @property
-    def loss_type(self) -> pu.LossType:
-        return self._loss_type
-
-    @loss_type.setter
-    def loss_type(self, value: pu.LossType):
-        self._loss_type = value
 
     @property
     def quiz(self) -> pu.YgivenX:
@@ -103,7 +113,7 @@ class Game:
         if not self.strategy.is_cont_legal():
             raise ValueError("not a valid quiz strategy")
 
-    def play(self, actions: Union[Dict[pu.Agent, pu.PreStrategy], Dict[pu.Agent, np.ndarray]]) -> Dict[pu.Agent, float]:
+    def play(self, actions: Dict[pu.Agent, pu.PreStrategy] | Dict[pu.Agent, np.ndarray]) -> Dict[pu.Agent, float]:
         if isinstance(actions[pu.quiz()], pu.PreStrategy):
             self.quiz = actions[pu.quiz()]
             self.cont = actions[pu.cont()]
@@ -111,30 +121,26 @@ class Game:
             self.quiz = self.strategy.to_pre_quiz_strategy(actions[pu.quiz()])
             self.cont = self.strategy.to_pre_cont_strategy(actions[pu.cont()])
 
-        reward_quiz = -self.loss.get_expected_loss()
-        reward_cont = self.loss.get_expected_loss()
+        reward_quiz = self._get_expected_loss()
+        reward_cont = -self._get_expected_loss()
 
         return {pu.quiz(): reward_quiz, pu.cont(): reward_cont}
 
-    def simulate_single(self) -> (pu.Outcome, pu.Message, float, float):
-        x = random.choices(list(self.marginal_outcome.keys()), list(self.marginal_outcome.values()), k=1)[0]
-        y = random.choices(list(self.quiz[x].keys()), list(self.quiz[x].values()), k=1)[0]
-        loss = self.loss.get_loss(x, y)
-        entropy = self.loss.get_entropy(y)
+    def _get_expected_loss(self) -> float:
+        loss: float = 0
+        for x in self.outcomes:
+            for y in self.messages:
+                _l = self.marginal_outcome[x] * self.quiz[x][y] * self._loss_fn(x, y)
+                if not math.isnan(_l):
+                    loss += _l
 
-        return x, y, loss, entropy
+        return 100000000000 if math.isinf(loss) else loss
 
-    def simulate(self, n: int) -> (Dict[pu.Outcome, int], Dict[pu.Message, int], float, float):
-        x_count = {x: 0 for x in self.outcomes}
-        y_count = {y: 0 for y in self.messages}
-        losses = []
-        entropies = []
+    def _get_expected_entropy(self) -> float:
+        ent: float = 0
+        for y in self.messages:
+            e = self.marginal_message[y] * self.get_entropy(y)
+            if not math.isnan(e):
+                ent += e
 
-        for _ in range(n):
-            x, y, loss, entropy = self.simulate_single()
-            x_count[x] += 1
-            y_count[y] += 1
-            losses.append(loss)
-            entropies.append(entropy)
-
-        return x_count, y_count, mean(losses), mean(entropies)
+        return ent

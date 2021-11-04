@@ -6,28 +6,25 @@ import numpy as np
 from gym import spaces
 
 from pettingzoo import ParallelEnv
-from pettingzoo.utils import wrappers
 from pettingzoo.utils.agent_selector import agent_selector
 
 import probability_updating as pu
 import probability_updating.game_samples.monty_hall as monty_hall
 
 
-def env(loss_type: pu.loss_type.LossType):
-    env = raw_env(loss_type)
-    env = wrappers.BaseParallelWraper(env)
-    return env
+def env(game: pu.Game, loss_type: pu.LossType):
+    return ProbabilityUpdatingEnv(game, loss_type)
 
 
-class raw_env(ParallelEnv):
+class ProbabilityUpdatingEnv(ParallelEnv):
     metadata = {'render.modes': ['human'], "name": "probability_updating_game"}
     game: pu.Game
     observations: Dict[str, Union[List[List[bool]], List[float]]]
 
-    def __init__(self, loss_type: pu.LossType):
+    def __init__(self, game: pu.Game, loss_type: pu.LossType):
         super().__init__()
 
-        self.game = monty_hall.create_game()
+        self.game = game
         self.game.loss_type = loss_type
 
         self.seed()
@@ -98,10 +95,10 @@ class raw_env(ParallelEnv):
         Returns the observation dictionary, reward dictionary, done dictionary, and info dictionary,
         where each dictionary is keyed by the agent.
         """
-        dones = {agent: True for agent in self.agents}
-        infos = {agent: {} for agent in self.agents}
         observations = {agent: spaces.flatten(self.raw_observation_space, self.observations) for agent in self.agents}
         rewards = self.game.play(actions)
+        dones = {agent: False for agent in self.agents}
+        infos = {agent: None for agent in self.agents}
 
         self.agents = []
 

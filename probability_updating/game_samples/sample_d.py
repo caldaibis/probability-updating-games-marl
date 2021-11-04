@@ -5,10 +5,10 @@ from typing import List
 import probability_updating as pu
 
 
-def create_game() -> pu.Game:
+def create_game(loss_cont_fn: pu.LossFunc, loss_quiz_fn: pu.LossFunc) -> pu.Game:
     outcomes, messages = pu.game.create_structure(marginal(), message_structure())
     marginal_outcome = dict(zip(outcomes, marginal()))
-    return pu.Game(name(), outcomes, messages, marginal_outcome)
+    return pu.Game(name(), outcomes, messages, marginal_outcome, loss_cont_fn, loss_quiz_fn)
 
 
 @property
