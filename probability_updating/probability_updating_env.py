@@ -9,11 +9,10 @@ from pettingzoo import ParallelEnv
 from pettingzoo.utils.agent_selector import agent_selector
 
 import probability_updating as pu
-import probability_updating.game_samples.monty_hall as monty_hall
 
 
-def env(game: pu.Game, loss_type: pu.LossType):
-    return ProbabilityUpdatingEnv(game, loss_type)
+def env(game: pu.Game):
+    return ProbabilityUpdatingEnv(game)
 
 
 class ProbabilityUpdatingEnv(ParallelEnv):
@@ -21,11 +20,10 @@ class ProbabilityUpdatingEnv(ParallelEnv):
     game: pu.Game
     observations: Dict[str, Union[List[List[bool]], List[float]]]
 
-    def __init__(self, game: pu.Game, loss_type: pu.LossType):
+    def __init__(self, g: pu.Game):
         super().__init__()
 
-        self.game = game
-        self.game.loss_type = loss_type
+        self.game = g
 
         self.seed()
 
@@ -34,22 +32,39 @@ class ProbabilityUpdatingEnv(ParallelEnv):
 
         self._agent_selector = agent_selector(self.agents)
 
+        # Monty Hall
+        # y1 < {x1, x2}
+        # y2 < {x2, x3}
+        # --
+        # x1 < {y1}
+        # x2 < {y1, y2}
+        # x3 < {y2}
+
+        # Colly Hall
+        # y1 < {x1, x2}
+        # y2 < {x2, x3}
+        # y3 < {x2}
+        # --
+        # x1 < {y1}
+        # x2 < {y1, y2, y3}
+        # x3 < {y2}
+
         self.action_spaces = {
-            pu.quiz(): spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32),
-            pu.cont(): spaces.Box(low=0.0, high=1.0, shape=(2,), dtype=np.float32)
+            pu.cont(): spaces.Box(low=0.0, high=1.0, shape=(sum(len(y.outcomes) - 1 for y in g.messages),), dtype=np.float32),
+            pu.quiz(): spaces.Box(low=0.0, high=1.0, shape=(sum(len(x.messages) - 1 for x in g.outcomes),), dtype=np.float32)
+
         }
 
         self.raw_observation_space = spaces.Dict({
-            'structure': spaces.Box(low=False, high=True, shape=(2, 3), dtype=bool),
-            'marginal': spaces.Box(low=0.0, high=1.0, shape=(2,), dtype=np.float32)
+            'structure': spaces.Box(low=False, high=True, shape=(len(g.messages), len(g.outcomes)), dtype=bool),
+            'marginal': spaces.Box(low=0.0, high=1.0, shape=(len(g.outcomes)-1,), dtype=np.float32)
         })
 
-        # self.observation_spaces = {agent: self.raw_observation_space for agent in self.agents}
         self.observation_spaces = {agent: spaces.flatten_space(self.raw_observation_space) for agent in self.agents}
 
         self.observations = {
-            'structure': [[True, True, False], [False, True, True]],
-            'marginal': [1 / 3, 1 / 3]
+            'structure': [[x in y.outcomes for x in g.outcomes] for y in g.messages],
+            'marginal': [g.marginal_outcome[x] for x in g.outcomes[0:-1]]
         }
 
         self.steps = 0
@@ -96,13 +111,13 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         where each dictionary is keyed by the agent.
         """
         observations = {agent: spaces.flatten(self.raw_observation_space, self.observations) for agent in self.agents}
-        rewards = self.game.play(actions)
-        dones = {agent: False for agent in self.agents}
-        infos = {agent: None for agent in self.agents}
+        losses = self.game.play(actions)
+        dones = {agent: True for agent in self.agents}
+        infos = {agent: {} for agent in self.agents}
 
         self.agents = []
 
-        return observations, rewards, dones, infos
+        return observations, {a: -loss for a, loss in losses.items()}, dones, infos
 
     def render(self, mode="human"):
         """
@@ -125,12 +140,9 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         """
         resets the environment and returns a dictionary of observations (keyed by the agent name)
         """
-        loss_type = self.game.loss_type
-        self.game = monty_hall.create_game()
-        self.game.loss_type = loss_type
+        self.game.reset()
 
         self.agents = self.possible_agents[:]
 
-        # return {agent: self.observations for agent in self.agents}
         return {agent: spaces.flatten(self.raw_observation_space, self.observations) for agent in self.agents}
 

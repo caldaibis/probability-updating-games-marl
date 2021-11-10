@@ -5,9 +5,6 @@ import math
 from typing import Dict
 import probability_updating as pu
 
-OutcomeId = int
-MessageId = int
-
 
 class Strategy:
     game: pu.Game
@@ -15,7 +12,7 @@ class Strategy:
     def __init__(self, game: pu.Game):
         self.game = game
 
-    def update_strategy_quiz_reverse(self) -> XgivenY:
+    def update_strategy_quiz_reverse(self) -> pu.XgivenY:
         reverse = {}
         for y in self.game.messages:
             reverse[y] = {}
@@ -33,17 +30,6 @@ class Strategy:
 
         return probs
 
-    def is_quiz_legal(self) -> bool:
-        is_distribution = math.isclose(sum(self.game.marginal_message.values()), 1, rel_tol=1e-5)
-
-        is_lying = False
-        for y in self.game.messages:
-            for x in self.game.outcomes:
-                if self.game.quiz[x][y] > 0 and x not in y.outcomes:
-                    is_lying = True
-
-        return is_distribution and not is_lying
-
     def is_cont_legal(self) -> bool:
         for y in self.game.messages:
             _sum = 0
@@ -55,53 +41,48 @@ class Strategy:
 
         return True
 
-    def to_quiz_strategy(self, s: pu.PreStrategy) -> YgivenX:
-        new_dict = {}
-        for x in s.strategy.keys():
-            new_dict[self.game.outcomes[x]] = {}
-            for y in s.strategy[x].keys():
-                new_dict[self.game.outcomes[x]][self.game.messages[y]] = s.strategy[x][y]
+    def is_quiz_legal(self) -> bool:
+        is_distribution = math.isclose(sum(self.game.marginal_message.values()), 1, rel_tol=1e-5)
 
-        return new_dict
+        is_lying = False
+        for y in self.game.messages:
+            for x in self.game.outcomes:
+                if self.game.quiz[x][y] > 0 and x not in y.outcomes:
+                    is_lying = True
 
-    def to_cont_strategy(self, s: pu.PreStrategy) -> XgivenY:
-        new_dict = {}
-        for y in s.strategy.keys():
-            new_dict[self.game.messages[y]] = {}
-            for x in s.strategy[y].keys():
-                new_dict[self.game.messages[y]][self.game.outcomes[x]] = s.strategy[y][x]
+        return is_distribution and not is_lying
 
-        return new_dict
+    def to_cont_strategy(self, s: np.ndarray) -> pu.XgivenY:
+        i = 0
+        strategy = {y: {x: 0 for x in self.game.outcomes} for y in self.game.messages}
 
-    def to_pre_quiz_strategy(self, s: np.ndarray) -> pu.PreStrategy:
-        return pu.PreStrategy("dynamic_quiz", {
-            0: {
-                0: 1,
-                1: 0,
-            },
-            1: {
-                0: s[0],
-                1: 1 - s[0]
-            },
-            2: {
-                0: 0,
-                1: 1
-            }
-        })
+        for y in self.game.messages:
+            sum_prob = 0
+            for x in y.outcomes:
+                if x == y.outcomes[-1]:
+                    strategy[y][x] = 1 - sum_prob
+                else:
+                    strategy[y][x] = s[i]
+                    sum_prob += s[i]
+                    i += 1
 
-    def to_pre_cont_strategy(self, s: np.ndarray) -> pu.PreStrategy:
-        return pu.PreStrategy("dynamic_cont", {
-            0: {
-                0: s[0],
-                1: 1 - s[0],
-                2: 0
-            },
-            1: {
-                0: 0,
-                1: s[1],
-                2: 1 - s[1],
-            }
-        })
+        return strategy
+
+    def to_quiz_strategy(self, s: np.ndarray) -> pu.YgivenX:
+        i = 0
+        strategy = {x: {y: 0 for y in self.game.messages} for x in self.game.outcomes}
+
+        for x in self.game.outcomes:
+            sum_prob = 0
+            for y in x.messages:
+                if y == x.messages[-1]:
+                    strategy[x][y] = 1 - sum_prob
+                else:
+                    strategy[x][y] = s[i]
+                    sum_prob += s[i]
+                    i += 1
+
+        return strategy
 
     def is_car(self) -> bool:
         for y in self.game.messages:

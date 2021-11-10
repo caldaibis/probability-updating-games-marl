@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from types import FunctionType
 import math
 from abc import abstractmethod
-from typing import List, Dict, Callable
+from typing import List, Dict, Callable, Optional
 
 import numpy as np
 
@@ -51,11 +52,8 @@ class Game:
     marginal_outcome: Dict[pu.Outcome, float]
     marginal_message: Dict[pu.Message, float]
 
-    _loss_cont_fn: Callable[[pu.Outcome, pu.Message], float]
-    _loss_quiz_fn: Callable[[pu.Outcome, pu.Message], float]
-
-    _entropy_cont_fn: Callable[[pu.Message], float]
-    _entropy_quiz_fn: Callable[[pu.Message], float]
+    loss_fn: Dict[pu.Agent, Callable[[pu.XgivenY, pu.Outcome, pu.Message], float]] = {}
+    entropy_fn: Dict[pu.Agent, Callable[[pu.Message], float]] = {}
 
     strategy: pu.Strategy
     _quiz: pu.YgivenX
@@ -67,9 +65,8 @@ class Game:
                  outcomes: List[pu.Outcome],
                  messages: List[pu.Message],
                  marginal_outcome: Dict[pu.Outcome, float],
-                 loss_cont_fn: pu.LossFunc,
-                 loss_quiz_fn: pu.LossFunc,
-                 entropy_cont_fn: pu.): # koppel entropy function met loss!!
+                 loss_cont: pu.LossFunc | pu.Loss,
+                 loss_quiz: pu.LossFunc | pu.Loss):
         self.strategy = pu.Strategy(self)
 
         self._name = name
@@ -77,14 +74,20 @@ class Game:
         self.messages = messages
         self.marginal_outcome = marginal_outcome
 
-        self._loss_cont_fn = lambda x, y: loss_cont_fn(self.cont, self.outcomes, x, y)
-        self._loss_quiz_fn = lambda x, y: loss_quiz_fn(self.cont, self.outcomes, x, y)
+        if isinstance(loss_cont, FunctionType):
+            self.loss_fn[pu.cont()] = lambda cont, x, y: loss_cont(cont, self.outcomes, x, y)
+            self.entropy_fn[pu.cont()] = NotImplemented
+        elif isinstance(loss_cont, pu.Loss):
+            # Wat de fuck, attribute nog niet gedefinieerd in lamda functie maar in werkelijkheid wel gedefinieerd, wat te doen?
+            self.loss_fn[pu.cont()] = lambda cont, x, y: pu.loss.standard_loss(loss_cont)(cont, self.outcomes, x, y)
+            self.entropy_fn[pu.cont()] = lambda y: pu.loss.standard_entropy(loss_cont)(self.quiz_reverse, self.outcomes, y)
 
-        entropy_cont_fn = pu.get_entropy_fn(loss_cont_fn.__name__)
-        self._entropy_cont_fn = lambda y: entropy_cont_fn(self.quiz_reverse, self.outcomes, y)
-
-        entropy_quiz_fn = pu.get_entropy_fn(loss_quiz_fn.__name__)
-        self._entropy_quiz_fn = lambda y: entropy_quiz_fn(self.quiz_reverse, self.outcomes, y)
+        if isinstance(loss_quiz, FunctionType):
+            self.loss_fn[pu.quiz()] = lambda cont, x, y: loss_quiz(cont, self.outcomes, x, y)
+            self.entropy_fn[pu.quiz()] = NotImplemented
+        elif isinstance(loss_quiz, pu.Loss):
+            self.loss_fn[pu.quiz()] = lambda cont, x, y: pu.loss.standard_loss(loss_quiz)(cont, self.outcomes, x, y)
+            self.entropy_fn[pu.quiz()] = lambda y: pu.loss.standard_entropy(loss_quiz)(self.quiz_reverse, self.outcomes, y)
 
     @property
     @abstractmethod
@@ -96,7 +99,7 @@ class Game:
         return self._quiz
 
     @quiz.setter
-    def quiz(self, value: pu.PreStrategy):
+    def quiz(self, value: np.ndarray):
         self._quiz = self.strategy.to_quiz_strategy(value)
         self.marginal_message = self.strategy.update_message_marginal()
         self.quiz_reverse = self.strategy.update_strategy_quiz_reverse()
@@ -108,39 +111,52 @@ class Game:
         return self._cont
 
     @cont.setter
-    def cont(self, value: pu.PreStrategy):
+    def cont(self, value: np.ndarray):
         self._cont = self.strategy.to_cont_strategy(value)
         if not self.strategy.is_cont_legal():
             raise ValueError("not a valid quiz strategy")
 
-    def play(self, actions: Dict[pu.Agent, pu.PreStrategy] | Dict[pu.Agent, np.ndarray]) -> Dict[pu.Agent, float]:
-        if isinstance(actions[pu.quiz()], pu.PreStrategy):
-            self.quiz = actions[pu.quiz()]
-            self.cont = actions[pu.cont()]
-        else:
-            self.quiz = self.strategy.to_pre_quiz_strategy(actions[pu.quiz()])
-            self.cont = self.strategy.to_pre_cont_strategy(actions[pu.cont()])
+    def play(self, actions: Dict[pu.Agent, np.ndarray]) -> Dict[pu.Agent, float]:
+        self.cont = actions[pu.cont()]
+        self.quiz = actions[pu.quiz()]
 
-        reward_quiz = self._get_expected_loss()
-        reward_cont = -self._get_expected_loss()
+        return {
+            pu.cont(): self.get_expected_loss(pu.cont()),
+            pu.quiz(): self.get_expected_loss(pu.quiz())
+        }
 
-        return {pu.quiz(): reward_quiz, pu.cont(): reward_cont}
-
-    def _get_expected_loss(self) -> float:
+    def get_expected_loss(self, agent: pu.Agent) -> float:
         loss: float = 0
         for x in self.outcomes:
             for y in self.messages:
-                _l = self.marginal_outcome[x] * self.quiz[x][y] * self._loss_fn(x, y)
+                _l = self.marginal_outcome[x] * self.quiz[x][y] * self.loss_fn[agent](self.cont, x, y)
                 if not math.isnan(_l):
                     loss += _l
 
-        return 100000000000 if math.isinf(loss) else loss
+        # TODO: checken of dit oke is
+        return np.sign(loss) * pu.inf_loss if math.isinf(loss) else loss
 
-    def _get_expected_entropy(self) -> float:
-        ent: float = 0
-        for y in self.messages:
-            e = self.marginal_message[y] * self.get_entropy(y)
-            if not math.isnan(e):
-                ent += e
+    def get_expected_entropy(self, agent: pu.Agent) -> Optional[float]:
+        if callable(self.entropy_fn[agent]):
+            ent: float = 0
+            for y in self.messages:
+                e = self.marginal_message[y] * self.entropy_fn[agent](y)
+                if not math.isnan(e):
+                    ent += e
 
-        return ent
+            return ent
+
+        return None
+
+    def reset(self):
+        pass
+        # self._quiz = {x: {y: 0 for y in self.messages} for x in self.outcomes}
+        # self.quiz_reverse = {y: {x: 0 for x in self.outcomes} for y in self.messages}
+        # self._cont = {y: {x: 0 for x in self.outcomes} for y in self.messages}
+        # self.marginal_message = {y: 0 for y in self.messages}
+
+    def get_cont_readable(self):
+        return {y.id: {x.id: self.cont[y][x] for x in self.outcomes} for y in self.messages}
+
+    def get_quiz_readable(self):
+        return {x.id: {y.id: self.quiz[x][y] for y in self.messages} for x in self.outcomes}

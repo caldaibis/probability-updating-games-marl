@@ -2,13 +2,15 @@ from __future__ import annotations
 
 from typing import List
 
+import numpy as np
+
 import probability_updating as pu
 
 
-def create_game(loss_cont_fn: pu.LossFunc, loss_quiz_fn: pu.LossFunc) -> pu.Game:
+def create_game(loss_cont: pu.LossFunc | pu.Loss, loss_quiz: pu.LossFunc | pu.Loss) -> pu.Game:
     outcomes, messages = pu.game.create_structure(marginal(), message_structure())
     marginal_outcome = dict(zip(outcomes, marginal()))
-    return pu.Game(name(), outcomes, messages, marginal_outcome, loss_cont_fn, loss_quiz_fn)
+    return pu.Game(name(), outcomes, messages, marginal_outcome, loss_cont, loss_quiz)
 
 
 def name() -> str:
@@ -31,96 +33,25 @@ def message_structure() -> List[List[int]]:
 
 
 def quiz_uniform() -> pu.PreStrategy:
-    return pu.PreStrategy("quiz_uniform", {
-        0: {
-            0: 1,
-            1: 0
-        },
-        1: {
-            0: 1 / 2,
-            1: 1 / 2
-        },
-        2: {
-            0: 0,
-            1: 1
-        }
-    })
+    return pu.PreStrategy("quiz_uniform", np.array([1 / 2]))
 
 
 def quiz_always_y1() -> pu.PreStrategy:
-    return pu.PreStrategy("quiz_always_y1", {
-        0: {
-            0: 1,
-            1: 0
-        },
-        1: {
-            0: 1,
-            1: 0
-        },
-        2: {
-            0: 0,
-            1: 1
-        }
-    })
+    return pu.PreStrategy("quiz_always_y1", np.array([1]))
 
 
 def quiz_always_y2() -> pu.PreStrategy:
-    return pu.PreStrategy("quiz_always_y2", {
-        0: {
-            0: 1,
-            1: 0
-        },
-        1: {
-            0: 0,
-            1: 1
-        },
-        2: {
-            0: 0,
-            1: 1
-        }
-    })
+    return pu.PreStrategy("quiz_always_y2", np.array([0]))
 
 
 def cont_always_switch() -> pu.PreStrategy:
-    return pu.PreStrategy("cont_always_switch", {
-        0: {
-            0: 1,
-            1: 0,
-            2: 0
-        },
-        1: {
-            0: 0,
-            1: 0,
-            2: 1,
-        }
-    })
+    return pu.PreStrategy("cont_always_switch", np.array([1, 0]))
 
 
 def cont_always_stay() -> pu.PreStrategy:
-    return pu.PreStrategy("cont_always_stay", {
-        0: {
-            0: 0,
-            1: 1,
-            2: 0
-        },
-        1: {
-            0: 0,
-            1: 1,
-            2: 0,
-        }
-    })
+    return pu.PreStrategy("cont_always_stay", np.array([0, 1]))
 
 
 def cont_min_loss_logarithmic() -> pu.PreStrategy:
-    return pu.PreStrategy("cont_min_loss_logarithmic", {
-        0: {
-            0: 2 / 3,
-            1: 1 / 3,
-            2: 0
-        },
-        1: {
-            0: 0,
-            1: 1 / 3,
-            2: 2 / 3,
-        }
-    })
+    return pu.PreStrategy("cont_min_loss_logarithmic", np.array([2 / 3, 1 / 3]))
+

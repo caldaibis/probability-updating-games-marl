@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import Dict
+import numpy as np
 
 
 class PreStrategy:
     name: str
-    strategy: Dict[int, Dict[int, float]]
+    strategy: np.ndarray
 
-    def __init__(self, name: str, strategy: Dict[int, Dict[int, float]]):
+    def __init__(self, name: str, strategy: np.ndarray):
         self.name = name
         self.strategy = strategy
 
