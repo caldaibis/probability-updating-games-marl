@@ -1,1 +1,1 @@
-# Multi Agent Reinforcement Learning for Probability Updating Games
+# Multi Agent Reinforcement Learning (MARL) for Probability Updating Games
