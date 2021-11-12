@@ -38,24 +38,24 @@ class MontyHall(games.Game):
 
     @staticmethod
     def cont_always_switch() -> pu.StrategyWrapper:
-        return pu.StrategyWrapper("cont_always_switch", np.array([1, 0]))
+        return pu.StrategyWrapper("cont_always_switch", np.array([1, 0, 0, 1]))
 
     @staticmethod
     def cont_always_stay() -> pu.StrategyWrapper:
-        return pu.StrategyWrapper("cont_always_stay", np.array([0, 1]))
+        return pu.StrategyWrapper("cont_always_stay", np.array([0, 1, 1, 0]))
 
     @staticmethod
     def cont_min_loss_logarithmic() -> pu.StrategyWrapper:
-        return pu.StrategyWrapper("cont_min_loss_logarithmic", np.array([2 / 3, 1 / 3]))
+        return pu.StrategyWrapper("cont_min_loss_logarithmic", np.array([2 / 3, 1 / 3, 1 / 3, 2 / 3]))
 
     @staticmethod
     def quiz_uniform() -> pu.StrategyWrapper:
-        return pu.StrategyWrapper("quiz_uniform", np.array([1 / 2]))
+        return pu.StrategyWrapper("quiz_uniform", np.array([1 / 2, 1 / 2]))
 
     @staticmethod
     def quiz_always_y1() -> pu.StrategyWrapper:
-        return pu.StrategyWrapper("quiz_always_y1", np.array([1]))
+        return pu.StrategyWrapper("quiz_always_y1", np.array([1, 0]))
 
     @staticmethod
     def quiz_always_y2() -> pu.StrategyWrapper:
-        return pu.StrategyWrapper("quiz_always_y2", np.array([0]))
+        return pu.StrategyWrapper("quiz_always_y2", np.array([0, 1]))

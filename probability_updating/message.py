@@ -16,3 +16,6 @@ class Message:
 
     def __str__(self):
         return f"y{str(self.id)}"
+
+    def __eq__(self, other: Message) -> bool:
+        return self.id == other.id

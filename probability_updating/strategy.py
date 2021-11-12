@@ -4,12 +4,13 @@ import numpy as np
 import math
 from typing import Dict
 import probability_updating as pu
+import probability_updating.games as games
 
 
 class Strategy:
-    game: pu.Game
+    game: games.Game
 
-    def __init__(self, game: pu.Game):
+    def __init__(self, game: games.Game):
         self.game = game
 
     def update_strategy_quiz_reverse(self) -> pu.XgivenY:
@@ -69,13 +70,26 @@ class Strategy:
 
         for y in self.game.messages:
             sum_prob = 0
+
+            if len(y.outcomes) == 1:
+                x = y.outcomes[0]
+                strategy[y][x] = 1
+                continue
+
             for x in y.outcomes:
-                if x == y.outcomes[-1]:
-                    strategy[y][x] = 1 - sum_prob
-                else:
-                    strategy[y][x] = s[i]
-                    sum_prob += s[i]
-                    i += 1
+                # arrange values from gym env action space to original strategy space
+                strategy[y][x] = s[i]
+                sum_prob += s[i]
+                i += 1
+
+            # normalise to create a probability distribution: sum must be one
+            if sum_prob == 0:
+                for x in y.outcomes:
+                    strategy[y][x] = 1 / len(y.outcomes)
+                continue
+
+            for x in y.outcomes:
+                strategy[y][x] /= sum_prob
 
         return strategy
 
@@ -85,16 +99,28 @@ class Strategy:
 
         for x in self.game.outcomes:
             sum_prob = 0
+
+            if len(x.messages) == 1:
+                y = x.messages[0]
+                strategy[x][y] = 1
+                continue
+
             for y in x.messages:
-                if y == x.messages[-1]:
-                    strategy[x][y] = 1 - sum_prob
-                else:
-                    strategy[x][y] = s[i]
-                    sum_prob += s[i]
-                    i += 1
+                # arrange values from gym env action space to original strategy space
+                strategy[x][y] = s[i]
+                sum_prob += s[i]
+                i += 1
+
+            # normalise to create a probability distribution: sum must be one
+            if sum_prob == 0:
+                for y in x.messages:
+                    strategy[x][y] = 1 / len(x.messages)
+                continue
+
+            for y in x.messages:
+                strategy[x][y] /= sum_prob
 
         return strategy
-
 
     def is_car(self) -> bool:
         for y in self.game.messages:

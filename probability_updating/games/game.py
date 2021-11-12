@@ -116,10 +116,10 @@ class Game(ABC):
         return {x.id: {y.id: self.quiz[x][y] for y in self.messages} for x in self.outcomes}
 
     def get_cont_action_space(self) -> int:
-        return sum(len(y.outcomes) - 1 for y in self.messages)
+        return sum(0 if len(y.outcomes) == 1 else len(y.outcomes) for y in self.messages)
 
     def get_quiz_action_space(self) -> int:
-        return sum(len(x.messages) - 1 for x in self.outcomes)
+        return sum(0 if len(x.messages) == 1 else len(x.messages) for x in self.outcomes)
 
     @staticmethod
     def create_structure(marginal: List[float], messages: List[List[int]]) -> (List[pu.Outcome], List[pu.Message]):

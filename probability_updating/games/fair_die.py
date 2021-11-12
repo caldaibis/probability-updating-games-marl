@@ -44,8 +44,8 @@ class FairDie(games.Game):
 
     @staticmethod
     def cont_always_switch() -> pu.StrategyWrapper:
-        return pu.StrategyWrapper("cont_always_switch", np.array([1 / 2, 1 / 2, 0, 0, 0, 1 / 2]))
+        return pu.StrategyWrapper("cont_always_switch", np.array([1 / 2, 1 / 2, 0, 0, 0, 0, 1 / 2, 1 / 2]))
 
     @staticmethod
     def quiz_uniform() -> pu.StrategyWrapper:
-        return pu.StrategyWrapper("quiz_uniform", np.array([1 / 2, 1 / 2]))
+        return pu.StrategyWrapper("quiz_uniform", np.array([1 / 2, 1 / 2, 1 / 2, 1 / 2]))

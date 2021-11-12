@@ -16,3 +16,6 @@ class Outcome:
 
     def __str__(self):
         return f"x{str(self.id)}"
+
+    def __eq__(self, other: Outcome) -> bool:
+        return self.id == other.id

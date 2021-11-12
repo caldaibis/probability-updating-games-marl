@@ -47,11 +47,11 @@ def manual(game, actions: Dict[pu.Agent, pu.StrategyWrapper]):
     output_prediction(game)
 
 
-def learn(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.LossFunc | pu.Loss], model_type: Type[models.Model]):
+def learn(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.LossFunc | pu.Loss], model_type: Type[models.Model], total_timesteps: int):
     game = game_type(losses)
 
     model = model_type.create(game)
-    model.learn(total_timesteps=10000)
+    model.learn(total_timesteps=total_timesteps)
 
     model.save(get_model_path(game, losses, model_type))
 
@@ -84,19 +84,24 @@ def test(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.LossFunc | pu.Lo
 
 
 def run():
-    game_type = games.FairDie
+    # randomised lijkt het erg goed te doen, voor MontyHall en FairDie met A2C of PPO!
+    # logarithmic lijkt niet te convergeren naar Nash met A2C of PPO...
+    # brier lijkt niet te convergeren naar Nash met PPO of A2C...
+
+    game_type = games.MontyHall
     losses = {
-        pu.cont(): pu.Loss.randomised_zero_one,
-        pu.quiz(): lambda c, o, x, y: -pu.randomised_zero_one(c, o, x, y)
+        pu.cont(): pu.Loss.brier,
+        pu.quiz(): lambda c, o, x, y: -pu.brier(c, o, x, y)
     }
     actions = {
-        pu.cont(): games.FairDie.cont_always_switch(),
-        pu.quiz(): games.FairDie.quiz_uniform()
+        pu.cont(): games.MontyHall.cont_min_loss_logarithmic(),
+        pu.quiz(): games.MontyHall.quiz_uniform()
     }
     model_type = models.A2C
+    total_timesteps = 10000
 
     # test(game_type, losses, actions)
-    learn(game_type, losses, model_type)
+    # learn(game_type, losses, model_type, total_timesteps)
     predict(game_type, losses, model_type)
 
 
