@@ -1,48 +1,17 @@
 from __future__ import annotations
 
-from typing import Type
+from typing import Dict
 
 import probability_updating as pu
+import probability_updating.games as games
 
-import inspect
 
-
-def run(game_creator: Type[pu.GameCreator],
-        loss_cont: pu.LossFunc | pu.Loss,
-        loss_quiz: pu.LossFunc | pu.Loss,
-        q: pu.StrategyWrapper,
-        c: pu.StrategyWrapper):
-    print("BEGIN")
-    print()
-
-    print(f"Creating game: {game_creator.name()}")
-    print()
-
-    g = game_creator.create(loss_cont, loss_quiz)
-    g.quiz = q.strategy
-    g.cont = c.strategy
-
-    print(f"Loss (cont): {loss_cont if isinstance(loss_cont, pu.Loss) else inspect.getsource(loss_cont)}")
-    print(f"Loss (quiz): {loss_quiz if isinstance(loss_quiz, pu.Loss) else inspect.getsource(loss_quiz)}")
-
-    print(f"Strategy (cont): {c.name}")
-    print(f"Strategy (quiz): {q.name}")
-
-    print()
-    print(f"CAR? {g.strategy.is_car()}")
-    print(f"RCAR? {g.strategy.is_rcar()}")
-
-    print()
-    print(f"Expected loss (cont): {g.get_expected_loss(pu.cont())}")
-    print(f"Expected entropy (cont): {g.get_expected_entropy(pu.cont())}")
-
-    print()
-    print(f"Expected loss (quiz): {g.get_expected_loss(pu.quiz())}")
-    print(f"Expected entropy (quiz): {g.get_expected_entropy(pu.quiz())}")
-
+def run(game: games.Game, actions: Dict[pu.Agent, pu.StrategyWrapper]):
+    print("SIMULATION BEGIN")
     print()
     print("Running simulation...")
-    sim = pu.SimulationWrapper(g)
+    sim = pu.SimulationWrapper(game, actions)
+
     x_count, y_count, mean_loss, mean_entropy = sim.simulate(100000)
 
     print()
@@ -62,4 +31,4 @@ def run(game_creator: Type[pu.GameCreator],
     print(f"Mean entropy (quiz): {mean_entropy[pu.quiz()]}")
 
     print()
-    print("END")
+    print("SIMULATION END")

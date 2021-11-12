@@ -5,9 +5,10 @@ from typing import List
 import numpy as np
 
 import probability_updating as pu
+import probability_updating.games as games
 
 
-class SampleD(pu.GameCreator):
+class SampleD(games.Game):
     @staticmethod
     def name() -> str:
         return "sampleD"

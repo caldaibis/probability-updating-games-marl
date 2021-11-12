@@ -6,15 +6,18 @@ import numpy as np
 from typing import Dict
 
 import probability_updating as pu
+import probability_updating.games as games
 
 
 class SimulationWrapper:
-    game = pu.game.Game
+    game = games.Game
 
-    def __init__(self, game: pu.Game):
+    def __init__(self, game: games.Game, actions: Dict[pu.Agent, pu.StrategyWrapper]):
         self.game = game
+        self.game.cont = actions[pu.cont()].strategy
+        self.game.quiz = actions[pu.quiz()].strategy
 
-    def simulate_single(self) -> (pu.Outcome, pu.Message, Dict[pu.Agent, float], Dict[pu.Agent, float]):
+    def _simulate_single(self) -> (pu.Outcome, pu.Message, Dict[pu.Agent, float], Dict[pu.Agent, float]):
         x = random.choices(list(self.game.marginal_outcome.keys()), list(self.game.marginal_outcome.values()), k=1)[0]
         y = random.choices(list(self.game.quiz[x].keys()), list(self.game.quiz[x].values()), k=1)[0]
 
@@ -31,7 +34,7 @@ class SimulationWrapper:
         entropies = {agent: [] for agent in pu.agents()}
 
         for _ in range(n):
-            x, y, loss, entropy = self.simulate_single()
+            x, y, loss, entropy = self._simulate_single()
             x_count[x] += 1
             y_count[y] += 1
             losses[pu.cont()].append(loss[pu.cont()])

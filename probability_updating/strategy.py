@@ -34,23 +34,34 @@ class Strategy:
         for y in self.game.messages:
             _sum = 0
             for x in self.game.outcomes:
-                _sum += self.game.cont[y][x]
-
-            if _sum != 1:
+                val = self.game.cont[y][x]
+                # confirm within domain [0, 1]
+                if val < 0 or val > 1:
+                    return False
+                _sum += val
+            # confirm sums to one
+            if not math.isclose(_sum, 1, rel_tol=1e-5):
                 return False
 
         return True
 
     def is_quiz_legal(self) -> bool:
-        is_distribution = math.isclose(sum(self.game.marginal_message.values()), 1, rel_tol=1e-5)
+        for x in self.game.outcomes:
+            _sum = 0
+            for y in self.game.messages:
+                val = self.game.quiz[x][y]
+                # confirm within domain [0, 1]
+                if val < 0 or val > 1:
+                    return False
+                # confirm not lying (no positive values for outcomes not contained in message
+                if val > 0 and x not in y.outcomes:
+                    return False
+                _sum += val
+            # confirm sums to one
+            if not math.isclose(_sum, 1, rel_tol=1e-5):
+                return False
 
-        is_lying = False
-        for y in self.game.messages:
-            for x in self.game.outcomes:
-                if self.game.quiz[x][y] > 0 and x not in y.outcomes:
-                    is_lying = True
-
-        return is_distribution and not is_lying
+        return True
 
     def to_cont_strategy(self, s: np.ndarray) -> pu.XgivenY:
         i = 0
@@ -84,13 +95,14 @@ class Strategy:
 
         return strategy
 
+
     def is_car(self) -> bool:
         for y in self.game.messages:
             val = float('nan')
             for x in y.outcomes:
                 if math.isnan(val):
                     val = self.game.quiz[x][y]
-                elif val is not self.game.quiz[x][y]:
+                elif not math.isclose(val, self.game.quiz[x][y], rel_tol=1e-5):
                     return False
 
         return True
@@ -99,10 +111,9 @@ class Strategy:
         rcar_vector = [float('nan') for _ in range(len(self.game.outcomes))]
         for x in self.game.outcomes:
             for y in x.messages:
-                test = self.game.quiz_reverse[y][x]
                 if math.isnan(rcar_vector[x.id]):
                     rcar_vector[x.id] = self.game.quiz_reverse[y][x]
-                elif rcar_vector[x.id] != self.game.quiz_reverse[y][x]:
+                elif not math.isclose(rcar_vector[x.id], self.game.quiz_reverse[y][x], rel_tol=1e-5):
                     return False
 
         return True

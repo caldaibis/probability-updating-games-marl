@@ -9,18 +9,19 @@ from pettingzoo import ParallelEnv
 from pettingzoo.utils.agent_selector import agent_selector
 
 import probability_updating as pu
+import probability_updating.games as games
 
 
-def env(game: pu.Game):
+def env(game: games.Game):
     return ProbabilityUpdatingEnv(game)
 
 
 class ProbabilityUpdatingEnv(ParallelEnv):
     metadata = {'render.modes': ['human'], "name": "probability_updating_game"}
-    game: pu.Game
+    game: games.Game
     observations: Dict[str, Union[List[List[bool]], List[float]]]
 
-    def __init__(self, g: pu.Game):
+    def __init__(self, g: games.Game):
         super().__init__()
 
         self.game = g
@@ -32,27 +33,9 @@ class ProbabilityUpdatingEnv(ParallelEnv):
 
         self._agent_selector = agent_selector(self.agents)
 
-        # Monty Hall
-        # y1 < {x1, x2}
-        # y2 < {x2, x3}
-        # --
-        # x1 < {y1}
-        # x2 < {y1, y2}
-        # x3 < {y2}
-
-        # Colly Hall
-        # y1 < {x1, x2}
-        # y2 < {x2, x3}
-        # y3 < {x2}
-        # --
-        # x1 < {y1}
-        # x2 < {y1, y2, y3}
-        # x3 < {y2}
-
         self.action_spaces = {
-            pu.cont(): spaces.Box(low=0.0, high=1.0, shape=(sum(len(y.outcomes) - 1 for y in g.messages),), dtype=np.float32),
-            pu.quiz(): spaces.Box(low=0.0, high=1.0, shape=(sum(len(x.messages) - 1 for x in g.outcomes),), dtype=np.float32)
-
+            pu.cont(): spaces.Box(low=0.0, high=1.0, shape=(g.get_cont_action_space(),), dtype=np.float32),
+            pu.quiz(): spaces.Box(low=0.0, high=1.0, shape=(g.get_quiz_action_space(),), dtype=np.float32)
         }
 
         self.raw_observation_space = spaces.Dict({
@@ -137,8 +120,6 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         """
         resets the environment and returns a dictionary of observations (keyed by the agent name)
         """
-        self.game.reset()
-
         self.agents = self.possible_agents[:]
 
         return {agent: spaces.flatten(self.raw_observation_space, self.observations) for agent in self.agents}
