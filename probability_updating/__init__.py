@@ -7,7 +7,7 @@ from . import strategy
 from . import loss
 from . import message
 from . import outcome
-from . import pre_strategy
+from . import strategy_wrapper
 from . import game
 from . import util
 from . import agent
@@ -20,9 +20,14 @@ from .loss import Loss, randomised_zero_one, brier, logarithmic, hard_matrix_los
 from .message import Message
 from .outcome import Outcome
 from .strategy import Strategy
-from .pre_strategy import PreStrategy
+from .strategy_wrapper import StrategyWrapper
 from .agent import Agent, agents, quiz, cont
 from .simulation_wrapper import SimulationWrapper
+
+from .games.game_builder import GameCreator
+from .games.monty_hall import MontyHall
+from .games.fair_die import FairDie
+from .games.sample_d import SampleD
 
 YgivenX = Dict[Outcome, Dict[Message, float]]
 XgivenY = Dict[Message, Dict[Outcome, float]]

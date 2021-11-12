@@ -50,7 +50,6 @@ def matrix_zero_one(outcome_count: int) -> np.ndarray:
     return m
 
 
-
 def randomised_zero_one_entropy(quiz_reverse: pu.XgivenY, outcomes: List[pu.Outcome], y: pu.Message) -> float:
     _max: float = 0
     for x in outcomes:

@@ -67,9 +67,6 @@ class ProbabilityUpdatingEnv(ParallelEnv):
             'marginal': [g.marginal_outcome[x] for x in g.outcomes[0:-1]]
         }
 
-        self.steps = 0
-        self.rewards = None
-
     def seed(self, seed=None):
         """
         Reseeds the environment (making the resulting environment deterministic).

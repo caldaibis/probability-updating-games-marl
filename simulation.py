@@ -1,26 +1,26 @@
 from __future__ import annotations
 
-import probability_updating as pu
+from typing import Type
 
-from typing import Callable
+import probability_updating as pu
 
 import inspect
 
 
-def run(game_fn: Callable[[pu.LossFunc, pu.LossFunc], pu.Game],
-             loss_cont: pu.LossFunc | pu.Loss,
-             loss_quiz: pu.LossFunc | pu.Loss,
-             q: pu.PreStrategy,
-             c: pu.PreStrategy):
-    g = game_fn(loss_cont, loss_quiz)
-    g.quiz = q
-    g.cont = c
-
+def run(game_creator: Type[pu.GameCreator],
+        loss_cont: pu.LossFunc | pu.Loss,
+        loss_quiz: pu.LossFunc | pu.Loss,
+        q: pu.StrategyWrapper,
+        c: pu.StrategyWrapper):
     print("BEGIN")
     print()
 
-    print(f"Game: {g.name}")
+    print(f"Creating game: {game_creator.name()}")
     print()
+
+    g = game_creator.create(loss_cont, loss_quiz)
+    g.quiz = q.strategy
+    g.cont = c.strategy
 
     print(f"Loss (cont): {loss_cont if isinstance(loss_cont, pu.Loss) else inspect.getsource(loss_cont)}")
     print(f"Loss (quiz): {loss_quiz if isinstance(loss_quiz, pu.Loss) else inspect.getsource(loss_quiz)}")

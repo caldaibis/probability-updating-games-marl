@@ -10,42 +10,7 @@ import numpy as np
 import probability_updating as pu
 
 
-def create_structure(marginal: List[float], messages: List[List[int]]) -> (List[pu.Outcome], List[pu.Message]):
-    # create messages
-    new_messages: List[pu.Message] = []
-    for y in range(len(messages)):
-        new_messages.append(pu.Message(y))
-
-    # create outcomes
-    new_outcomes: List[pu.Outcome] = []
-    for x in range(len(marginal)):
-        new_outcomes.append(pu.Outcome(x))
-
-    # fill messages
-    for y in range(len(messages)):
-        for x in messages[y]:
-            new_messages[y].outcomes.append(new_outcomes[x])
-
-    # infer outcome structure from outcome count and message structure
-    outcomes: List[List[int]] = []
-    for x in range(len(marginal)):
-        ys: List[int] = []
-        for y in range(len(messages)):
-            if x in messages[y]:
-                ys.append(y)
-        outcomes.append(ys)
-
-    # fill outcomes
-    for x in range(len(outcomes)):
-        for y in outcomes[x]:
-            new_outcomes[x].messages.append(new_messages[y])
-
-    return new_outcomes, new_messages
-
-
 class Game:
-    _name: str
-
     outcomes: List[pu.Outcome]
     messages: List[pu.Message]
 
@@ -61,7 +26,6 @@ class Game:
     _cont: pu.XgivenY
 
     def __init__(self,
-                 name: str,
                  outcomes: List[pu.Outcome],
                  messages: List[pu.Message],
                  marginal_outcome: Dict[pu.Outcome, float],
@@ -69,7 +33,6 @@ class Game:
                  loss_quiz: pu.LossFunc | pu.Loss):
         self.strategy = pu.Strategy(self)
 
-        self._name = name
         self.outcomes = outcomes
         self.messages = messages
         self.marginal_outcome = marginal_outcome
@@ -88,11 +51,6 @@ class Game:
         elif isinstance(loss_quiz, pu.Loss):
             self.loss_fn[pu.quiz()] = lambda cont, x, y: pu.loss.standard_loss(loss_quiz)(cont, self.outcomes, x, y)
             self.entropy_fn[pu.quiz()] = lambda y: pu.loss.standard_entropy(loss_quiz)(self.quiz_reverse, self.outcomes, y)
-
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        return self._name
 
     @property
     def quiz(self) -> pu.YgivenX:

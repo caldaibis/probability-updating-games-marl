@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 
-class PreStrategy:
+class StrategyWrapper:
     name: str
     strategy: np.ndarray
 
@@ -13,3 +13,6 @@ class PreStrategy:
 
     def __str__(self) -> str:
         return self.strategy.__str__()
+
+    def __getitem__(self, item):
+        return self.strategy[item]
