@@ -5,6 +5,7 @@ import math
 from typing import Dict
 import probability_updating as pu
 import probability_updating.games as games
+from exceptions import AllZeroesError
 
 
 class Strategy:
@@ -40,8 +41,8 @@ class Strategy:
                 if val < 0 or val > 1:
                     return False
                 _sum += val
-            # confirm sums to one
-            if not math.isclose(_sum, 1, rel_tol=1e-5):
+            # confirm sums to one (or zero, which we will allow but the algorithm will be punished with a high loss)
+            if not math.isclose(_sum, 1, rel_tol=1e-5) and not math.isclose(_sum, 0, rel_tol=1e-5):
                 return False
 
         return True
@@ -58,11 +59,25 @@ class Strategy:
                 if val > 0 and x not in y.outcomes:
                     return False
                 _sum += val
-            # confirm sums to one
-            if not math.isclose(_sum, 1, rel_tol=1e-5):
+            # confirm sums to one (or zero, which we will allow but the algorithm will be punished with a high loss)
+            if not math.isclose(_sum, 1, rel_tol=1e-5) and not math.isclose(_sum, 0, rel_tol=1e-5):
                 return False
 
         return True
+
+    def is_cont_all_zeroes(self):
+        for y in self.game.messages:
+            if sum(self.game.cont[y][x] for x in y.outcomes) == 0:
+                return True
+
+        return False
+
+    def is_quiz_all_zeroes(self):
+        for x in self.game.outcomes:
+            if sum(self.game.quiz[x][y] for y in x.messages) == 0:
+                return True
+
+        return False
 
     def to_cont_strategy(self, s: np.ndarray) -> pu.XgivenY:
         i = 0
@@ -70,6 +85,9 @@ class Strategy:
 
         for y in self.game.messages:
             sum_prob = 0
+
+            if not y.outcomes:
+                continue
 
             if len(y.outcomes) == 1:
                 x = y.outcomes[0]
@@ -82,14 +100,9 @@ class Strategy:
                 sum_prob += s[i]
                 i += 1
 
-            # normalise to create a probability distribution: sum must be one
-            if sum_prob == 0:
+            if sum_prob > 0: # (if zero, the strategy is invalid, but that will be handled elsewhere)
                 for x in y.outcomes:
-                    strategy[y][x] = 1 / len(y.outcomes)
-                continue
-
-            for x in y.outcomes:
-                strategy[y][x] /= sum_prob
+                    strategy[y][x] /= sum_prob
 
         return strategy
 
@@ -99,6 +112,9 @@ class Strategy:
 
         for x in self.game.outcomes:
             sum_prob = 0
+
+            if not x.messages:
+                continue
 
             if len(x.messages) == 1:
                 y = x.messages[0]
@@ -111,14 +127,9 @@ class Strategy:
                 sum_prob += s[i]
                 i += 1
 
-            # normalise to create a probability distribution: sum must be one
-            if sum_prob == 0:
+            if sum_prob > 0: # (if zero, the strategy is invalid, but that will be handled elsewhere)
                 for y in x.messages:
-                    strategy[x][y] = 1 / len(x.messages)
-                continue
-
-            for y in x.messages:
-                strategy[x][y] /= sum_prob
+                    strategy[x][y] /= sum_prob
 
         return strategy
 
@@ -143,3 +154,4 @@ class Strategy:
                     return False
 
         return True
+

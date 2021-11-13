@@ -90,8 +90,8 @@ def run():
 
     game_type = games.MontyHall
     losses = {
-        pu.cont(): pu.Loss.brier,
-        pu.quiz(): lambda c, o, x, y: -pu.brier(c, o, x, y)
+        pu.cont(): pu.Loss.logarithmic,
+        pu.quiz(): lambda c, o, x, y: -pu.logarithmic(c, o, x, y)
     }
     actions = {
         pu.cont(): games.MontyHall.cont_min_loss_logarithmic(),
@@ -101,7 +101,7 @@ def run():
     total_timesteps = 10000
 
     # test(game_type, losses, actions)
-    # learn(game_type, losses, model_type, total_timesteps)
+    learn(game_type, losses, model_type, total_timesteps)
     predict(game_type, losses, model_type)
 
 

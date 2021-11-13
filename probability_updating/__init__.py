@@ -21,4 +21,5 @@ XgivenY = Dict[Message, Dict[Outcome, float]]
 LossFunc = Callable[[XgivenY, List[Outcome], Outcome, Message], float]
 EntropyFunc = Callable[[XgivenY, List[Outcome], Message], float]
 
-inf_loss = 100000000000
+inf_loss = 1000
+invalid_action_loss = inf_loss * 100

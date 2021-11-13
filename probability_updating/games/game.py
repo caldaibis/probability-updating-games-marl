@@ -8,6 +8,7 @@ from typing import List, Dict, Callable, Optional
 import numpy as np
 
 import probability_updating as pu
+from exceptions import InvalidStrategyError, AllZeroesError
 
 
 class Game(ABC):
@@ -50,21 +51,6 @@ class Game(ABC):
             self.entropy_fn[pu.quiz()] = lambda y: pu.loss.standard_entropy(losses[pu.quiz()])(self.quiz_reverse, self.outcomes, y)
 
     @property
-    def quiz(self) -> pu.YgivenX:
-        return self._quiz
-
-    @quiz.setter
-    def quiz(self, value: np.ndarray):
-        try:
-            self._quiz = self.strategy.to_quiz_strategy(value)
-        except IndexError:
-            raise ValueError("Not a valid quiz strategy. Did you accidentally swap the cont and quiz strategies?")
-        self.marginal_message = self.strategy.update_message_marginal()
-        self.quiz_reverse = self.strategy.update_strategy_quiz_reverse()
-
-        assert self.strategy.is_quiz_legal()
-
-    @property
     def cont(self) -> pu.XgivenY:
         return self._cont
 
@@ -73,9 +59,25 @@ class Game(ABC):
         try:
             self._cont = self.strategy.to_cont_strategy(value)
         except IndexError:
-            raise ValueError("Not a valid cont strategy. Did you accidentally swap the cont and quiz strategies?")
+            raise InvalidStrategyError(value, self.get_cont_action_space())
 
         assert self.strategy.is_cont_legal()
+
+    @property
+    def quiz(self) -> pu.YgivenX:
+        return self._quiz
+
+    @quiz.setter
+    def quiz(self, value: np.ndarray):
+        try:
+            self._quiz = self.strategy.to_quiz_strategy(value)
+        except IndexError:
+            raise InvalidStrategyError(value, self.get_quiz_action_space())
+
+        self.marginal_message = self.strategy.update_message_marginal()
+        self.quiz_reverse = self.strategy.update_strategy_quiz_reverse()
+
+        assert self.strategy.is_quiz_legal()
 
     def play(self, actions: Dict[pu.Agent, np.ndarray]) -> Dict[pu.Agent, float]:
         self.cont = actions[pu.cont()]
@@ -87,6 +89,9 @@ class Game(ABC):
         }
 
     def get_expected_loss(self, agent: pu.Agent) -> float:
+        if self.strategy.is_cont_all_zeroes() or self.strategy.is_quiz_all_zeroes():
+            return pu.invalid_action_loss
+
         loss: float = 0
         for x in self.outcomes:
             for y in self.messages:
@@ -98,6 +103,9 @@ class Game(ABC):
         return np.sign(loss) * pu.inf_loss if math.isinf(loss) else loss
 
     def get_expected_entropy(self, agent: pu.Agent) -> Optional[float]:
+        if self.strategy.is_quiz_all_zeroes():
+            return pu.invalid_action_loss
+
         if callable(self.entropy_fn[agent]):
             ent: float = 0
             for y in self.messages:
@@ -109,10 +117,10 @@ class Game(ABC):
 
         return None
 
-    def get_cont_readable(self):
+    def get_cont_readable(self) -> Dict[int, Dict[int, float]]:
         return {y.id: {x.id: self.cont[y][x] for x in self.outcomes} for y in self.messages}
 
-    def get_quiz_readable(self):
+    def get_quiz_readable(self) -> Dict[int, Dict[int, float]]:
         return {x.id: {y.id: self.quiz[x][y] for y in self.messages} for x in self.outcomes}
 
     def get_cont_action_space(self) -> int:
