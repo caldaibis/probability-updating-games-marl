@@ -12,10 +12,10 @@ import probability_updating.games as games
 class SimulationWrapper:
     game = games.Game
 
-    def __init__(self, game: games.Game, actions: Dict[pu.Agent, pu.StrategyWrapper]):
+    def __init__(self, game: games.Game, actions: Dict[pu.Agent, np.ndarray]):
         self.game = game
-        self.game.cont = actions[pu.cont()].strategy
-        self.game.quiz = actions[pu.quiz()].strategy
+        self.game.cont = actions[pu.cont()]
+        self.game.quiz = actions[pu.quiz()]
 
     def _simulate_single(self) -> (pu.Outcome, pu.Message, Dict[pu.Agent, float], Dict[pu.Agent, float]):
         x = random.choices(list(self.game.marginal_outcome.keys()), list(self.game.marginal_outcome.values()), k=1)[0]

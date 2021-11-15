@@ -1,21 +1,27 @@
 from __future__ import annotations
 
 import inspect
-from typing import Type, Dict
+from typing import Type, Dict, Optional
+
+import numpy as np
 
 import probability_updating as pu
 import probability_updating.games as games
 
 from pathlib import Path
 
-import simulation
 import models
 
 model_path: Path = Path("saved_models")
 
 
-def get_model_path(game: games.Game, losses: Dict[pu.Agent, pu.LossFunc | pu.Loss], model: Type[models.Model]):
-    return f"{model_path}/{game.name()}/{model.name()}/{losses[pu.cont()] if isinstance(losses[pu.cont()], pu.Loss) else ''}_{losses[pu.quiz()] if isinstance(losses[pu.quiz()], pu.Loss) else ''}"
+def get_model_path(game: games.Game, losses: Dict[pu.Agent, pu.LossFunc | pu.Loss], model: Type[models.Model], total_timesteps: int, ext_name: Optional[str]):
+    loss_str_c = losses[pu.cont()] if isinstance(losses[pu.cont()], pu.Loss) else ''
+    loss_str_q = losses[pu.quiz()] if isinstance(losses[pu.quiz()], pu.Loss) else ''
+
+    filename = f"c={loss_str_c}_q={loss_str_q}_tt={total_timesteps}_e={ext_name}"
+
+    return f"{model_path}/{game.name()}/{model.name()}/{filename}"
 
 
 def output_prediction(game: games.Game):
@@ -38,7 +44,7 @@ def output_prediction(game: games.Game):
     print()
 
 
-def manual(game, actions: Dict[pu.Agent, pu.StrategyWrapper]):
+def manual(game, actions: Dict[pu.Agent, np.ndarray]):
     env = pu.probability_updating_env.env(game=game)
     env.reset()
 
@@ -47,24 +53,26 @@ def manual(game, actions: Dict[pu.Agent, pu.StrategyWrapper]):
     output_prediction(game)
 
 
-def learn(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.LossFunc | pu.Loss], model_type: Type[models.Model], total_timesteps: int):
+def learn(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.LossFunc | pu.Loss], model_type: Type[models.Model], total_timesteps: int, ext_name: Optional[str]):
     game = game_type(losses)
 
     model = model_type.create(game)
     model.learn(total_timesteps=total_timesteps)
 
-    model.save(get_model_path(game, losses, model_type))
+    model.save(get_model_path(game, losses, model_type, total_timesteps, ext_name))
 
 
-def predict(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.LossFunc | pu.Loss], model_type: Type[models.Model]):
+def predict(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.LossFunc | pu.Loss], model_type: Type[models.Model], total_timesteps: int, ext_name: Optional[str]):
     game = game_type(losses)
 
-    model_type.predict(game, get_model_path(game, losses, model_type))
+    model_type.predict(game, get_model_path(game, losses, model_type, total_timesteps, ext_name))
 
     output_prediction(game)
 
 
-def test(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.LossFunc | pu.Loss], actions: Dict[pu.Agent, pu.StrategyWrapper]):
+def test(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.LossFunc | pu.Loss], actions: Dict[pu.Agent, np.ndarray]):
+    import simulation
+
     print("MANUAL TEST RUN BEGIN")
     print()
     print(f"Game: {game_type.name()}")
@@ -84,9 +92,9 @@ def test(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.LossFunc | pu.Lo
 
 
 def run():
-    # randomised lijkt het erg goed te doen, voor MontyHall en FairDie met A2C of PPO!
-    # logarithmic lijkt niet te convergeren naar Nash met A2C of PPO...
-    # brier lijkt niet te convergeren naar Nash met PPO of A2C...
+    # MontyHall randomised    -> RCAR && Nash met PPO: total_timesteps=200000
+    # MontyHall brier         -> RCAR && Nash met A2C: total_timesteps=500000
+    # MontyHall logarithmic   -> RCAR && Nash met A2C: total_timesteps>1000000
 
     game_type = games.MontyHall
     losses = {
@@ -97,12 +105,16 @@ def run():
         pu.cont(): games.MontyHall.cont_min_loss_logarithmic(),
         pu.quiz(): games.MontyHall.quiz_uniform()
     }
-    model_type = models.A2C
-    total_timesteps = 10000
+    model_type = models.PPO
+    total_timesteps = 200000
+    ext_name = "no_obs"
 
-    # test(game_type, losses, actions)
-    learn(game_type, losses, model_type, total_timesteps)
-    predict(game_type, losses, model_type)
+    test(game_type, losses, actions)
+    # learn(game_type, losses, model_type, total_timesteps, ext_name)
+    # import main_ray_llib
+    # predict(game_type, losses, model_type, total_timesteps, ext_name)
+
+    # main_ray_llib.ray(game_type, losses)
 
 
 if __name__ == '__main__':

@@ -4,7 +4,6 @@ from typing import List
 
 import numpy as np
 
-import probability_updating as pu
 import probability_updating.games as games
 
 

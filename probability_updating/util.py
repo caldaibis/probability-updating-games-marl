@@ -2,7 +2,7 @@ from __future__ import annotations
 import math
 
 
-def safe_log(x) -> float:
-    if x == 0:
+def safe_log(p) -> float:
+    if p == 0:
         return -math.inf
-    return math.log(x)
+    return math.log(p)

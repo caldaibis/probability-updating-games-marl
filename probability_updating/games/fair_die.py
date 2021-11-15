@@ -4,7 +4,6 @@ from typing import List
 
 import numpy as np
 
-import probability_updating as pu
 import probability_updating.games as games
 
 
@@ -43,9 +42,9 @@ class FairDie(games.Game):
         ]
 
     @staticmethod
-    def cont_always_switch() -> pu.StrategyWrapper:
-        return pu.StrategyWrapper("cont_always_switch", np.array([1 / 2, 1 / 2, 0, 0, 0, 0, 1 / 2, 1 / 2]))
+    def cont_always_switch() -> np.ndarray:
+        return np.array([1 / 2, 1 / 2, 0, 0, 0, 0, 1 / 2, 1 / 2])
 
     @staticmethod
-    def quiz_uniform() -> pu.StrategyWrapper:
-        return pu.StrategyWrapper("quiz_uniform", np.array([1 / 2, 1 / 2, 1 / 2, 1 / 2]))
+    def quiz_uniform() -> np.ndarray:
+        return np.array([1 / 2, 1 / 2, 1 / 2, 1 / 2])

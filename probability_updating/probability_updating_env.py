@@ -12,14 +12,15 @@ import probability_updating as pu
 import probability_updating.games as games
 
 
-def env(game: games.Game):
-    return ProbabilityUpdatingEnv(game)
+def env(game: games.Game, obs: bool = True):
+    return ProbabilityUpdatingEnv(game) if obs else ProbabilityUpdatingNoObsEnv(game)
 
 
 class ProbabilityUpdatingEnv(ParallelEnv):
     metadata = {'render.modes': ['human'], "name": "probability_updating_game"}
     game: games.Game
     observations: Dict[str, Union[List[List[bool]], List[float]]]
+    saved_losses: Dict[pu.Agent, List[float]]
 
     def __init__(self, g: games.Game):
         super().__init__()
@@ -49,6 +50,8 @@ class ProbabilityUpdatingEnv(ParallelEnv):
             'structure': [[x in y.outcomes for x in g.outcomes] for y in g.messages],
             'marginal': [g.marginal_outcome[x] for x in g.outcomes[0:-1]]
         }
+
+        self.saved_losses = {agent: [] for agent in pu.agents()}
 
     def seed(self, seed=None):
         """
@@ -95,6 +98,9 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         dones = {agent: True for agent in self.agents}
         infos = {agent: {} for agent in self.agents}
 
+        self.saved_losses[pu.cont()].append(losses[pu.cont()])
+        self.saved_losses[pu.quiz()].append(losses[pu.quiz()])
+
         self.agents = []
 
         return observations, {a: -loss for a, loss in losses.items()}, dones, infos
@@ -124,3 +130,13 @@ class ProbabilityUpdatingEnv(ParallelEnv):
 
         return {agent: spaces.flatten(self.raw_observation_space, self.observations) for agent in self.agents}
 
+
+class ProbabilityUpdatingNoObsEnv(ProbabilityUpdatingEnv):
+    def __init__(self, g: games.Game):
+        super().__init__(g)
+
+        self.raw_observation_space = spaces.Box(low=0.0, high=1.0, shape=(0, 0), dtype=np.float32)
+
+        self.observation_spaces = {agent: spaces.flatten_space(self.raw_observation_space) for agent in self.agents}
+
+        self.observations = []

@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from typing import Dict
 
+import numpy as np
+
 import probability_updating as pu
 import probability_updating.games as games
 
 
-def run(game: games.Game, actions: Dict[pu.Agent, pu.StrategyWrapper]):
+def run(game: games.Game, actions: Dict[pu.Agent, np.ndarray]):
     print("SIMULATION BEGIN")
     print()
     print("Running simulation...")
