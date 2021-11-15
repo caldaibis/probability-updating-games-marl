@@ -106,14 +106,14 @@ def run():
         pu.quiz(): games.MontyHall.quiz_uniform()
     }
     model_type = models.PPO
-    total_timesteps = 200000
-    ext_name = "no_obs"
+    total_timesteps = 1000000
+    ext_name = ""
 
-    test(game_type, losses, actions)
-    # learn(game_type, losses, model_type, total_timesteps, ext_name)
+    # test(game_type, losses, actions)
+    learn(game_type, losses, model_type, total_timesteps, ext_name)
+    predict(game_type, losses, model_type, total_timesteps, ext_name)
+
     # import main_ray_llib
-    # predict(game_type, losses, model_type, total_timesteps, ext_name)
-
     # main_ray_llib.ray(game_type, losses)
 
 
