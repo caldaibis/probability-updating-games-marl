@@ -43,8 +43,8 @@ class FairDie(games.Game):
 
     @staticmethod
     def cont_always_switch() -> np.ndarray:
-        return np.array([1 / 2, 1 / 2, 0, 0, 0, 0, 1 / 2, 1 / 2])
+        return np.array([1 / 2, 1 / 2, 0, 0, 0, 1 / 2])
 
     @staticmethod
     def quiz_uniform() -> np.ndarray:
-        return np.array([1 / 2, 1 / 2, 1 / 2, 1 / 2])
+        return np.array([1 / 2, 1 / 2])
