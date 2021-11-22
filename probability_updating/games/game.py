@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from types import FunctionType
 import math
 from abc import ABC, abstractmethod
 from typing import List, Dict, Callable, Optional
@@ -8,7 +7,7 @@ from typing import List, Dict, Callable, Optional
 import numpy as np
 
 import probability_updating as pu
-from exceptions import InvalidStrategyError, AllZeroesError
+from exceptions import InvalidStrategyError
 
 
 class Game(ABC):
@@ -26,7 +25,7 @@ class Game(ABC):
     quiz_reverse: pu.XgivenY
     _cont: pu.XgivenY
 
-    def __init__(self, losses: Dict[pu.Agent, pu.LossFunc | pu.Loss]):
+    def __init__(self, losses: Dict[pu.Agent, pu.Loss]):
         outcomes, messages = self.create_structure(self.marginal(), self.message_structure())
         marginal_outcome = dict(zip(outcomes, self.marginal()))
 
@@ -36,19 +35,18 @@ class Game(ABC):
         self.messages = messages
         self.marginal_outcome = marginal_outcome
 
-        if isinstance(losses[pu.cont()], FunctionType):
-            self.loss_fn[pu.cont()] = lambda cont, x, y: losses[pu.cont()](cont, self.outcomes, x, y)
-            self.entropy_fn[pu.cont()] = NotImplemented
-        elif isinstance(losses[pu.cont()], pu.Loss):
-            self.loss_fn[pu.cont()] = lambda cont, x, y: pu.loss.standard_loss(losses[pu.cont()])(cont, self.outcomes, x, y)
-            self.entropy_fn[pu.cont()] = lambda y: pu.loss.standard_entropy(losses[pu.cont()])(self.quiz_reverse, self.outcomes, y)
+        self.loss_fn[pu.cont()] = lambda cont, x, y: losses[pu.cont()].loss_fn(cont, self.outcomes, x, y)
+        self.loss_fn[pu.quiz()] = lambda cont, x, y: losses[pu.quiz()].loss_fn(cont, self.outcomes, x, y)
 
-        if isinstance(losses[pu.quiz()], FunctionType):
-            self.loss_fn[pu.quiz()] = lambda cont, x, y: losses[pu.quiz()](cont, self.outcomes, x, y)
+        if losses[pu.cont()].name in pu.entropy_fns:
+            self.entropy_fn[pu.cont()] = lambda y: pu.get_entropy_fn(losses[pu.cont()].name)(self.quiz_reverse, self.outcomes, y)
+        else:
+            self.entropy_fn[pu.cont()] = NotImplemented
+
+        if losses[pu.quiz()].name in pu.entropy_fns:
+            self.entropy_fn[pu.quiz()] = lambda y: pu.get_entropy_fn(losses[pu.quiz()].name)(self.quiz_reverse, self.outcomes, y)
+        else:
             self.entropy_fn[pu.quiz()] = NotImplemented
-        elif isinstance(losses[pu.quiz()], pu.Loss):
-            self.loss_fn[pu.quiz()] = lambda cont, x, y: pu.loss.standard_loss(losses[pu.quiz()])(cont, self.outcomes, x, y)
-            self.entropy_fn[pu.quiz()] = lambda y: pu.loss.standard_entropy(losses[pu.quiz()])(self.quiz_reverse, self.outcomes, y)
 
     @property
     def cont(self) -> pu.XgivenY:

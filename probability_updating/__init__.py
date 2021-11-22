@@ -13,6 +13,7 @@ from .strategy import Strategy
 from .simulation_wrapper import SimulationWrapper
 
 from .loss import *
+from .entropy import get_entropy_fn, entropy_fns
 
 YgivenX = Dict[Outcome, Dict[Message, float]]
 XgivenY = Dict[Message, Dict[Outcome, float]]

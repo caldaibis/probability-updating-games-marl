@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import inspect
 from typing import Type, Dict, Optional
 
 import numpy as np
@@ -15,9 +14,9 @@ import models
 model_path: Path = Path("saved_models")
 
 
-def get_model_path(game: games.Game, losses: Dict[pu.Agent, pu.LossFunc | pu.Loss], model: Type[models.Model], total_timesteps: int, ext_name: Optional[str]):
-    loss_str_c = losses[pu.cont()] if isinstance(losses[pu.cont()], pu.Loss) else ''
-    loss_str_q = losses[pu.quiz()] if isinstance(losses[pu.quiz()], pu.Loss) else ''
+def get_model_path(game: games.Game, losses: Dict[pu.Agent, pu.Loss], model: Type[models.Model], total_timesteps: int, ext_name: Optional[str]):
+    loss_str_c = losses[pu.cont()].name
+    loss_str_q = losses[pu.quiz()].name
 
     filename = f"c={loss_str_c}_q={loss_str_q}_tt={total_timesteps}_e={ext_name}"
 
@@ -45,7 +44,9 @@ def output_prediction(game: games.Game):
 
 
 def manual(game, actions: Dict[pu.Agent, np.ndarray]):
+    import supersuit as ss
     env = pu.probability_updating_env.env(game=game)
+    env = ss.pad_action_space_v0(env)
     env.reset()
 
     env.step(actions)
@@ -53,7 +54,7 @@ def manual(game, actions: Dict[pu.Agent, np.ndarray]):
     output_prediction(game)
 
 
-def learn(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.LossFunc | pu.Loss], model_type: Type[models.Model], total_timesteps: int, ext_name: Optional[str]):
+def learn(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss], model_type: Type[models.Model], total_timesteps: int, ext_name: Optional[str]):
     game = game_type(losses)
 
     model = model_type.create(game)
@@ -62,7 +63,7 @@ def learn(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.LossFunc | pu.L
     model.save(get_model_path(game, losses, model_type, total_timesteps, ext_name))
 
 
-def predict(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.LossFunc | pu.Loss], model_type: Type[models.Model], total_timesteps: int, ext_name: Optional[str]):
+def predict(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss], model_type: Type[models.Model], total_timesteps: int, ext_name: Optional[str]):
     game = game_type(losses)
 
     model_type.predict(game, get_model_path(game, losses, model_type, total_timesteps, ext_name))
@@ -70,7 +71,7 @@ def predict(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.LossFunc | pu
     output_prediction(game)
 
 
-def test(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.LossFunc | pu.Loss], actions: Dict[pu.Agent, np.ndarray]):
+def test(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss], actions: Dict[pu.Agent, np.ndarray]):
     import simulation
 
     print("MANUAL TEST RUN BEGIN")
@@ -81,8 +82,8 @@ def test(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.LossFunc | pu.Lo
     print(f"Action space (cont): {game.get_cont_action_space()}")
     print(f"Action space (quiz): {game.get_quiz_action_space()}")
 
-    print(f"Loss function (cont): {losses[pu.cont()] if isinstance(losses[pu.cont()], pu.Loss) else inspect.getsource(losses[pu.cont()])}")
-    print(f"Loss function (quiz): {losses[pu.quiz()] if isinstance(losses[pu.quiz()], pu.Loss) else inspect.getsource(losses[pu.quiz()])}")
+    print(f"Loss function (cont): {losses[pu.cont()].name}")
+    print(f"Loss function (quiz): {losses[pu.quiz()].name}")
 
     manual(game, actions)
     simulation.run(game, actions)
@@ -98,23 +99,23 @@ def run():
 
     game_type = games.MontyHall
     losses = {
-        pu.cont(): pu.Loss.logarithmic,
-        pu.quiz(): lambda c, o, x, y: -pu.logarithmic(c, o, x, y)
+        pu.cont(): pu.Loss.zero_one(),
+        pu.quiz(): pu.Loss.zero_one_negative()
     }
     actions = {
-        pu.cont(): games.MontyHall.cont_min_loss_logarithmic(),
+        pu.cont(): games.MontyHall.cont_always_switch(),
         pu.quiz(): games.MontyHall.quiz_uniform()
     }
     model_type = models.PPO
-    total_timesteps = 1000000
+    total_timesteps = 20000
     ext_name = ""
 
     # test(game_type, losses, actions)
-    learn(game_type, losses, model_type, total_timesteps, ext_name)
-    predict(game_type, losses, model_type, total_timesteps, ext_name)
+    # learn(game_type, losses, model_type, total_timesteps, ext_name)
+    # predict(game_type, losses, model_type, total_timesteps, ext_name)
 
-    # import main_ray_llib
-    # main_ray_llib.ray(game_type, losses)
+    import ray_llib
+    ray_llib.run(game_type, losses)
 
 
 if __name__ == '__main__':

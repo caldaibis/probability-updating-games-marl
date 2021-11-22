@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from enum import Enum, auto
+from dataclasses import dataclass
 from typing import List
 
 import numpy as np
@@ -10,95 +10,92 @@ import probability_updating as pu
 import probability_updating.util as util
 
 
-def randomised_zero_one(cont: pu.XgivenY, _: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
-    return 1 - cont[y][x]
+@dataclass
+class Loss:
+    name: str
+    loss_fn: pu.LossFunc
 
+    @staticmethod
+    def zero_one() -> Loss:
+        """Randomised 0-1 loss"""
+        return Loss("randomised 0-1", Loss._zero_one_fn)
 
-def brier(cont: pu.XgivenY, outcomes: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
-    loss: float = 0
-    for x_ in outcomes:
-        if x == x_:
-            v = 1
-        else:
-            v = 0
-        loss += math.pow(v - cont[y][x_], 2)
+    @staticmethod
+    def zero_one_negative() -> Loss:
+        """Negative randomised 0-1 loss"""
+        return Loss("negative randomised 0-1", lambda c, o, x, y: -Loss._zero_one_fn(c, o, x, y))
 
-    return loss
+    @staticmethod
+    def brier() -> Loss:
+        """Brier loss"""
+        return Loss("brier", Loss._brier_fn)
 
+    @staticmethod
+    def brier_negative() -> Loss:
+        """Negative Brier loss"""
+        return Loss("negative brier", lambda c, o, x, y: -Loss._brier_fn(c, o, x, y))
 
-def logarithmic(cont: pu.XgivenY, _: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
-    return -util.safe_log(cont[y][x])
+    @staticmethod
+    def logarithmic() -> Loss:
+        """Logarithmic loss"""
+        return Loss("logarithmic", Loss._logarithmic_fn)
 
+    @staticmethod
+    def logarithmic_negative() -> Loss:
+        """negative logarithmic loss"""
+        return Loss("negative logarithmic", lambda c, o, x, y: -Loss._logarithmic_fn(c, o, x, y))
 
-def hard_matrix_loss(m: np.ndarray, cont: pu.XgivenY, outcomes: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
-    for x_prime in outcomes:
-        if cont[y][x_prime] == 1:
-            return m[x.id, x_prime.id]
+    @staticmethod
+    def matrix(m: np.ndarray) -> Loss:
+        """Matrix loss"""
+        return Loss("matrix", lambda c, o, x, y: Loss._matrix_fn(m, c, o, x, y))
 
-    return math.inf
+    @staticmethod
+    def matrix_negative(m: np.ndarray) -> Loss:
+        """Negative matrix loss"""
+        return Loss("negative matrix", lambda c, o, x, y: -Loss._matrix_fn(m, c, o, x, y))
 
+    @staticmethod
+    def _zero_one_fn(cont: pu.XgivenY, _: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
+        return 1 - cont[y][x]
 
-def randomised_matrix_loss(m: np.ndarray, cont: pu.XgivenY, outcomes: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
-    return sum(cont[y][x] * m[x.id, x_prime.id] for x_prime in outcomes)
-
-
-def matrix_zero_one(outcome_count: int) -> np.ndarray:
-    m = np.empty((outcome_count, outcome_count), dtype=int)
-    for i in range(outcome_count):
-        for j in range(outcome_count):
-            if i == j:
-                m[i, j] = 0
+    @staticmethod
+    def _brier_fn(cont: pu.XgivenY, outcomes: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
+        loss: float = 0
+        for x_ in outcomes:
+            if x == x_:
+                v = 1
             else:
-                m[i, j] = 1
+                v = 0
+            loss += math.pow(v - cont[y][x_], 2)
 
-    return m
+        return loss
 
+    @staticmethod
+    def _logarithmic_fn(cont: pu.XgivenY, _: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
+        return -util.safe_log(cont[y][x])
 
-def randomised_zero_one_entropy(quiz_reverse: pu.XgivenY, outcomes: List[pu.Outcome], y: pu.Message) -> float:
-    _max: float = 0
-    for x in outcomes:
-        if quiz_reverse[y][x] > _max:
-            _max = quiz_reverse[y][x]
+    @staticmethod
+    def _matrix_fn(m: np.ndarray, cont: pu.XgivenY, outcomes: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
+        return sum(cont[y][x] * m[x.id, x_prime.id] for x_prime in outcomes)
 
-    return 1 - _max
+    @staticmethod
+    def matrix_zero_one(outcome_count: int) -> np.ndarray:
+        m = np.empty((outcome_count, outcome_count), dtype=int)
+        for i in range(outcome_count):
+            for j in range(outcome_count):
+                if i == j:
+                    m[i, j] = 0
+                else:
+                    m[i, j] = 1
 
+        return m
 
-def brier_entropy(quiz_reverse: pu.XgivenY, outcomes: List[pu.Outcome], y: pu.Message) -> float:
-    _sum: float = 0
-    for x in outcomes:
-        _sum += math.pow(quiz_reverse[y][x], 2)
-
-    return 1 - _sum
-
-
-def logarithmic_entropy(quiz_reverse: pu.XgivenY, outcomes: List[pu.Outcome], y: pu.Message) -> float:
-    _sum: float = 0
-    for x in outcomes:
-        e: float = -quiz_reverse[y][x] * util.safe_log(quiz_reverse[y][x])
-        if not math.isnan(e):
-            _sum += e
-
-    return _sum
-
-
-def standard_loss(loss: Loss) -> pu.LossFunc:
-    return {
-        Loss.randomised_zero_one: randomised_zero_one,
-        Loss.brier: brier,
-        Loss.logarithmic: logarithmic,
-    }[loss]
-
-
-def standard_entropy(loss: Loss) -> pu.EntropyFunc:
-    return {
-        Loss.randomised_zero_one: randomised_zero_one_entropy,
-        Loss.brier: brier_entropy,
-        Loss.logarithmic: logarithmic_entropy
-    }[loss]
-
-
-class Loss(Enum):
-    randomised_zero_one = auto(),
-    brier = auto(),
-    logarithmic = auto(),
-    custom = auto()
+    # @staticmethod
+    # def hard_matrix_loss(m: np.ndarray, cont: pu.XgivenY, outcomes: List[pu.Outcome], x: pu.Outcome,
+    #                      y: pu.Message) -> float:
+    #     for x_prime in outcomes:
+    #         if cont[y][x_prime] == 1:
+    #             return m[x.id, x_prime.id]
+    #
+    #     return math.inf
