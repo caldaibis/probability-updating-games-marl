@@ -2,15 +2,7 @@
 
 from __future__ import annotations
 
-from random import random
 from typing import Type, Dict
-
-import numpy as np
-from gym.spaces import Box, Discrete
-from ray.rllib import RolloutWorker
-from ray.rllib.agents.pg import PGTFPolicy
-from ray.rllib.agents.ppo import PPOTFPolicy
-from ray.rllib.policy.sample_batch import MultiAgentBatch, SampleBatch
 
 import probability_updating as pu
 import probability_updating.games as games
@@ -24,6 +16,9 @@ from ray.tune.logger import pretty_print
 import supersuit as ss
 
 
+env_name = "probability_updating"
+
+
 def create_ray_env(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss]):
     env = pu.probability_updating_env.env(game_type(losses))
     env = ss.pad_action_space_v0(env)
@@ -32,7 +27,7 @@ def create_ray_env(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss])
     return ParallelPettingZooEnv(env)
 
 
-def create_config(env_name: str) -> dict:
+def create_config() -> dict:
     c = ppo.DEFAULT_CONFIG.copy()
     c["num_gpus"] = 0
     c["num_workers"] = 0
@@ -48,15 +43,18 @@ def create_config(env_name: str) -> dict:
     # c["observation_space"] = env.observation_space
     # c["action_space"] = env.action_space
 
+    c["train_batch_size"] = 400
+    c["sgd_minibatch_size"] = 20
+    c["num_sgd_iter"] = 30
+
     return c
 
 
 def setup(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss], trainer_type: Type[Trainable]) -> Trainable:
-    env_name = "probability_updating"
     env = create_ray_env(game_type, losses)
     register_env(env_name, lambda _: env)
 
-    return trainer_type(config=create_config(env_name))
+    return trainer_type(config=create_config())
 
 
 def learn(trainer: Trainable) -> str:
@@ -90,40 +88,43 @@ def predict(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss], traine
 
 
 def learn_with_tune(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss], trainer_type: Type[Trainable]):
-    env_name = "probability_updating"
     env = create_ray_env(game_type, losses)
     register_env(env_name, lambda _: env)
 
-    results = ray.tune.run(
+    analysis = ray.tune.run(
         trainer_type,
-        config=create_config(env_name),
-        stop={"episodes_total": 1},
+        config=create_config(),
+        stop={"training_iteration": 50},  # "episodes_total": 100
         checkpoint_freq=1,
-        verbose=3,
+        verbose=1,
         local_dir='./ray_dir',
     )
 
-    print(pretty_print(results))
+    # best_checkpoint = analysis.get_last_checkpoint(metric="episode_reward_mean", mode="max")
+    return analysis.get_last_checkpoint()
 
 
 def run(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss]):
-    ray.init()
+    ray.init(local_mode=True) # Let op, geen multi-processing nu! :(
 
-    learn_with_tune(game_type, losses, ppo.PPOTrainer)
-    #
-    # trainer = setup(game_type, losses, ppo.PPOTrainer)
-    #
-    # # checkpoint = learn(trainer)
-    #
+    # Use Ray Tune to learn model
+    checkpoint = learn_with_tune(game_type, losses, ppo.PPOTrainer)
+
+    # # Learn directly through API
+    # agent = setup(game_type, losses, ppo.PPOTrainer)
+    # checkpoint = learn(trainer)
+    # # OR just load model from disk
     # checkpoint = "./ray_dir/without_tune\checkpoint_000025\checkpoint-25"
-    #
-    # trainer.restore(checkpoint)
-    # actions, rewards = predict(game_type, losses, trainer)
-    #
-    # print("Rewards")
-    # print(f"reward cont {rewards[pu.cont()]}")
-    # print(f"reward quiz {rewards[pu.quiz()]}")
-    # print()
+
+    # Using the model, predict the optimal strategy
+    agent = ppo.PPOTrainer(config=create_config())
+    agent.restore(checkpoint)
+    actions, rewards = predict(game_type, losses, agent)
+
+    print("Rewards")
+    print(f"reward cont {rewards[pu.cont()]}")
+    print(f"reward quiz {rewards[pu.quiz()]}")
+    print()
 
 
 
