@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from types import FunctionType
 import math
 from abc import ABC, abstractmethod
-from typing import List, Dict, Callable, Optional
+from typing import List, Dict, Optional
 
 import numpy as np
 
 import probability_updating as pu
-from exceptions import InvalidStrategyError, AllZeroesError
+from exceptions import InvalidStrategyError
 
 
 class Game(ABC):
@@ -18,15 +17,15 @@ class Game(ABC):
     marginal_outcome: Dict[pu.Outcome, float]
     marginal_message: Dict[pu.Message, float]
 
-    loss_fn: Dict[pu.Agent, Callable[[pu.XgivenY, pu.Outcome, pu.Message], float]] = {}
-    entropy_fn: Dict[pu.Agent, Callable[[pu.Message], float]] = {}
+    loss: Dict[pu.Agent, pu.Loss]
+    entropy: Dict[pu.Agent, Optional[pu.EntropyFunc]]
 
     strategy: pu.Strategy
     _quiz: pu.YgivenX
     quiz_reverse: pu.XgivenY
     _cont: pu.XgivenY
 
-    def __init__(self, losses: Dict[pu.Agent, pu.LossFunc | pu.Loss]):
+    def __init__(self, losses: Dict[pu.Agent, pu.Loss]):
         outcomes, messages = self.create_structure(self.marginal(), self.message_structure())
         marginal_outcome = dict(zip(outcomes, self.marginal()))
 
@@ -36,19 +35,8 @@ class Game(ABC):
         self.messages = messages
         self.marginal_outcome = marginal_outcome
 
-        if isinstance(losses[pu.cont()], FunctionType):
-            self.loss_fn[pu.cont()] = lambda cont, x, y: losses[pu.cont()](cont, self.outcomes, x, y)
-            self.entropy_fn[pu.cont()] = NotImplemented
-        elif isinstance(losses[pu.cont()], pu.Loss):
-            self.loss_fn[pu.cont()] = lambda cont, x, y: pu.loss.standard_loss(losses[pu.cont()])(cont, self.outcomes, x, y)
-            self.entropy_fn[pu.cont()] = lambda y: pu.loss.standard_entropy(losses[pu.cont()])(self.quiz_reverse, self.outcomes, y)
-
-        if isinstance(losses[pu.quiz()], FunctionType):
-            self.loss_fn[pu.quiz()] = lambda cont, x, y: losses[pu.quiz()](cont, self.outcomes, x, y)
-            self.entropy_fn[pu.quiz()] = NotImplemented
-        elif isinstance(losses[pu.quiz()], pu.Loss):
-            self.loss_fn[pu.quiz()] = lambda cont, x, y: pu.loss.standard_loss(losses[pu.quiz()])(cont, self.outcomes, x, y)
-            self.entropy_fn[pu.quiz()] = lambda y: pu.loss.standard_entropy(losses[pu.quiz()])(self.quiz_reverse, self.outcomes, y)
+        self.loss = {agent: losses[agent] for agent in pu.agents()}
+        self.entropy = {agent: pu.get_entropy_fn(losses[agent]) for agent in pu.agents()}
 
     @property
     def cont(self) -> pu.XgivenY:
@@ -88,21 +76,27 @@ class Game(ABC):
             pu.quiz(): self.get_expected_loss(pu.quiz())
         }
 
+    def get_loss(self, agent: pu.Agent, x: pu.Outcome, y: pu.Message):
+        return self.loss[agent](self.cont, self.outcomes, x, y)
+
     def get_expected_loss(self, agent: pu.Agent) -> float:
         loss: float = 0
         for x in self.outcomes:
             for y in self.messages:
-                _l = self.marginal_outcome[x] * self.quiz[x][y] * self.loss_fn[agent](self.cont, x, y)
+                _l = self.marginal_outcome[x] * self.quiz[x][y] * self.get_loss(agent, x, y)
                 if not math.isnan(_l):
                     loss += _l
 
         return np.sign(loss) * pu.inf_loss if math.isinf(loss) else loss
 
+    def get_entropy(self, agent: pu.Agent, y: pu.Message):
+        return self.entropy[agent](self.quiz_reverse, self.outcomes, y)
+
     def get_expected_entropy(self, agent: pu.Agent) -> Optional[float]:
-        if callable(self.entropy_fn[agent]):
+        if self.entropy[agent]:
             ent: float = 0
             for y in self.messages:
-                e = self.marginal_message[y] * self.entropy_fn[agent](y)
+                e = self.marginal_message[y] * self.get_entropy(agent, y)
                 if not math.isnan(e):
                     ent += e
 
