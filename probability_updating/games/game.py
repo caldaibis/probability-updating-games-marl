@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from typing import List, Dict, Callable, Optional
+from typing import List, Dict, Optional
 
 import numpy as np
 
@@ -17,8 +17,8 @@ class Game(ABC):
     marginal_outcome: Dict[pu.Outcome, float]
     marginal_message: Dict[pu.Message, float]
 
-    loss_fn: Dict[pu.Agent, Callable[[pu.XgivenY, pu.Outcome, pu.Message], float]] = {}
-    entropy_fn: Dict[pu.Agent, Callable[[pu.Message], float]] = {}
+    loss: Dict[pu.Agent, pu.Loss]
+    entropy: Dict[pu.Agent, Optional[pu.EntropyFunc]]
 
     strategy: pu.Strategy
     _quiz: pu.YgivenX
@@ -35,18 +35,8 @@ class Game(ABC):
         self.messages = messages
         self.marginal_outcome = marginal_outcome
 
-        self.loss_fn[pu.cont()] = lambda cont, x, y: losses[pu.cont()].loss_fn(cont, self.outcomes, x, y)
-        self.loss_fn[pu.quiz()] = lambda cont, x, y: losses[pu.quiz()].loss_fn(cont, self.outcomes, x, y)
-
-        if losses[pu.cont()].name in pu.entropy_fns:
-            self.entropy_fn[pu.cont()] = lambda y: pu.get_entropy_fn(losses[pu.cont()].name)(self.quiz_reverse, self.outcomes, y)
-        else:
-            self.entropy_fn[pu.cont()] = NotImplemented
-
-        if losses[pu.quiz()].name in pu.entropy_fns:
-            self.entropy_fn[pu.quiz()] = lambda y: pu.get_entropy_fn(losses[pu.quiz()].name)(self.quiz_reverse, self.outcomes, y)
-        else:
-            self.entropy_fn[pu.quiz()] = NotImplemented
+        self.loss = {agent: losses[agent] for agent in pu.agents()}
+        self.entropy = {agent: pu.get_entropy_fn(losses[agent]) for agent in pu.agents()}
 
     @property
     def cont(self) -> pu.XgivenY:
@@ -86,6 +76,9 @@ class Game(ABC):
             pu.quiz(): self.get_expected_loss(pu.quiz())
         }
 
+    def get_loss(self, agent: pu.Agent, x: pu.Outcome, y: pu.Message):
+        return self.loss[agent](self.cont, self.outcomes, x, y)
+
     def get_expected_loss(self, agent: pu.Agent) -> float:
         if self.strategy.is_cont_all_zeroes() or self.strategy.is_quiz_all_zeroes():
             return pu.invalid_action_loss
@@ -93,21 +86,24 @@ class Game(ABC):
         loss: float = 0
         for x in self.outcomes:
             for y in self.messages:
-                _l = self.marginal_outcome[x] * self.quiz[x][y] * self.loss_fn[agent](self.cont, x, y)
+                _l = self.marginal_outcome[x] * self.quiz[x][y] * self.get_loss(agent, x, y)
                 if not math.isnan(_l):
                     loss += _l
 
         # TODO: checken of dit oke is
         return np.sign(loss) * pu.inf_loss if math.isinf(loss) else loss
 
+    def get_entropy(self, agent: pu.Agent, y: pu.Message):
+        return self.entropy[agent](self.quiz_reverse, self.outcomes, y)
+
     def get_expected_entropy(self, agent: pu.Agent) -> Optional[float]:
         if self.strategy.is_quiz_all_zeroes():
             return pu.invalid_action_loss
 
-        if callable(self.entropy_fn[agent]):
+        if self.entropy[agent]:
             ent: float = 0
             for y in self.messages:
-                e = self.marginal_message[y] * self.entropy_fn[agent](y)
+                e = self.marginal_message[y] * self.get_entropy(agent, y)
                 if not math.isnan(e):
                     ent += e
 

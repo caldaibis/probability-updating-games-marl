@@ -13,7 +13,10 @@ import probability_updating.util as util
 @dataclass
 class Loss:
     name: str
-    loss_fn: pu.LossFunc
+    _loss_fn: pu.LossFunc
+
+    def __call__(self, *args, **kwargs):
+        return self._loss_fn(*args)
 
     @staticmethod
     def zero_one() -> Loss:

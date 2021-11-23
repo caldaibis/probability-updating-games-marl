@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import math
-from typing import List
+from typing import List, Optional
 import probability_updating as pu
 import probability_updating.util as util
 
 
-def get_entropy_fn(entropy_key) -> pu.EntropyFunc:
-    return entropy_fns[entropy_key]
+def get_entropy_fn(loss: pu.Loss) -> Optional[pu.EntropyFunc]:
+    return entropy_fns.get(loss.name)
 
 
 def _zero_one_fn(quiz_reverse: pu.XgivenY, outcomes: List[pu.Outcome], y: pu.Message) -> float:
