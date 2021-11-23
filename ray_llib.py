@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import Type, Dict
 
 import probability_updating as pu
@@ -27,34 +28,39 @@ def create_ray_env(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss])
     return ParallelPettingZooEnv(env)
 
 
-def create_config() -> dict:
-    c = ppo.DEFAULT_CONFIG.copy()
-    c["num_gpus"] = 0
-    c["num_workers"] = 0
-    c["multiagent"] = {
-        # We only have one policy (calling it "shared").
-        # Class, obs/act-spaces, and config will be derived
-        # automatically.
-        "policies": {"default_policy"},
-        # Always use "shared" policy.
-        "policy_mapping_fn": lambda agent_id, episode, **kwargs: "default_policy",
+def plain_config() -> dict:
+    return {
+        "env": env_name,
+        "num_gpus": int(os.environ.get("RLLIB_NUM_GPUS", "0")),
+        "num_workers": 7,
+        "framework": "torch",  # "tf"
+        "log_level": "DEBUG",
+        "multiagent": {
+            "policies": {"default_policy"},
+            "policy_mapping_fn": lambda agent_id, episode, **kwargs: "default_policy",
+        },
     }
-    c["env"] = env_name
-    # c["observation_space"] = env.observation_space
-    # c["action_space"] = env.action_space
 
-    c["train_batch_size"] = 400
-    c["sgd_minibatch_size"] = 20
-    c["num_sgd_iter"] = 30
 
-    return c
+def ppo_config() -> dict:
+    # Todo: hyperparameter tuning!
+    return {
+        **plain_config(),
+        "model": {
+            "vf_share_layers": True,
+        },
+        "vf_loss_coeff": 0.001,
+        # "train_batch_size": 4000,
+        # "sgd_minibatch_size": 20,
+        # "num_sgd_iter": 30,
+    }
 
 
 def setup(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss], trainer_type: Type[Trainable]) -> Trainable:
     env = create_ray_env(game_type, losses)
     register_env(env_name, lambda _: env)
 
-    return trainer_type(config=create_config())
+    return trainer_type(config=ppo_config())
 
 
 def learn(trainer: Trainable) -> str:
@@ -93,10 +99,11 @@ def learn_with_tune(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss]
 
     analysis = ray.tune.run(
         trainer_type,
-        config=create_config(),
-        stop={"training_iteration": 50},  # "episodes_total": 100
-        checkpoint_freq=1,
-        verbose=1,
+        config=ppo_config(),
+        stop={"training_iteration": 10},  # "episodes_total": 100
+        checkpoint_freq=0,
+        checkpoint_at_end=True,
+        verbose=3,
         local_dir='./ray_dir',
     )
 
@@ -105,7 +112,8 @@ def learn_with_tune(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss]
 
 
 def run(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss]):
-    ray.init(local_mode=True) # Let op, geen multi-processing nu! :(
+    # Zet local_mode=True om te debuggen
+    ray.init(local_mode=False)
 
     # Use Ray Tune to learn model
     checkpoint = learn_with_tune(game_type, losses, ppo.PPOTrainer)
@@ -117,7 +125,7 @@ def run(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss]):
     # checkpoint = "./ray_dir/without_tune\checkpoint_000025\checkpoint-25"
 
     # Using the model, predict the optimal strategy
-    agent = ppo.PPOTrainer(config=create_config())
+    agent = ppo.PPOTrainer(config=ppo_config())
     agent.restore(checkpoint)
     actions, rewards = predict(game_type, losses, agent)
 
@@ -125,35 +133,3 @@ def run(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss]):
     print(f"reward cont {rewards[pu.cont()]}")
     print(f"reward quiz {rewards[pu.quiz()]}")
     print()
-
-
-
-
-
-
-
-
-
-
-# worker = RolloutWorker(
-#     env_creator=lambda _: create_ray_env(games.MontyHall,
-#                                          {
-#                                              pu.cont(): games.MontyHall.cont_always_switch(),
-#                                              pu.quiz(): games.MontyHall.quiz_uniform()
-#                                          }),
-#     policy_spec=
-#     {
-#         "shared_policy": (PPOTFPolicy, Box(low=0.0, high=1.0, shape=(g.get_cont_action_space(),), dtype=np.float32), {}),
-#     },
-#     policy_mapping_fn= lambda agent_id, episode, **kwargs: "shared_policy",
-# )
-#
-# print(worker.sample())
-#
-# MultiAgentBatch(
-#     {
-#         "car_policy1": SampleBatch(...),
-#         "car_policy2": SampleBatch(...),
-#         "traffic_light_policy": SampleBatch(...)
-#     }
-# )
