@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, Dict
 
 import numpy as np
 from gym import spaces
@@ -18,8 +18,11 @@ def env(game: games.Game):
 
 class ProbabilityUpdatingEnv(ParallelEnv):
     metadata = {'render.modes': ['human'], "name": "probability_updating_game"}
+
     game: games.Game
-    observations: List
+
+    action_spaces: Dict[pu.Agent, spaces.Box]
+    observation_spaces: Dict[pu.Agent, spaces.Box]
 
     def __init__(self, g: games.Game):
         super().__init__()
@@ -37,10 +40,7 @@ class ProbabilityUpdatingEnv(ParallelEnv):
             pu.cont(): spaces.Box(low=0.0, high=1.0, shape=(g.get_cont_action_space(),), dtype=np.float32),
             pu.quiz(): spaces.Box(low=0.0, high=1.0, shape=(g.get_quiz_action_space(),), dtype=np.float32)
         }
-
-        self.raw_observation_space = spaces.Box(low=0.0, high=1.0, shape=(0, 0), dtype=np.float32)
-        self.observation_spaces = {agent: spaces.flatten_space(self.raw_observation_space) for agent in self.agents}
-        self.observations = []
+        self.observation_spaces = {agent: spaces.Box(low=0.0, high=1.0, shape=(0,), dtype=np.float32) for agent in self.agents}
 
     def seed(self, seed=None):
         """
@@ -84,7 +84,7 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         """
         losses = self.game.play(actions)
 
-        observations = {agent: spaces.flatten(self.raw_observation_space, self.observations) for agent in self.agents}
+        observations = {agent: [] for agent in self.agents}
         rewards = {a: -loss for a, loss in losses.items()}
         dones = {agent: True for agent in self.agents}
         infos = {agent: {} for agent in self.agents}
@@ -116,4 +116,4 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         """
         self.agents = self.possible_agents[:]
 
-        return {agent: spaces.flatten(self.raw_observation_space, self.observations) for agent in self.agents}
+        return {agent: [] for agent in self.agents}
