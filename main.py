@@ -3,6 +3,12 @@ from __future__ import annotations
 from typing import Type, Dict, Optional
 
 import numpy as np
+from ray.rllib.agents.a3c import A2CTrainer
+from ray.rllib.agents.ppo import PPOTrainer
+from ray.rllib.agents.ddpg import TD3Trainer, DDPGTrainer
+from ray.rllib.agents.pg import PGTrainer
+from ray.rllib.agents.sac import SACTrainer
+from ray.rllib.contrib.maddpg import MADDPGTrainer
 
 import probability_updating as pu
 import probability_updating.games as games
@@ -15,10 +21,7 @@ model_path: Path = Path("saved_models")
 
 
 def get_model_path(game: games.Game, losses: Dict[pu.Agent, pu.Loss], model: Type[models.Model], total_timesteps: int, ext_name: Optional[str]):
-    loss_str_c = losses[pu.cont()].name
-    loss_str_q = losses[pu.quiz()].name
-
-    filename = f"c={loss_str_c}_q={loss_str_q}_tt={total_timesteps}_e={ext_name}"
+    filename = f"c={losses[pu.cont()].name}_q={losses[pu.quiz()].name}_tt={total_timesteps}_e={ext_name}"
 
     return f"{model_path}/{game.name()}/{model.name()}/{filename}"
 
@@ -99,8 +102,8 @@ def run():
 
     game_type = games.MontyHall
     losses = {
-        pu.cont(): pu.Loss.zero_one(),
-        pu.quiz(): pu.Loss.zero_one_negative()
+        pu.cont(): pu.Loss.logarithmic(),
+        pu.quiz(): pu.Loss.logarithmic_negative()
     }
     actions = {
         pu.cont(): games.MontyHall.cont_always_switch(),
@@ -114,8 +117,10 @@ def run():
     # learn(game_type, losses, model_type, total_timesteps, ext_name)
     # predict(game_type, losses, model_type, total_timesteps, ext_name)
 
-    import ray_llib
-    ray_llib.run(game_type, losses)
+    import ray_rl_lib
+    ray_model_type = MADDPGTrainer
+    checkpoint = ray_rl_lib.learn(game_type, losses, ray_model_type, 10)
+    ray_rl_lib.predict(game_type, losses, ray_model_type, checkpoint)
 
 
 if __name__ == '__main__':
