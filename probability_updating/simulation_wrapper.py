@@ -21,9 +21,8 @@ class SimulationWrapper:
         x = random.choices(list(self.game.marginal_outcome.keys()), list(self.game.marginal_outcome.values()), k=1)[0]
         y = random.choices(list(self.game.quiz[x].keys()), list(self.game.quiz[x].values()), k=1)[0]
 
-        loss = {agent: self.game.loss_fn[agent](self.game.cont, x, y) for agent in pu.agents()}
-        entropy = {agent: self.game.entropy_fn[agent](y) if callable(self.game.entropy_fn[agent]) else math.nan for
-                   agent in pu.agents()}
+        loss = {agent: self.game.get_loss(agent, x, y) for agent in pu.agents()}
+        entropy = {agent: self.game.get_entropy(agent, y) for agent in pu.agents()}
 
         return x, y, loss, entropy
 

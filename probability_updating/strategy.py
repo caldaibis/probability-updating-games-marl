@@ -85,24 +85,13 @@ class Strategy:
 
         for y in self.game.messages:
             sum_prob = 0
-
-            if not y.outcomes:
-                continue
-
-            if len(y.outcomes) == 1:
-                x = y.outcomes[0]
-                strategy[y][x] = 1
-                continue
-
             for x in y.outcomes:
-                # arrange values from gym env action space to original strategy space
-                strategy[y][x] = s[i]
-                sum_prob += s[i]
-                i += 1
-
-            if sum_prob > 0: # (if zero, the strategy is invalid, but that will be handled elsewhere)
-                for x in y.outcomes:
-                    strategy[y][x] /= sum_prob
+                if x == y.outcomes[-1]:
+                    strategy[y][x] = 1 - sum_prob
+                else:
+                    strategy[y][x] = s[i]
+                    sum_prob += s[i]
+                    i += 1
 
         return strategy
 
@@ -112,24 +101,13 @@ class Strategy:
 
         for x in self.game.outcomes:
             sum_prob = 0
-
-            if not x.messages:
-                continue
-
-            if len(x.messages) == 1:
-                y = x.messages[0]
-                strategy[x][y] = 1
-                continue
-
             for y in x.messages:
-                # arrange values from gym env action space to original strategy space
-                strategy[x][y] = s[i]
-                sum_prob += s[i]
-                i += 1
-
-            if sum_prob > 0: # (if zero, the strategy is invalid, but that will be handled elsewhere)
-                for y in x.messages:
-                    strategy[x][y] /= sum_prob
+                if y == x.messages[-1]:
+                    strategy[x][y] = 1 - sum_prob
+                else:
+                    strategy[x][y] = s[i]
+                    sum_prob += s[i]
+                    i += 1
 
         return strategy
 

@@ -1,29 +1,19 @@
 from __future__ import annotations
 
-from typing import Type, Dict, Optional
+from typing import Type, Dict
 
 import numpy as np
 
 import probability_updating as pu
-import probability_updating.games as games
+import games
+import models as baseline_models
 
-from pathlib import Path
-
-import models
-
-model_path: Path = Path("saved_models")
-
-
-def get_model_path(game: games.Game, losses: Dict[pu.Agent, pu.Loss], model: Type[models.Model], total_timesteps: int, ext_name: Optional[str]):
-    loss_str_c = losses[pu.cont()].name
-    loss_str_q = losses[pu.quiz()].name
-
-    filename = f"c={loss_str_c}_q={loss_str_q}_tt={total_timesteps}_e={ext_name}"
-
-    return f"{model_path}/{game.name()}/{model.name()}/{filename}"
+import run_baselines as baselines
+import run_ray as ray
+from run_ray import RayModel
 
 
-def output_prediction(game: games.Game):
+def write_results(game: games.Game):
     import json
 
     print("Action (cont)", json.dumps(game.get_cont_readable(), indent=2, default=str))
@@ -51,24 +41,7 @@ def manual(game, actions: Dict[pu.Agent, np.ndarray]):
 
     env.step(actions)
 
-    output_prediction(game)
-
-
-def learn(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss], model_type: Type[models.Model], total_timesteps: int, ext_name: Optional[str]):
-    game = game_type(losses)
-
-    model = model_type.create(game)
-    model.learn(total_timesteps=total_timesteps)
-
-    model.save(get_model_path(game, losses, model_type, total_timesteps, ext_name))
-
-
-def predict(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss], model_type: Type[models.Model], total_timesteps: int, ext_name: Optional[str]):
-    game = game_type(losses)
-
-    model_type.predict(game, get_model_path(game, losses, model_type, total_timesteps, ext_name))
-
-    output_prediction(game)
+    return game
 
 
 def test(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss], actions: Dict[pu.Agent, np.ndarray]):
@@ -85,7 +58,9 @@ def test(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss], actions: 
     print(f"Loss function (cont): {losses[pu.cont()].name}")
     print(f"Loss function (quiz): {losses[pu.quiz()].name}")
 
-    manual(game, actions)
+    game = manual(game, actions)
+    write_results(game)
+
     simulation.run(game, actions)
 
     print("MANUAL TEST RUN END")
@@ -93,29 +68,52 @@ def test(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss], actions: 
 
 
 def run():
-    # MontyHall randomised    -> RCAR && Nash met PPO: total_timesteps=200000
-    # MontyHall brier         -> RCAR && Nash met A2C: total_timesteps=500000
-    # MontyHall logarithmic   -> RCAR && Nash met A2C: total_timesteps>1000000
+    # ---------------------------------------------------------------
 
+    # Essential configuration
     game_type = games.MontyHall
     losses = {
-        pu.cont(): pu.Loss.zero_one(),
-        pu.quiz(): pu.Loss.zero_one_negative()
+        pu.cont(): pu.Loss.logarithmic(),
+        pu.quiz(): pu.Loss.logarithmic_negative()
     }
+
+    # ---------------------------------------------------------------
+
+    # Manual run configuration
     actions = {
         pu.cont(): games.MontyHall.cont_always_switch(),
         pu.quiz(): games.MontyHall.quiz_uniform()
     }
-    model_type = models.PPO
-    total_timesteps = 20000
+
+    # Run
+    test(game_type, losses, actions)
+
+    # ---------------------------------------------------------------
+
+    # Baseline configuration
+    model_type = baseline_models.PPO
+    total_timesteps = 100000
     ext_name = ""
 
-    # test(game_type, losses, actions)
-    # learn(game_type, losses, model_type, total_timesteps, ext_name)
-    # predict(game_type, losses, model_type, total_timesteps, ext_name)
+    # Run
+    if False:
+        baselines.learn(game_type, losses, model_type, total_timesteps, ext_name)
+        game = baselines.predict(game_type, losses, model_type, total_timesteps, ext_name)
+        write_results(game)
 
-    import ray_llib
-    ray_llib.run(game_type, losses)
+    # ---------------------------------------------------------------
+
+    # Ray configuration
+    ray_model_type = RayModel.MADDPG
+    iterations = 5
+
+    # Run
+    if True:
+        checkpoint = ray.learn(game_type, losses, ray_model_type, iterations)
+        game = ray.predict(game_type, losses, ray_model_type, checkpoint)
+        write_results(game)
+
+    # ---------------------------------------------------------------
 
 
 if __name__ == '__main__':

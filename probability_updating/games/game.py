@@ -80,9 +80,6 @@ class Game(ABC):
         return self.loss[agent](self.cont, self.outcomes, x, y)
 
     def get_expected_loss(self, agent: pu.Agent) -> float:
-        if self.strategy.is_cont_all_zeroes() or self.strategy.is_quiz_all_zeroes():
-            return pu.invalid_action_loss
-
         loss: float = 0
         for x in self.outcomes:
             for y in self.messages:
@@ -90,26 +87,22 @@ class Game(ABC):
                 if not math.isnan(_l):
                     loss += _l
 
-        # TODO: checken of dit oke is
         return np.sign(loss) * pu.inf_loss if math.isinf(loss) else loss
 
     def get_entropy(self, agent: pu.Agent, y: pu.Message):
-        return self.entropy[agent](self.quiz_reverse, self.outcomes, y)
+        if self.entropy[agent]:
+            return self.entropy[agent](self.quiz_reverse, self.outcomes, y)
+
+        return math.nan
 
     def get_expected_entropy(self, agent: pu.Agent) -> Optional[float]:
-        if self.strategy.is_quiz_all_zeroes():
-            return pu.invalid_action_loss
+        ent: float = 0
+        for y in self.messages:
+            e = self.marginal_message[y] * self.get_entropy(agent, y)
+            if not math.isnan(e):
+                ent += e
 
-        if self.entropy[agent]:
-            ent: float = 0
-            for y in self.messages:
-                e = self.marginal_message[y] * self.get_entropy(agent, y)
-                if not math.isnan(e):
-                    ent += e
-
-            return ent
-
-        return None
+        return ent
 
     def get_cont_readable(self) -> Dict[int, Dict[int, float]]:
         return {y.id: {x.id: self.cont[y][x] for x in self.outcomes} for y in self.messages}
@@ -118,10 +111,10 @@ class Game(ABC):
         return {x.id: {y.id: self.quiz[x][y] for y in self.messages} for x in self.outcomes}
 
     def get_cont_action_space(self) -> int:
-        return sum(0 if len(y.outcomes) == 1 else len(y.outcomes) for y in self.messages)
+        return sum(len(y.outcomes) - 1 for y in self.messages)
 
     def get_quiz_action_space(self) -> int:
-        return sum(0 if len(x.messages) == 1 else len(x.messages) for x in self.outcomes)
+        return sum(len(x.messages) - 1 for x in self.outcomes)
 
     @staticmethod
     def create_structure(marginal: List[float], messages: List[List[int]]) -> (List[pu.Outcome], List[pu.Message]):
