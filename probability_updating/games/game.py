@@ -90,19 +90,19 @@ class Game(ABC):
         return np.sign(loss) * pu.inf_loss if math.isinf(loss) else loss
 
     def get_entropy(self, agent: pu.Agent, y: pu.Message):
-        return self.entropy[agent](self.quiz_reverse, self.outcomes, y)
+        if self.entropy[agent]:
+            return self.entropy[agent](self.quiz_reverse, self.outcomes, y)
+
+        return math.nan
 
     def get_expected_entropy(self, agent: pu.Agent) -> Optional[float]:
-        if self.entropy[agent]:
-            ent: float = 0
-            for y in self.messages:
-                e = self.marginal_message[y] * self.get_entropy(agent, y)
-                if not math.isnan(e):
-                    ent += e
+        ent: float = 0
+        for y in self.messages:
+            e = self.marginal_message[y] * self.get_entropy(agent, y)
+            if not math.isnan(e):
+                ent += e
 
-            return ent
-
-        return None
+        return ent
 
     def get_cont_readable(self) -> Dict[int, Dict[int, float]]:
         return {y.id: {x.id: self.cont[y][x] for x in self.outcomes} for y in self.messages}

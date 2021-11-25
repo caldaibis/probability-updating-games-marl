@@ -3,6 +3,5 @@
 /__pycache__/
 /probability_updating/__pycache__/
 /probability_updating/games/__pycache__/
-/models/__pycache__/
-*.pyc
-/ray_dir/
+/output_ray/
+/output_baselines/
