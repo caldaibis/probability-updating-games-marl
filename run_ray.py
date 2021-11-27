@@ -64,7 +64,7 @@ def shared_critic_env(game: games.Game) -> ParallelPettingZooEnv:
 
 def basic_config() -> dict:
     return {
-        "env": env_name,
+        "env": "pug",
         "num_gpus": int(os.environ.get("RLLIB_NUM_GPUS", "0")),
         "num_workers": 10,
         "framework": "tf",  # "tf"
