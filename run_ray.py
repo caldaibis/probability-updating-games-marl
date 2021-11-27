@@ -1,19 +1,23 @@
 from __future__ import annotations
 
-import logging
+import inspect
 import os
-from enum import Enum
-from typing import Type, Dict, Optional
+import json
+from enum import Enum, auto
+from typing import Type, Dict, Optional, List
 
-from ray.rllib.policy.policy import PolicySpec
+from ray.rllib.agents import Trainer
+from ray.rllib.evaluation.worker_set import WorkerSet
+from ray.tune.checkpoint_manager import Checkpoint
 from ray.util.ml_utils.dict import merge_dicts
 
 import probability_updating as pu
-import games
+import probability_updating.games as games
 
 import ray
 from ray.rllib.env.wrappers.pettingzoo_env import ParallelPettingZooEnv
-from ray.tune import register_env
+from ray.tune import Trainable, Callback
+from ray.tune.trial import Trial
 
 import supersuit as ss
 
@@ -22,24 +26,30 @@ from ray.rllib.agents.a3c import A2CTrainer
 from ray.rllib.agents.sac import SACTrainer
 from ray.rllib.agents.ddpg import TD3Trainer, DDPGTrainer
 from ray.rllib.agents.pg import PGTrainer
-from ray.rllib.contrib.maddpg import MADDPGTrainer
-
-
-env_name = "pug"
 
 
 class RayModel(Enum):
-    PPO = PPOTrainer,
-    A2C = A2CTrainer,
-    SAC = SACTrainer,
-    TD3 = TD3Trainer,
-    DDPG = DDPGTrainer,
-    PG = PGTrainer,
-    MADDPG = MADDPGTrainer
+    PPO = auto(),
+    A2C = auto(),
+    SAC = auto(),
+    TD3 = auto(),
+    DDPG = auto(),
+    PG = auto(),
+
+
+def get_trainable(model_type: RayModel) -> Type[Trainable]:
+    return {
+        RayModel.PPO: PPOTrainer,
+        RayModel.A2C: A2CTrainer,
+        RayModel.SAC: SACTrainer,
+        RayModel.TD3: TD3Trainer,
+        RayModel.DDPG: DDPGTrainer,
+        RayModel.PG: PGTrainer,
+    }[model_type]
 
 
 def shared_parameter_env(game: games.Game) -> ParallelPettingZooEnv:
-    env = pu.probability_updating_env.env(game)
+    env = pu.ProbabilityUpdatingEnv(game)
     env = ss.pad_action_space_v0(env)
     env = ss.agent_indicator_v0(env)
 
@@ -47,7 +57,7 @@ def shared_parameter_env(game: games.Game) -> ParallelPettingZooEnv:
 
 
 def shared_critic_env(game: games.Game) -> ParallelPettingZooEnv:
-    env = pu.probability_updating_env.env(game)
+    env = pu.ProbabilityUpdatingEnv(game)
 
     return ParallelPettingZooEnv(env)
 
@@ -56,52 +66,30 @@ def basic_config() -> dict:
     return {
         "env": env_name,
         "num_gpus": int(os.environ.get("RLLIB_NUM_GPUS", "0")),
-        "num_workers": 9,
-        "framework": "torch",  # "tf"
-    }
-
-
-def parameter_sharing_config() -> dict:
-    return {
+        "num_workers": 10,
+        "framework": "tf",  # "tf"
         "multiagent": {
             "policies": {"default_policy"},
             "policy_mapping_fn": lambda agent_id, episode, **kwargs: "default_policy",
         },
+        "evaluation_interval": 1,
+        "evaluation_num_episodes": 1,
+        # "custom_eval_function": custom_eval_function,
     }
 
 
-def shared_critic_config(env: ParallelPettingZooEnv) -> dict:
-    return {
-        # "multiagent": {
-        #     "policies": {"default_policy"},
-        #     "policy_mapping_fn": lambda agent_id, episode, **kwargs: "default_policy",
-        # },
-        "multiagent": {
-            "policies": {
-                pu.cont(): PolicySpec(
-                    observation_space=env.observation_spaces[pu.cont()],
-                    action_space=env.action_spaces[pu.cont()],
-                    config={"agent_id": 0}),
-                pu.quiz(): PolicySpec(
-                    observation_space=env.observation_spaces[pu.quiz()],
-                    action_space=env.action_spaces[pu.quiz()],
-                    config={"agent_id": 1}),
-            },
-            "policy_mapping_fn": (
-                lambda agent_id, **kwargs: {0: pu.cont(), 1: pu.quiz()}[agent_id]),
-        }
-    }
+def custom_eval_function(trainer: Trainer, eval_workers: WorkerSet):
+    pass
 
 
-def get_full_config(model: RayModel, env: ParallelPettingZooEnv) -> dict:
+def get_full_config(model: RayModel) -> dict:
     return {
-        RayModel.PPO: merge_dicts(basic_config(), merge_dicts(parameter_sharing_config(), ppo_config())),
-        RayModel.A2C: merge_dicts(basic_config(), merge_dicts(parameter_sharing_config(), ppo_config())),
-        RayModel.SAC: merge_dicts(basic_config(), merge_dicts(parameter_sharing_config(), ppo_config())),
-        RayModel.TD3: merge_dicts(basic_config(), merge_dicts(parameter_sharing_config(), ppo_config())),
-        RayModel.DDPG: merge_dicts(basic_config(), merge_dicts(parameter_sharing_config(), ppo_config())),
-        RayModel.PG: merge_dicts(basic_config(), merge_dicts(parameter_sharing_config(), ppo_config())),
-        RayModel.MADDPG: merge_dicts(basic_config(), merge_dicts(shared_critic_config(env), ppo_config())),
+        RayModel.PPO: merge_dicts(basic_config(), ppo_config()),
+        RayModel.A2C: merge_dicts(basic_config(), ppo_config()),
+        RayModel.SAC: merge_dicts(basic_config(), ppo_config()),
+        RayModel.TD3: merge_dicts(basic_config(), ppo_config()),
+        RayModel.DDPG: merge_dicts(basic_config(), ppo_config()),
+        RayModel.PG: merge_dicts(basic_config(), ppo_config()),
     }[model]
 
 
@@ -112,47 +100,64 @@ def ppo_config() -> dict:
         #     "vf_share_layers": False,
         # },
         # "vf_loss_coeff": 0.01,
-        # "train_batch_size": 4000,
-        # "sgd_minibatch_size": 20,
+        # "train_batch_size": 10,
+        # "sgd_minibatch_size": 1,
         # "num_sgd_iter": 30,
     }
 
 
-def init(game: games.Game) -> ParallelPettingZooEnv:
-    ray.shutdown()
-    # Zet local_mode=True om te debuggen
-    ray.init(local_mode=False, logging_level=logging.DEBUG)
+class MyCallback(Callback):
+    def on_step_begin(self, iteration: int, trials: List["Trial"], **info):
+        print(inspect.stack()[0][3])
 
-    # Setup environment
-    env = shared_parameter_env(game)
-    register_env(env_name, lambda _: env)
+    def on_step_end(self, iteration: int, trials: List["Trial"], **info):
+        print(inspect.stack()[0][3])
 
-    return env
+    def on_trial_start(self, iteration: int, trials: List["Trial"], trial: "Trial", **info):
+        print(inspect.stack()[0][3])
+
+    def on_trial_restore(self, iteration: int, trials: List["Trial"], trial: "Trial", **info):
+        print(inspect.stack()[0][3])
+
+    def on_trial_save(self, iteration: int, trials: List["Trial"], trial: "Trial", **info):
+        print(inspect.stack()[0][3])
+
+    def on_trial_result(self, iteration: int, trials: List["Trial"], trial: "Trial", result: Dict, **info):
+        print(inspect.stack()[0][3])
+        print(json.dumps(info, indent=2, default=str))
+        print(f"Got result: {result['metric']}")
+
+    def on_trial_complete(self, iteration: int, trials: List["Trial"], trial: "Trial", **info):
+        print(inspect.stack()[0][3])
+
+    def on_trial_error(self, iteration: int, trials: List["Trial"], trial: "Trial", **info):
+        print(inspect.stack()[0][3])
+
+    def on_checkpoint(self, iteration: int, trials: List["Trial"], trial: "Trial", checkpoint: Checkpoint, **info):
+        print(inspect.stack()[0][3])
+
+    def on_experiment_end(self, trials: List["Trial"], **info):
+        print(inspect.stack()[0][3])
 
 
-def learn(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss], model_type: RayModel, iterations: int, ext_name: Optional[str] = '') -> str:
-    env = init(game_type(losses))
-
+def learn(game: games.Game, losses: Dict[pu.Agent, pu.Loss], model_type: RayModel, iterations: int, ext_name: Optional[str] = '') -> str:
     analysis = ray.tune.run(
-        model_type.value,
-        name=f"g={game_type.name()}_c={losses[pu.cont()].name}_q={losses[pu.quiz()].name}_iter={iterations}_e={ext_name}",
-        config=get_full_config(model_type, env),
-        stop={"training_iteration": iterations},
+        get_trainable(model_type),
+        name=f"g={game.name()}_c={losses[pu.cont()].name}_q={losses[pu.quiz()].name}_iter={iterations}_e={ext_name}",
+        config=get_full_config(model_type),
+        stop={"training_iteration": iterations},  # "timesteps_total": 1, "episodes_total": 1
         checkpoint_freq=0,
         checkpoint_at_end=True,
-        verbose=3,
+        verbose=1,
         local_dir='./output_ray',
+        callbacks=[MyCallback()],
     )
 
-    # best_checkpoint = analysis.get_last_checkpoint(metric="episode_reward_mean", mode="max")
     return analysis.get_last_checkpoint()
 
 
-def predict(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss], model_type: RayModel, checkpoint: str) -> games.Game:
-    game = game_type(losses)
-    env = init(game)
-
-    model = model_type.value(config=get_full_config(model_type, env))
+def predict(game: games.Game, env: ParallelPettingZooEnv, model_type: RayModel, checkpoint: str):
+    model = get_trainable(model_type)(config=get_full_config(model_type))
     model.restore(checkpoint)
 
     obs = env.reset()

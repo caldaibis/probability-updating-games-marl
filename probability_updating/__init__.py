@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Dict, List, Callable
+from typing import Dict, Callable
 
-import util
-import probability_updating_env
+from .probability_updating_env import ProbabilityUpdatingEnv
 
 from .message import Message
 from .outcome import Outcome

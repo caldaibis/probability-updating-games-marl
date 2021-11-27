@@ -5,7 +5,6 @@ import math
 from typing import Dict
 import probability_updating as pu
 import probability_updating.games as games
-from exceptions import AllZeroesError
 
 
 class Strategy:

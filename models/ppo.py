@@ -10,7 +10,7 @@ import models
 class PPO(models.Model):
     @classmethod
     def _apply(cls, env: ss.vector.MarkovVectorEnv):
-        return ppo(MlpPolicy, env, verbose=3)
+        return ppo(MlpPolicy, env, verbose=1)  # n_steps=10, batch_size=20, learning_rate=0.1
 
     @classmethod
     def _load(cls, model_path: str):

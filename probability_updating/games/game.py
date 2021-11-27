@@ -67,7 +67,7 @@ class Game(ABC):
 
         assert self.strategy.is_quiz_legal()
 
-    def play(self, actions: Dict[pu.Agent, np.ndarray]) -> Dict[pu.Agent, float]:
+    def step(self, actions: Dict[pu.Agent, np.ndarray]) -> Dict[pu.Agent, float]:
         self.cont = actions[pu.cont()]
         self.quiz = actions[pu.quiz()]
 

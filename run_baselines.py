@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Type, Dict, Optional
 
 import probability_updating as pu
-import games
+import probability_updating.games as games
 import models
 
 
@@ -17,18 +17,14 @@ def get_model_path(game: games.Game, losses: Dict[pu.Agent, pu.Loss], model: Typ
     return f"{model_path}/{game.name()}/{model.name()}/{filename}"
 
 
-def learn(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss], model_type: Type[models.Model], total_timesteps: int, ext_name: Optional[str]):
-    game = game_type(losses)
-
+def learn(game: games.Game, losses: Dict[pu.Agent, pu.Loss], model_type: Type[models.Model], total_timesteps: int, ext_name: Optional[str]):
     model = model_type.create(game)
     model.learn(total_timesteps=total_timesteps)
 
     model.save(get_model_path(game, losses, model_type, total_timesteps, ext_name))
 
 
-def predict(game_type: Type[games.Game], losses: Dict[pu.Agent, pu.Loss], model_type: Type[models.Model], total_timesteps: int, ext_name: Optional[str]):
-    game = game_type(losses)
-
+def predict(game: games.Game, losses: Dict[pu.Agent, pu.Loss], model_type: Type[models.Model], total_timesteps: int, ext_name: Optional[str]):
     model_type.predict(game, get_model_path(game, losses, model_type, total_timesteps, ext_name))
 
     return game

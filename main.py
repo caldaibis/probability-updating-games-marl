@@ -5,12 +5,16 @@ from typing import Type, Dict
 import numpy as np
 
 import probability_updating as pu
-import games
+import probability_updating.games as games
 import models as baseline_models
 
+import logging
+
+import ray
 import run_baselines as baselines
-import run_ray as ray
+import run_ray
 from run_ray import RayModel
+from ray.tune import register_env
 
 
 def write_results(game: games.Game):
@@ -35,7 +39,7 @@ def write_results(game: games.Game):
 
 def manual(game, actions: Dict[pu.Agent, np.ndarray]):
     import supersuit as ss
-    env = pu.probability_updating_env.env(game=game)
+    env = pu.ProbabilityUpdatingEnv(game)
     env = ss.pad_action_space_v0(env)
     env.reset()
 
@@ -73,45 +77,52 @@ def run():
     # Essential configuration
     game_type = games.MontyHall
     losses = {
-        pu.cont(): pu.Loss.logarithmic(),
-        pu.quiz(): pu.Loss.logarithmic_negative()
+        pu.cont(): pu.Loss.zero_one(),
+        pu.quiz(): pu.Loss.zero_one_negative()
     }
+    game = game_type(losses)
 
     # ---------------------------------------------------------------
 
-    # Manual run configuration
-    actions = {
-        pu.cont(): games.MontyHall.cont_always_switch(),
-        pu.quiz(): games.MontyHall.quiz_uniform()
-    }
-
-    # Run
-    test(game_type, losses, actions)
-
-    # ---------------------------------------------------------------
-
-    # Baseline configuration
-    model_type = baseline_models.PPO
-    total_timesteps = 100000
-    ext_name = ""
-
-    # Run
     if False:
-        baselines.learn(game_type, losses, model_type, total_timesteps, ext_name)
-        game = baselines.predict(game_type, losses, model_type, total_timesteps, ext_name)
+        # Manual run configuration
+        actions = {
+            pu.cont(): games.MontyHall.cont_always_switch(),
+            pu.quiz(): games.MontyHall.quiz_uniform()
+        }
+
+        # Run
+        test(game_type, losses, actions)
+
+    # ---------------------------------------------------------------
+
+    if False:
+        # Baseline configuration
+        model_type = baseline_models.PPO
+        total_timesteps = 10000
+        ext_name = ""
+
+        # Run
+        baselines.learn(game, losses, model_type, total_timesteps, ext_name)
+        game = baselines.predict(game, losses, model_type, total_timesteps, ext_name)
         write_results(game)
 
     # ---------------------------------------------------------------
 
-    # Ray configuration
-    ray_model_type = RayModel.MADDPG
-    iterations = 5
-
-    # Run
     if True:
-        checkpoint = ray.learn(game_type, losses, ray_model_type, iterations)
-        game = ray.predict(game_type, losses, ray_model_type, checkpoint)
+        # Ray configuration
+        env = run_ray.shared_parameter_env(game)
+        register_env("pug", lambda _: env)
+        ray_model_type = RayModel.PPO
+        iterations = 10
+
+        # Run
+        # Zet local_mode=True om te debuggen
+        ray.init(local_mode=False, logging_level=logging.INFO)
+        checkpoint = run_ray.learn(game, losses, ray_model_type, iterations)
+        run_ray.predict(game, env, ray_model_type, checkpoint)
         write_results(game)
+        ray.shutdown()
 
     # ---------------------------------------------------------------
 

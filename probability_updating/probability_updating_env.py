@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Dict
+from typing import Dict
 
 import numpy as np
 from gym import spaces
@@ -10,10 +10,6 @@ from pettingzoo.utils.agent_selector import agent_selector
 
 import probability_updating as pu
 import probability_updating.games as games
-
-
-def env(game: games.Game):
-    return ProbabilityUpdatingEnv(game)
 
 
 class ProbabilityUpdatingEnv(ParallelEnv):
@@ -82,14 +78,12 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         Returns the observation dictionary, reward dictionary, done dictionary, and info dictionary,
         where each dictionary is keyed by the agent.
         """
-        losses = self.game.play(actions)
+        losses = self.game.step(actions)
 
         observations = {agent: [] for agent in self.agents}
         rewards = {a: -loss for a, loss in losses.items()}
         dones = {agent: True for agent in self.agents}
         infos = {agent: {} for agent in self.agents}
-
-        self.agents = []
 
         return observations, rewards, dones, infos
 

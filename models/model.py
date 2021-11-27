@@ -17,7 +17,7 @@ class Model(ABC):
 
     @classmethod
     def _create_env(cls, game: games.Game):
-        env = pu.probability_updating_env.env(game=game)
+        env = pu.ProbabilityUpdatingEnv(game)
         env = ss.pad_action_space_v0(env)
         env = ss.agent_indicator_v0(env)
         return ss.pettingzoo_env_to_vec_env_v0(env)
