@@ -7,6 +7,7 @@ from enum import Enum, auto
 from typing import Type, Dict, Optional, List
 
 from ray.rllib.agents import Trainer
+from ray.rllib.evaluation.metrics import get_learner_stats
 from ray.rllib.evaluation.worker_set import WorkerSet
 from ray.tune.checkpoint_manager import Checkpoint
 from ray.util.ml_utils.dict import merge_dicts
@@ -74,6 +75,9 @@ def basic_config() -> dict:
         },
         "evaluation_interval": 1,
         "evaluation_num_episodes": 1,
+        "evaluation_config": {
+            "explore": False
+        },
         # "custom_eval_function": custom_eval_function,
     }
 
@@ -124,8 +128,12 @@ class MyCallback(Callback):
 
     def on_trial_result(self, iteration: int, trials: List["Trial"], trial: "Trial", result: Dict, **info):
         print(inspect.stack()[0][3])
-        print(json.dumps(info, indent=2, default=str))
-        print(f"Got result: {result['metric']}")
+        print("Iteration", iteration)
+        print("episode_reward_max", result["episode_reward_max"])
+        print("episode_reward_min", result["episode_reward_min"])
+        print("episode_reward_mean", result["episode_reward_mean"])
+        print("stats", json.dumps(result["info"]["learner"], indent=2, default=str))
+        print("evaluation", json.dumps(result["evaluation"], indent=2, default=str))
 
     def on_trial_complete(self, iteration: int, trials: List["Trial"], trial: "Trial", **info):
         print(inspect.stack()[0][3])

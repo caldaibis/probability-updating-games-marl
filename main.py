@@ -78,7 +78,7 @@ def run():
     game_type = games.MontyHall
     losses = {
         pu.cont(): pu.Loss.zero_one(),
-        pu.quiz(): pu.Loss.zero_one_negative()
+        pu.quiz(): pu.Loss.zero_one()
     }
     game = game_type(losses)
 
@@ -118,7 +118,7 @@ def run():
 
         # Run
         # Zet local_mode=True om te debuggen
-        ray.init(local_mode=False, logging_level=logging.INFO)
+        ray.init(local_mode=True, logging_level=logging.DEBUG)
         checkpoint = run_ray.learn(game, losses, ray_model_type, iterations)
         run_ray.predict(game, env, ray_model_type, checkpoint)
         write_results(game)
