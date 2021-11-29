@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Dict, Callable
 
 from .probability_updating_env import ProbabilityUpdatingEnv
+from .games import Game
 
 from .message import Message
 from .outcome import Outcome

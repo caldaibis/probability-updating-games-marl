@@ -5,13 +5,20 @@ import logging
 import util
 
 import probability_updating as pu
-import probability_updating.games as games
+from probability_updating import games
 
 import scripts_baselines
 
 import ray
 from ray.tune import register_env
 import scripts_ray
+
+
+from ray.rllib.agents.ppo import PPOTrainer
+from ray.rllib.agents.a3c import A2CTrainer
+from ray.rllib.agents.sac import SACTrainer
+from ray.rllib.agents.ddpg import TD3Trainer, DDPGTrainer
+from ray.rllib.agents.pg import PGTrainer
 
 
 def run():
@@ -27,7 +34,7 @@ def run():
 
     # ---------------------------------------------------------------
 
-    if True:
+    if False:
         # Manual run configuration
         actions = {
             pu.cont(): games.MontyHall.cont_always_switch(),
@@ -39,7 +46,7 @@ def run():
 
     # ---------------------------------------------------------------
 
-    if True:
+    if False:
         # Baseline configuration
         model_type = scripts_baselines.PPO
         total_timesteps = 10000
@@ -54,16 +61,14 @@ def run():
 
     if True:
         # Ray configuration
-        env = scripts_ray.shared_parameter_env(game)
-        register_env("pug", lambda _: env)
-        ray_model_type = scripts_ray.RayModel.PPO
         iterations = 10
+        ray_model = scripts_ray.ParameterSharingModel(game, losses, PPOTrainer)
 
         # Run
         # Zet local_mode=True om te debuggen
         ray.init(local_mode=True, logging_level=logging.DEBUG)
-        checkpoint = scripts_ray.learn(game, losses, ray_model_type, iterations)
-        scripts_ray.predict(game, env, ray_model_type, checkpoint)
+        checkpoint = ray_model.learn(iterations)
+        ray_model.predict(model_type, checkpoint)
         util.write_results(game)
         ray.shutdown()
 
