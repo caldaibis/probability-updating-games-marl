@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import inspect
 import os
-import json
 from enum import Enum, auto
-from typing import Type, Dict, Optional, List
+from typing import Type, Dict, Optional
+
+import scripts_ray
 
 from ray.rllib.agents import Trainer
-from ray.rllib.evaluation.metrics import get_learner_stats
 from ray.rllib.evaluation.worker_set import WorkerSet
 from ray.tune.checkpoint_manager import Checkpoint
 from ray.util.ml_utils.dict import merge_dicts
@@ -17,8 +16,7 @@ import probability_updating.games as games
 
 import ray
 from ray.rllib.env.wrappers.pettingzoo_env import ParallelPettingZooEnv
-from ray.tune import Trainable, Callback
-from ray.tune.trial import Trial
+from ray.tune import Trainable
 
 import supersuit as ss
 
@@ -110,44 +108,6 @@ def ppo_config() -> dict:
     }
 
 
-class MyCallback(Callback):
-    def on_step_begin(self, iteration: int, trials: List["Trial"], **info):
-        print(inspect.stack()[0][3])
-
-    def on_step_end(self, iteration: int, trials: List["Trial"], **info):
-        print(inspect.stack()[0][3])
-
-    def on_trial_start(self, iteration: int, trials: List["Trial"], trial: "Trial", **info):
-        print(inspect.stack()[0][3])
-
-    def on_trial_restore(self, iteration: int, trials: List["Trial"], trial: "Trial", **info):
-        print(inspect.stack()[0][3])
-
-    def on_trial_save(self, iteration: int, trials: List["Trial"], trial: "Trial", **info):
-        print(inspect.stack()[0][3])
-
-    def on_trial_result(self, iteration: int, trials: List["Trial"], trial: "Trial", result: Dict, **info):
-        print(inspect.stack()[0][3])
-        print("Iteration", iteration)
-        print("episode_reward_max", result["episode_reward_max"])
-        print("episode_reward_min", result["episode_reward_min"])
-        print("episode_reward_mean", result["episode_reward_mean"])
-        print("stats", json.dumps(result["info"]["learner"], indent=2, default=str))
-        print("evaluation", json.dumps(result["evaluation"], indent=2, default=str))
-
-    def on_trial_complete(self, iteration: int, trials: List["Trial"], trial: "Trial", **info):
-        print(inspect.stack()[0][3])
-
-    def on_trial_error(self, iteration: int, trials: List["Trial"], trial: "Trial", **info):
-        print(inspect.stack()[0][3])
-
-    def on_checkpoint(self, iteration: int, trials: List["Trial"], trial: "Trial", checkpoint: Checkpoint, **info):
-        print(inspect.stack()[0][3])
-
-    def on_experiment_end(self, trials: List["Trial"], **info):
-        print(inspect.stack()[0][3])
-
-
 def learn(game: games.Game, losses: Dict[pu.Agent, pu.Loss], model_type: RayModel, iterations: int, ext_name: Optional[str] = '') -> str:
     analysis = ray.tune.run(
         get_trainable(model_type),
@@ -157,8 +117,8 @@ def learn(game: games.Game, losses: Dict[pu.Agent, pu.Loss], model_type: RayMode
         checkpoint_freq=0,
         checkpoint_at_end=True,
         verbose=1,
-        local_dir='./output_ray',
-        callbacks=[MyCallback()],
+        local_dir='../output_ray',
+        callbacks=[scripts_ray.CustomCallback()],
     )
 
     return analysis.get_last_checkpoint()

@@ -4,10 +4,10 @@ from stable_baselines3 import A2C as a2c
 from stable_baselines3.a2c import MlpPolicy
 
 import supersuit as ss
-import models
+import scripts_baselines
 
 
-class A2C(models.Model):
+class A2C(scripts_baselines.Model):
     @classmethod
     def _apply(cls, env: ss.vector.MarkovVectorEnv):
         return a2c(MlpPolicy, env, verbose=3)

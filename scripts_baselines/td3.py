@@ -4,10 +4,10 @@ from stable_baselines3 import TD3 as td3
 from stable_baselines3.td3 import MlpPolicy
 
 import supersuit as ss
-import models
+import scripts_baselines
 
 
-class TD3(models.Model):
+class TD3(scripts_baselines.Model):
     @classmethod
     def _apply(cls, env: ss.vector.MarkovVectorEnv):
         return td3(MlpPolicy, env, verbose=3)

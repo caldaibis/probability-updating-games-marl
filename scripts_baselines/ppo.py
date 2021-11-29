@@ -4,10 +4,10 @@ from stable_baselines3 import PPO as ppo
 from stable_baselines3.ppo import MlpPolicy
 
 import supersuit as ss
-import models
+import scripts_baselines
 
 
-class PPO(models.Model):
+class PPO(scripts_baselines.Model):
     @classmethod
     def _apply(cls, env: ss.vector.MarkovVectorEnv):
         return ppo(MlpPolicy, env, verbose=1)  # n_steps=10, batch_size=20, learning_rate=0.1
