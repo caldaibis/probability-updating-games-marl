@@ -44,7 +44,7 @@ class Model(ABC):
             "num_cpus_per_worker": 1,
             "num_workers": 3,
             # "num_envs_per_worker": 1,
-            "framework": "tf",  # "torch"
+            "framework": "torch",  # "tf"
             "evaluation_interval": 1,
             "evaluation_num_episodes": 1,
             "evaluation_config": {
