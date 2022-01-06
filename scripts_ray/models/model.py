@@ -11,7 +11,6 @@ from ray.rllib.agents.ppo import PPOTrainer
 from ray.rllib.env import ParallelPettingZooEnv
 from ray.tune import Trainable, register_env, Analysis, sample_from
 from ray.tune.result import EPISODE_REWARD_MEAN
-from ray.tune.schedulers.pb2 import PB2
 from ray.tune.stopper import CombinedStopper, TimeoutStopper, ExperimentPlateauStopper, MaximumIterationStopper
 
 import probability_updating as pu
@@ -42,7 +41,6 @@ class Model(ABC):
             "num_gpus": 0,  # int(os.environ.get("RLLIB_NUM_GPUS", "0"))
             "num_cpus_for_driver": 1,
             "num_cpus_per_worker": 1,
-            "num_workers": 3,
             # "num_envs_per_worker": 1,
             "framework": "torch",  # "tf"
             "evaluation_interval": 1,
@@ -64,7 +62,6 @@ class Model(ABC):
             "verbose": 3,
             "metric": "episode_reward_mean",
             "mode": "max",
-            "num_samples": 1,
         }
 
     @classmethod

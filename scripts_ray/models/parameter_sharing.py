@@ -5,6 +5,7 @@ import random
 from hyperopt import hp
 from ray.rllib.env import ParallelPettingZooEnv
 from ray.tune import sample_from
+from ray.tune.schedulers import ASHAScheduler
 from ray.tune.suggest.hyperopt import HyperOptSearch
 
 import probability_updating as pu
@@ -22,25 +23,13 @@ class ParameterSharingModel(Model):
         return {
             **super()._create_tune_config(timeout_seconds),
             "callbacks": [scripts_ray.CustomCallback()],
-            "search_alg": HyperOptSearch
+            "num_samples": 4,
+            "scheduler": ASHAScheduler
             (
-                {
-                    "train_batch_size": hp.randint("train_batch_size", 1000, 10000),
-                    "sgd_minibatch_size": hp.randint("sgd_minibatch_size", 16, 256),
-                    "num_sgd_iter": hp.randint("num_sgd_iter", 5, 30),
-                    "lambda": hp.uniform("lambda", 0.9, 1.0),
-                    "clip_param": hp.uniform("clip_param", 0.1, 0.5),
-                    "lr": hp.uniform("lr", 1e-5, 1e-3)
-                },
-                metric="episode_reward_mean", mode="max",  # points_to_evaluate=
-                # [{
-                #     "train_batch_size": 1000,
-                #     "sgd_minibatch_size": 16,
-                #     "num_sgd_iter": 5,
-                #     "lambda": 0.9,
-                #     "clip_param": 0.1,
-                #     "lr": 1e-3,
-                # }]
+                time_attr='training_iteration',
+                max_t=10,
+                grace_period=5,
+                reduction_factor=4,
             ),
         }
 
@@ -51,6 +40,7 @@ class ParameterSharingModel(Model):
                 "policies": {"default_policy"},
                 "policy_mapping_fn": lambda agent_id, episode, **kwargs: "default_policy",
             },
+            "num_workers": 1,
         }
 
     @classmethod
