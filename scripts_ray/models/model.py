@@ -40,8 +40,8 @@ class Model(ABC):
         return {
             "env": "pug",
             "num_gpus": 0,  # int(os.environ.get("RLLIB_NUM_GPUS", "0"))
-            # "num_cpus_for_driver": 1,
-            # "num_cpus_per_worker": 1,
+            "num_cpus_for_driver": 1,
+            "num_cpus_per_worker": 1,
             "num_workers": 3,
             # "num_envs_per_worker": 1,
             "framework": "tf",  # "torch"
@@ -64,8 +64,7 @@ class Model(ABC):
             "verbose": 3,
             "metric": "episode_reward_mean",
             "mode": "max",
-            "num_samples": 2,
-            "resources_per_trial": {"cpu": 4, "gpu": 0}
+            "num_samples": 1,
         }
 
     @classmethod

@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import random
 
+from hyperopt import hp
 from ray.rllib.env import ParallelPettingZooEnv
 from ray.tune import sample_from
-from ray.tune.schedulers.pb2 import PB2
+from ray.tune.suggest.hyperopt import HyperOptSearch
 
 import probability_updating as pu
 import scripts_ray
@@ -20,19 +21,26 @@ class ParameterSharingModel(Model):
     def _create_tune_config(self, timeout_seconds: int) -> dict:
         return {
             **super()._create_tune_config(timeout_seconds),
-            # "callbacks": [scripts_ray.CustomCallback()],
-            "scheduler": PB2
+            "callbacks": [scripts_ray.CustomCallback()],
+            "search_alg": HyperOptSearch
             (
-                perturbation_interval=2.0,
-                # Specifies the hyperparam search space
-                hyperparam_bounds={
-                    "train_batch_size": [1000, 10000],
-                    "sgd_minibatch_size": [16, 256],
-                    "num_sgd_iter": [5, 30],
-                    "lambda": [0.9, 1.0],
-                    "clip_param": [0.1, 0.5],
-                    "lr": [1e-3, 1e-5],
-                }
+                {
+                    "train_batch_size": hp.randint("train_batch_size", 1000, 10000),
+                    "sgd_minibatch_size": hp.randint("sgd_minibatch_size", 16, 256),
+                    "num_sgd_iter": hp.randint("num_sgd_iter", 5, 30),
+                    "lambda": hp.uniform("lambda", 0.9, 1.0),
+                    "clip_param": hp.uniform("clip_param", 0.1, 0.5),
+                    "lr": hp.uniform("lr", 1e-5, 1e-3)
+                },
+                metric="episode_reward_mean", mode="max",  # points_to_evaluate=
+                # [{
+                #     "train_batch_size": 1000,
+                #     "sgd_minibatch_size": 16,
+                #     "num_sgd_iter": 5,
+                #     "lambda": 0.9,
+                #     "clip_param": 0.1,
+                #     "lr": 1e-3,
+                # }]
             ),
         }
 
@@ -43,12 +51,6 @@ class ParameterSharingModel(Model):
                 "policies": {"default_policy"},
                 "policy_mapping_fn": lambda agent_id, episode, **kwargs: "default_policy",
             },
-            "train_batch_size": sample_from(lambda spec: random.randint(1000, 10000)),
-            "sgd_minibatch_size": sample_from(lambda spec: random.randint(16, 256)),
-            "num_sgd_iter": sample_from(lambda spec: random.randint(5, 30)),
-            "lambda": sample_from(lambda spec: random.uniform(0.9, 1.0)),
-            "clip_param": sample_from(lambda spec: random.uniform(0.1, 0.5)),
-            "lr": sample_from(lambda spec: random.uniform(1e-3, 1e-5)),
         }
 
     @classmethod
