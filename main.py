@@ -28,7 +28,7 @@ def run():
 
         # ---------------------------------------------------------------
 
-        if True:
+        if False:
             # Manual run configuration
             actions = {
                 pu.Agent.Cont: game.cont_optimal_zero_one(),
@@ -57,13 +57,13 @@ def run():
 
         if True:
             # Ray configuration
-            ray.init(local_mode=False, logging_level=logging.INFO)  # Zet local_mode=True om te debuggen
+            ray.init(local_mode=False, logging_level=logging.DEBUG)  # Zet local_mode=True om te debuggen
             timeout_seconds = 60
             ray_model = scripts_ray.ParameterSharingModel(game, losses)
 
             # Run
             checkpoint = None
-            # checkpoint = ray_model.load()
+            checkpoint = ray_model.load()
             if not checkpoint:
                 checkpoint = ray_model.learn(timeout_seconds)
             ray_model.predict(checkpoint)

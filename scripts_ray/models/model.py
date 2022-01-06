@@ -9,7 +9,7 @@ import ray
 from ray.rllib.agents import Trainer
 from ray.rllib.agents.ppo import PPOTrainer
 from ray.rllib.env import ParallelPettingZooEnv
-from ray.tune import Trainable, register_env, Analysis, sample_from
+from ray.tune import Trainable, register_env, sample_from, ExperimentAnalysis
 from ray.tune.result import EPISODE_REWARD_MEAN
 from ray.tune.stopper import CombinedStopper, TimeoutStopper, ExperimentPlateauStopper, MaximumIterationStopper
 
@@ -95,8 +95,7 @@ class Model(ABC):
     def load(self) -> Optional[str]:
         """Safely loads an existing checkpoint. If none exists, returns None"""
         try:
-            analysis = Analysis(f"{self.get_local_dir()}/{self.name}", default_metric=EPISODE_REWARD_MEAN, default_mode="max")
-            best_trial = analysis.get_best_logdir()
-            return analysis.get_last_checkpoint(best_trial)
+            analysis = ExperimentAnalysis(f"{self.get_local_dir()}/{self.name}", default_metric=EPISODE_REWARD_MEAN, default_mode="max")
+            return analysis.best_checkpoint
         except Exception:
             return None
