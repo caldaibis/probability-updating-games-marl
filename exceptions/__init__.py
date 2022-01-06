@@ -1,3 +1,3 @@
 from __future__ import annotations
 
-from .invalid_strategy import InvalidStrategyError, AllZeroesError
+from .invalid_strategy import *

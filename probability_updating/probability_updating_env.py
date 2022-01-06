@@ -17,8 +17,8 @@ class ProbabilityUpdatingEnv(ParallelEnv):
 
     game: games.Game
 
-    action_spaces: Dict[pu.Agent, spaces.Box]
-    observation_spaces: Dict[pu.Agent, spaces.Box]
+    action_spaces: Dict[str, spaces.Box]
+    observation_spaces: Dict[str, spaces.Box]
 
     def __init__(self, g: games.Game):
         super().__init__()
@@ -27,16 +27,13 @@ class ProbabilityUpdatingEnv(ParallelEnv):
 
         self.seed()
 
-        self.agents = pu.agents()
+        self.agents = [agent.value for agent in pu.Agent]
         self.possible_agents = self.agents[:]
 
         self._agent_selector = agent_selector(self.agents)
 
-        self.action_spaces = {
-            pu.cont(): spaces.Box(low=0.0, high=1.0, shape=(g.get_cont_action_space(),), dtype=np.float32),
-            pu.quiz(): spaces.Box(low=0.0, high=1.0, shape=(g.get_quiz_action_space(),), dtype=np.float32)
-        }
-        self.observation_spaces = {agent: spaces.Box(low=0.0, high=1.0, shape=(0,), dtype=np.float32) for agent in self.agents}
+        self.action_spaces = {agent.value: spaces.Box(low=0.0, high=1.0, shape=(g.get_action_space(agent),), dtype=np.float32) for agent in pu.Agent}
+        self.observation_spaces = {agent.value: spaces.Box(low=0.0, high=1.0, shape=(0,), dtype=np.float32) for agent in pu.Agent}
 
     def seed(self, seed=None):
         """
@@ -95,7 +92,7 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         of classic, and `'ansi'` which returns the strings printed
         (specific to classic environments).
         """
-        print(f"Rendering... players: {pu.quiz()}, {pu.cont()}")
+        pass
 
     def state(self):
         """

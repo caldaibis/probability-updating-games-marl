@@ -10,27 +10,27 @@ def get_entropy_fn(loss: pu.Loss) -> Optional[pu.EntropyFunc]:
     return entropy_fns.get(loss.name)
 
 
-def _zero_one_fn(quiz_reverse: pu.XgivenY, outcomes: List[pu.Outcome], y: pu.Message) -> float:
+def _zero_one_fn(host_reverse: pu.ContAction, outcomes: List[pu.Outcome], y: pu.Message) -> float:
     _max: float = 0
     for x in outcomes:
-        if quiz_reverse[y][x] > _max:
-            _max = quiz_reverse[y][x]
+        if host_reverse[x, y] > _max:
+            _max = host_reverse[x, y]
 
     return 1 - _max
 
 
-def _brier_fn(quiz_reverse: pu.XgivenY, outcomes: List[pu.Outcome], y: pu.Message) -> float:
+def _brier_fn(host_reverse: pu.ContAction, outcomes: List[pu.Outcome], y: pu.Message) -> float:
     _sum: float = 0
     for x in outcomes:
-        _sum += math.pow(quiz_reverse[y][x], 2)
+        _sum += math.pow(host_reverse[x, y], 2)
 
     return 1 - _sum
 
 
-def _logarithmic_fn(quiz_reverse: pu.XgivenY, outcomes: List[pu.Outcome], y: pu.Message) -> float:
+def _logarithmic_fn(host_reverse: pu.ContAction, outcomes: List[pu.Outcome], y: pu.Message) -> float:
     _sum: float = 0
     for x in outcomes:
-        e: float = -quiz_reverse[y][x] * util.safe_log(quiz_reverse[y][x])
+        e: float = -host_reverse[x, y] * util.safe_log(host_reverse[x, y])
         if not math.isnan(e):
             _sum += e
 

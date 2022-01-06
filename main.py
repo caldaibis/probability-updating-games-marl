@@ -5,74 +5,73 @@ import logging
 import util
 
 import probability_updating as pu
-from probability_updating import games
 
 import scripts_baselines
 
 import ray
-from ray.tune import register_env
 import scripts_ray
 
 
-from ray.rllib.agents.ppo import PPOTrainer
-from ray.rllib.agents.a3c import A2CTrainer
-from ray.rllib.agents.sac import SACTrainer
-from ray.rllib.agents.ddpg import TD3Trainer, DDPGTrainer
-from ray.rllib.agents.pg import PGTrainer
-
-
 def run():
-    # ---------------------------------------------------------------
-
     # Essential configuration
-    game_type = games.MontyHall
+    # _games = pu.Game.__subclasses__()
+    _games = [pu.games.MontyHall]
     losses = {
-        pu.cont(): pu.Loss.zero_one(),
-        pu.quiz(): pu.Loss.zero_one()
+        pu.Agent.Cont: pu.Loss.zero_one(),
+        pu.Agent.Host: pu.Loss.zero_one()
     }
-    game = game_type(losses)
+
+    # ---------------------------------------------------------------
+    # Loop through varying probability updating games
+    for g in _games:
+        game = g(losses)
+
+        # ---------------------------------------------------------------
+
+        if True:
+            # Manual run configuration
+            actions = {
+                pu.Agent.Cont: game.cont_optimal_zero_one(),
+                pu.Agent.Host: game.host_default()
+            }
+
+            # Run
+            # util.test(game, actions)
+            util.manual_step(game, actions)
+            print(game)
+
+        # ---------------------------------------------------------------
+
+        if False:
+            # Baseline configuration
+            total_timesteps = 10000
+            ext_name = ""
+
+            # Run
+            model = scripts_baselines.Model(game, losses, total_timesteps, ext_name)
+            model.learn()
+            model.predict()
+            print(game)
+
+        # ---------------------------------------------------------------
+
+        if True:
+            # Ray configuration
+            ray.init(local_mode=False, logging_level=logging.INFO)  # Zet local_mode=True om te debuggen
+            timeout_seconds = 60
+            ray_model = scripts_ray.ParameterSharingModel(game, losses)
+
+            # Run
+            checkpoint = None
+            # checkpoint = ray_model.load()
+            if not checkpoint:
+                checkpoint = ray_model.learn(timeout_seconds)
+            ray_model.predict(checkpoint)
+            print(game)
 
     # ---------------------------------------------------------------
 
-    if False:
-        # Manual run configuration
-        actions = {
-            pu.cont(): games.MontyHall.cont_always_switch(),
-            pu.quiz(): games.MontyHall.quiz_uniform()
-        }
-
-        # Run
-        util.test(game_type, losses, actions)
-
-    # ---------------------------------------------------------------
-
-    if False:
-        # Baseline configuration
-        model_type = scripts_baselines.PPO
-        total_timesteps = 10000
-        ext_name = ""
-
-        # Run
-        scripts_baselines.learn(game, losses, model_type, total_timesteps, ext_name)
-        game = scripts_baselines.predict(game, losses, model_type, total_timesteps, ext_name)
-        util.write_results(game)
-
-    # ---------------------------------------------------------------
-
-    if True:
-        # Ray configuration
-        iterations = 10
-        ray_model = scripts_ray.ParameterSharingModel(game, losses, PPOTrainer)
-
-        # Run
-        # Zet local_mode=True om te debuggen
-        ray.init(local_mode=True, logging_level=logging.DEBUG)
-        checkpoint = ray_model.learn(iterations)
-        ray_model.predict(model_type, checkpoint)
-        util.write_results(game)
-        ray.shutdown()
-
-    # ---------------------------------------------------------------
+    ray.shutdown()
 
 
 if __name__ == '__main__':

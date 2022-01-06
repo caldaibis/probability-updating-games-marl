@@ -1,59 +1,57 @@
 from __future__ import annotations
 
-import os
-from typing import Dict, Optional, Type
+from typing import Dict, Optional
 
 import gym
 import gym.spaces
 import numpy as np
+import supersuit as ss
 
-import ray.tune
+import tensorflow as tf
+from gym.spaces import Box
+
 from ray.rllib import Policy, SampleBatch, RolloutWorker
 from ray.rllib.agents import DefaultCallbacks
 from ray.rllib.env import ParallelPettingZooEnv
 from ray.rllib.evaluation import MultiAgentEpisode
-from ray.rllib.examples.models.centralized_critic_models import YetAnotherTorchCentralizedCriticModel
 from ray.rllib.models import ModelCatalog
+from ray.rllib.models.tf import TFModelV2, FullyConnectedNetwork
 from ray.rllib.utils.typing import AgentID, PolicyID
-from ray.tune import Trainable
 
 import probability_updating as pu
 from scripts_ray import Model
 
 
 class CentralisedCriticModel(Model):
-    @classmethod
-    def get_local_dir(cls) -> str:
-        return "output_ray_cc"
-
-    @classmethod
-    def _create_tune_config(cls, iterations: int) -> dict:
-        return {
-            **super(cls)._create_tune_config(iterations),
-
-        }
-
     observation_space: gym.spaces.Dict
 
-    def __init__(self, game: pu.Game, losses: Dict[pu.Agent, pu.Loss], model_type: Type[Trainable], ext_name: Optional[str] = ''):
-        super().__init__(game, losses, model_type, ext_name)
+    def __init__(self, game: pu.Game, losses: Dict[pu.Agent, pu.Loss], ext_name: Optional[str] = ''):
+        super().__init__(game, losses, ext_name)
 
         self.observation_space = gym.spaces.Dict({
             "obs": self.env.observation_space,
             "opponent_action": self.env.action_space
         })
 
-        ModelCatalog.register_custom_model("cc_model", YetAnotherTorchCentralizedCriticModel)
+        ModelCatalog.register_custom_model("cc_model", self.CentralisedCriticModel)
+
+    def get_local_dir(self) -> str:
+        return "output_ray/centralised_critic"
+
+    def _create_tune_config(self, timeout_seconds: int) -> dict:
+        return {
+            **super()._create_tune_config(timeout_seconds),
+        }
 
     def _create_model_config(self) -> dict:
         return {
             **super()._create_model_config(),
             "multiagent": {
                 "policies": {
-                    "cont": (None, self.observation_space, self.action_space, {}),
-                    "quiz": (None, self.observation_space, self.action_space, {}),
+                    "cont": (None, self.observation_space, self.env.action_space, {}),
+                    "host": (None, self.observation_space, self.env.action_space, {}),
                 },
-                "policy_mapping_fn": lambda agent_id, **kwargs: "cont" if agent_id == 0 else "quiz",
+                "policy_mapping_fn": lambda agent_id, **kwargs: "cont" if agent_id == 0 else "host",
                 "observation_fn": self.central_critic_observer
             },
             "model": {
@@ -66,6 +64,7 @@ class CentralisedCriticModel(Model):
     @classmethod
     def _create_env(cls, game: pu.Game) -> ParallelPettingZooEnv:
         env = pu.ProbabilityUpdatingEnv(game)
+        env = ss.pad_action_space_v0(env)
 
         return ParallelPettingZooEnv(env)
 
@@ -83,6 +82,39 @@ class CentralisedCriticModel(Model):
             },
         }
 
+    class CentralisedCriticModel(TFModelV2):
+        """Multi-agent model that implements a centralized value function.
+
+        It assumes the observation is a dict with 'own_obs' and 'opponent_obs', the
+        former of which can be used for computing actions (i.e., decentralized
+        execution), and the latter for optimization (i.e., centralized learning).
+
+        This model has two parts:
+        - An action model that looks at just 'own_obs' to compute actions
+        - A value model that also looks at the 'opponent_obs' / 'opponent_action'
+          to compute the value (it does this by using the 'obs_flat' tensor).
+        """
+
+        def __init__(self, obs_space, action_space, num_outputs, model_config, name):
+            super().__init__(obs_space, action_space, num_outputs, model_config, name)
+
+            self.action_model = FullyConnectedNetwork(
+                Box(low=0, high=1, shape=(2,)),  # one-hot encoded Discrete(6)
+                action_space,
+                num_outputs,
+                model_config,
+                name + "_action")
+
+            self.value_model = FullyConnectedNetwork(obs_space, action_space, 1, model_config, name + "_vf")
+
+        def forward(self, input_dict, state, seq_lens):
+            print(input_dict)
+            self._value_out, _ = self.value_model({"obs": input_dict["obs_flat"]}, state, seq_lens)
+            return self.action_model({"obs": input_dict["obs"]["obs"]}, state, seq_lens)
+
+        def value_function(self):
+            return tf.reshape(self._value_out, [-1])
+
     class FillInActions(DefaultCallbacks):
         """Fills in the opponent actions info in the training batches."""
 
@@ -98,4 +130,3 @@ class CentralisedCriticModel(Model):
             _, opponent_batch = original_batches[other_id]
             opponent_actions = np.array([action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS]])
             to_update[:, -2:] = opponent_actions
-

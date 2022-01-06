@@ -21,7 +21,7 @@ class InvalidStrategyError(Exception):
         self.shape = shape
 
     def __str__(self):
-        return f'Strategy: {self.strategy} is invalid. It might be swapped (cont/quiz) or not the correct shape ({self.shape})?'
+        return f'Strategy: {self.strategy} is invalid. It might be swapped (cont/host) or not the correct shape ({self.shape})?'
 
 
 class AllZeroesError(Exception):
@@ -40,3 +40,23 @@ class AllZeroesError(Exception):
 
     def __str__(self):
         return f'Strategy: {self.strategy} is invalid because it has all zeroes for a particular outcome/message!'
+
+
+class NotWithinDomainError(Exception):
+    message: str
+
+    def __init__(self, message: str):
+        self.message = message
+
+    def __str__(self):
+        return self.message
+
+
+class NoDistributionError(Exception):
+    message: str
+
+    def __init__(self, message: str):
+        self.message = message
+
+    def __str__(self):
+        return self.message

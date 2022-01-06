@@ -59,28 +59,28 @@ class Loss:
         return Loss("negative matrix", lambda c, o, x, y: -Loss._matrix_fn(m, c, o, x, y))
 
     @staticmethod
-    def _zero_one_fn(cont: pu.XgivenY, _: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
-        return 1 - cont[y][x]
+    def _zero_one_fn(cont: pu.ContAction, _: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
+        return 1 - cont[x, y]
 
     @staticmethod
-    def _brier_fn(cont: pu.XgivenY, outcomes: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
+    def _brier_fn(cont: pu.ContAction, outcomes: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
         loss: float = 0
         for x_ in outcomes:
             if x == x_:
                 v = 1
             else:
                 v = 0
-            loss += math.pow(v - cont[y][x_], 2)
+            loss += math.pow(v - cont[x_, y], 2)
 
         return loss
 
     @staticmethod
-    def _logarithmic_fn(cont: pu.XgivenY, _: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
-        return -util.safe_log(cont[y][x])
+    def _logarithmic_fn(cont: pu.ContAction, _: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
+        return -util.safe_log(cont[x, y])
 
     @staticmethod
-    def _matrix_fn(m: np.ndarray, cont: pu.XgivenY, outcomes: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
-        return sum(cont[y][x] * m[x.id, x_prime.id] for x_prime in outcomes)
+    def _matrix_fn(m: np.ndarray, cont: pu.ContAction, outcomes: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
+        return sum(cont[x, y] * m[x.id, x_prime.id] for x_prime in outcomes)
 
     @staticmethod
     def matrix_zero_one(outcome_count: int) -> np.ndarray:

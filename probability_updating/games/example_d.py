@@ -7,13 +7,13 @@ import numpy as np
 import probability_updating.games as games
 
 
-class SampleD(games.Game):
+class ExampleD(games.Game):
     @staticmethod
     def name() -> str:
-        return "sampleD"
+        return "example_d"
 
     @staticmethod
-    def marginal() -> List[float]:
+    def default_marginal() -> List[float]:
         return [
             1 / 3,
             1 / 3,
@@ -27,3 +27,11 @@ class SampleD(games.Game):
             [0, 1],
             [1, 2, 3]
         ]
+
+    @staticmethod
+    def cont_optimal_zero_one() -> np.ndarray:
+        return np.array([1, 1 / 2, 1 / 2])
+
+    @staticmethod
+    def host_default() -> np.ndarray:
+        return np.array([1 / 2])
