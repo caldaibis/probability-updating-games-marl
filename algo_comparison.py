@@ -39,7 +39,7 @@ def run():
         ray.init(local_mode=False, logging_level=logging.INFO)  # Zet local_mode=True om te debuggen
         trainers = [PPOTrainer, A2CTrainer, DDPGTrainer, TD3Trainer, SACTrainer]
         t = PPOTrainer
-        timeout_seconds = 20
+        timeout_seconds = 300.0
 
         print()
         print("NOW USING " + t.__name__)

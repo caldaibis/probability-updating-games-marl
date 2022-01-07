@@ -59,7 +59,7 @@ class Model(ABC):
             "checkpoint_freq": 1,
             "checkpoint_at_end": True,
             "local_dir": self.get_local_dir(),
-            "verbose": 3,
+            "verbose": 1,
             "metric": "episode_reward_mean",
             "mode": "max",
         }

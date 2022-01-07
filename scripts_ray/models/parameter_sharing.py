@@ -6,6 +6,7 @@ from hyperopt import hp
 from ray.rllib.env import ParallelPettingZooEnv
 from ray.tune import sample_from
 from ray.tune.schedulers import ASHAScheduler
+from ray.tune.schedulers.pb2 import PB2
 from ray.tune.suggest.hyperopt import HyperOptSearch
 
 import probability_updating as pu
@@ -17,19 +18,25 @@ import supersuit as ss
 
 class ParameterSharingModel(Model):
     def get_local_dir(self) -> str:
-        return f"output_ray/parameter_sharing/{self.trainer_type.__name__}"
+        return f"output_ray/parameter_sharing/{self.trainer_type.__name__}/"
 
     def _create_tune_config(self, timeout_seconds: int) -> dict:
         return {
             **super()._create_tune_config(timeout_seconds),
-            "callbacks": [scripts_ray.CustomCallback()],
-            "num_samples": 4,
-            "scheduler": ASHAScheduler
+            # "callbacks": [scripts_ray.CustomCallback()],
+            "num_samples": 10,
+            "scheduler": PB2
             (
-                time_attr='time_total_s',
-                max_t=2,
-                grace_period=1,
-                reduction_factor=4,
+                perturbation_interval=30.0,
+                # Specifies the hyperparam search space
+                hyperparam_bounds={
+                    "train_batch_size": [200, 1200],
+                    "sgd_minibatch_size": [16, 256],
+                    "num_sgd_iter": [2, 8],
+                    "lambda": [0.98, 1.0],
+                    "clip_param": [0.05, 0.12],
+                    "lr": [1e-4, 1e-2],
+                }
             ),
         }
 
@@ -40,7 +47,13 @@ class ParameterSharingModel(Model):
                 "policies": {"default_policy"},
                 "policy_mapping_fn": lambda agent_id, episode, **kwargs: "default_policy",
             },
-            "num_workers": 1,
+            "num_workers": 0,
+            "train_batch_size": sample_from(lambda spec: random.randint(1000, 10000)),
+            "sgd_minibatch_size": sample_from(lambda spec: random.randint(16, 256)),
+            "num_sgd_iter": sample_from(lambda spec: random.randint(5, 30)),
+            "lambda": sample_from(lambda spec: random.uniform(0.9, 1.0)),
+            "clip_param": sample_from(lambda spec: random.uniform(0.1, 0.5)),
+            "lr": sample_from(lambda spec: random.uniform(1e-5, 1e-3)),
         }
 
     @classmethod
