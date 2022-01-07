@@ -15,6 +15,8 @@ from ray.tune.stopper import CombinedStopper, TimeoutStopper, ExperimentPlateauS
 
 import probability_updating as pu
 
+from ray.tune.progress_reporter import CLIReporter
+
 
 class Model(ABC):
     game: pu.Game
@@ -62,6 +64,7 @@ class Model(ABC):
             "verbose": 1,
             "metric": "episode_reward_mean",
             "mode": "max",
+            "progress_reporter": CLIReporter(),
         }
 
     @classmethod
