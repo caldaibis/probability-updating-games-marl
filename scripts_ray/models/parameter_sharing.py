@@ -26,7 +26,7 @@ class ParameterSharingModel(Model):
             "num_samples": 4,
             "scheduler": ASHAScheduler
             (
-                time_attr='training_iteration',
+                time_attr='time_total_s',
                 max_t=2,
                 grace_period=1,
                 reduction_factor=4,

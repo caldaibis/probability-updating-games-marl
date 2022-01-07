@@ -55,7 +55,7 @@ class Model(ABC):
         return {
             "name": self.name,
             "config": self._create_model_config(),
-            "stop": TimeoutStopper(timeout_seconds),  # CombinedStopper(TimeoutStopper(timeout_seconds), ExperimentPlateauStopper(EPISODE_REWARD_MEAN, mode="max")),
+            "stop": {"time_total_s": timeout_seconds},  # training_iteration, timesteps_total,   # TimeoutStopper(timeout_seconds),  # CombinedStopper(TimeoutStopper(timeout_seconds), ExperimentPlateauStopper(EPISODE_REWARD_MEAN, mode="max")),
             "checkpoint_freq": 1,
             "checkpoint_at_end": True,
             "local_dir": self.get_local_dir(),
