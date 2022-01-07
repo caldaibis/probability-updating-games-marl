@@ -21,4 +21,4 @@ from .util import random_marginal_distribution_alternative, random_marginal_dist
 LossFunc = Callable[[ContAction, List[Outcome], Outcome, Message], float]
 EntropyFunc = Callable[[ContAction, List[Outcome], Message], float]
 
-inf_loss = 100
+inf_loss = 5
