@@ -79,10 +79,10 @@ hyper_param = {
 def run():
     # Essential configuration
     losses = {
-        pu.Agent.Cont: pu.Loss.logarithmic(),
-        pu.Agent.Host: pu.Loss.logarithmic()
+        pu.Agent.Cont: pu.Loss.zero_one(),
+        pu.Agent.Host: pu.Loss.zero_one_negative()
     }
-    game = pu.games.FairDie(losses)
+    game = pu.games.MontyHall(losses)
 
     if True:
         # Manual configuration
@@ -97,7 +97,8 @@ def run():
 
     if True:
         # Configuration
-        ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)  # Zet local_mode=True om te debuggen
+        # ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)  # Running
+        ray.init(local_mode=True, logging_level=logging.DEBUG, log_to_driver=True)  # Debugging
         t = PPOTrainer
         timeout_seconds = 300.0
 
@@ -105,10 +106,13 @@ def run():
         print("NOW USING " + t.__name__)
         print()
 
-        ray_model = scripts_ray.ParameterSharingModel(game, losses, t)
+        ray_model = scripts_ray.IndependentLearning(game, losses, t)
 
         # Run
-        best = ray_model.learn(timeout_seconds, hyper_param[t])
+        best = None
+        best = ray_model.load()
+        if not best:
+            best = ray_model.learn(timeout_seconds, hyper_param[t])
         ray_model.predict(best)
         print(game)
 

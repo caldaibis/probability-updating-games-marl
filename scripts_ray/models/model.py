@@ -80,15 +80,6 @@ class Model(ABC):
         # best_result_df = analysis.best_result_df  # Get best result as pandas dataframe
         return analysis.best_checkpoint  # Get best trial's best checkpoint
 
-    def predict(self, checkpoint: str):
-        model = self.trainer_type(config=self._create_model_config())
-        model.restore(checkpoint)
-
-        obs = self.env.reset()
-        actions = {agent.value: model.compute_single_action(obs[agent.value], unsquash_action=True, explore=False) for agent in pu.Agent}
-
-        obs, rewards, dones, infos = self.env.step(actions)
-
     def load(self) -> Optional[str]:
         """Safely loads an existing checkpoint. If none exists, returns None"""
         try:
@@ -96,3 +87,7 @@ class Model(ABC):
             return analysis.best_checkpoint
         except Exception:
             return None
+
+    @abstractmethod
+    def predict(self, checkpoint: str):
+        pass

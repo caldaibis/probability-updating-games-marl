@@ -57,7 +57,8 @@ def run():
 
         if True:
             # Ray configuration
-            ray.init(local_mode=False, logging_level=logging.DEBUG)  # Zet local_mode=True om te debuggen
+            # ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)  # Running
+            ray.init(local_mode=True, logging_level=logging.DEBUG, log_to_driver=True)  # Debugging
             timeout_seconds = 60
             ray_model = scripts_ray.ParameterSharingModel(game, losses)
 

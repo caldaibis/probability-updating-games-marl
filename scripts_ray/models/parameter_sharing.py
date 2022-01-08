@@ -24,7 +24,6 @@ class ParameterSharingModel(Model):
     def _create_tune_config(self, timeout_seconds: int, hyper_param: Dict) -> dict:
         return {
             **super()._create_tune_config(timeout_seconds, hyper_param),
-            # "callbacks": [scripts_ray.CustomCallback()],
             "num_samples": 1,
             # "scheduler": PB2
             # (
@@ -54,3 +53,12 @@ class ParameterSharingModel(Model):
         env = ss.agent_indicator_v0(env)
 
         return ParallelPettingZooEnv(env)
+
+    def predict(self, checkpoint: str):
+        model = self.trainer_type(config=self._create_model_config())
+        model.restore(checkpoint)
+
+        obs = self.env.reset()
+        actions = {agent.value: model.compute_single_action(obs[agent.value], unsquash_action=True, explore=False) for agent in pu.Agent}
+
+        obs, rewards, dones, infos = self.env.step(actions)
