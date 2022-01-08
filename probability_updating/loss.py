@@ -19,6 +19,11 @@ class Loss:
         return self._loss_fn(*args)
 
     @staticmethod
+    def null() -> Loss:
+        """An empty loss function, always returning zero. Used for zero-sum games with parameter sharing"""
+        return Loss("null", Loss._null_fn)
+
+    @staticmethod
     def zero_one() -> Loss:
         """Randomised 0-1 loss"""
         return Loss("randomised 0-1", Loss._zero_one_fn)
@@ -57,6 +62,10 @@ class Loss:
     def matrix_negative(m: np.ndarray) -> Loss:
         """Negative matrix loss"""
         return Loss("negative matrix", lambda c, o, x, y: -Loss._matrix_fn(m, c, o, x, y))
+
+    @staticmethod
+    def _null_fn(_, __, ___, ____) -> float:
+        return 0
 
     @staticmethod
     def _zero_one_fn(cont: pu.ContAction, _: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:

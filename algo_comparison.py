@@ -98,21 +98,22 @@ def run():
     if True:
         # Configuration
         # ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)  # Running
-        ray.init(local_mode=True, logging_level=logging.DEBUG, log_to_driver=True)  # Debugging
+        ray.init(local_mode=True, logging_level=logging.INFO, log_to_driver=True)  # Debugging
         t = PPOTrainer
-        timeout_seconds = 300.0
+        min_total_time_s = 10
+        max_total_time_s = 60
 
         print()
         print("NOW USING " + t.__name__)
         print()
 
-        ray_model = scripts_ray.IndependentLearning(game, losses, t)
+        ray_model = scripts_ray.IndependentLearning(game, losses, t, hyper_param[t], 30, 60)
 
         # Run
         best = None
-        best = ray_model.load()
+        # best = ray_model.load()
         if not best:
-            best = ray_model.learn(timeout_seconds, hyper_param[t])
+            best = ray_model.learn()
         ray_model.predict(best)
         print(game)
 

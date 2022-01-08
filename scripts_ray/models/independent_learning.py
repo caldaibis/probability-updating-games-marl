@@ -14,9 +14,9 @@ class IndependentLearning(Model):
     def get_local_dir(self) -> str:
         return f"output_ray/independent_learning/{self.trainer_type.__name__}/"
 
-    def _create_tune_config(self, timeout_seconds: int, hyper_param: Dict) -> dict:
+    def _create_tune_config(self) -> dict:
         return {
-            **super()._create_tune_config(timeout_seconds, hyper_param),
+            **super()._create_tune_config(),
             "num_samples": 1,
         }
 
@@ -34,7 +34,6 @@ class IndependentLearning(Model):
     def _create_env(cls, game: pu.Game) -> ParallelPettingZooEnv:
         env = pu.ProbabilityUpdatingEnv(game)
         env = ss.pad_action_space_v0(env)
-        env = ss.agent_indicator_v0(env)
 
         return ParallelPettingZooEnv(env)
 

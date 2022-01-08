@@ -21,9 +21,9 @@ class ParameterSharingModel(Model):
     def get_local_dir(self) -> str:
         return f"output_ray/parameter_sharing/{self.trainer_type.__name__}/"
 
-    def _create_tune_config(self, timeout_seconds: int, hyper_param: Dict) -> dict:
+    def _create_tune_config(self) -> dict:
         return {
-            **super()._create_tune_config(timeout_seconds, hyper_param),
+            **super()._create_tune_config(),
             "num_samples": 1,
             # "scheduler": PB2
             # (
