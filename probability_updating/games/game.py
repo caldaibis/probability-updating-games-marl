@@ -55,22 +55,26 @@ class Game(ABC):
             self.marginal_message = self.strategy_util.update_message_marginal()
             self.host_reverse = self.strategy_util.update_strategy_host_reverse()
 
-        if not self.action[agent].is_within_domain(self.outcomes, self.messages):
-            raise NotWithinDomainError("The action values are not all within domain [0, 1]: " + repr(self.action[agent]))
-        if not self.action[agent].sums_to_one(self.outcomes, self.messages):
-            raise NoDistributionError("The action is not a distribution (it does not sum to one): " + repr(self.action[agent]))
-
     def step(self, actions: Dict[str, np.ndarray]) -> Dict[pu.Agent, float]:
-        try:
-            for agent in pu.Agent:
-                self.set_action(agent, actions[agent.value])
-        except NotWithinDomainError as e:
+        for agent in pu.Agent:
+            self.set_action(agent, actions[agent.value])
+
+        return self.get_expected_losses()
+
+    def any_illegal_action(self) -> bool:
+        cont_out_domain = not self.action[pu.Agent.Cont].is_within_domain(self.outcomes, self.messages)
+        host_out_domain = not self.action[pu.Agent.Host].is_within_domain(self.outcomes, self.messages)
+
+        cont_no_distribution = not self.action[pu.Agent.Cont].sums_to_one(self.outcomes, self.messages)
+        host_no_distribution = not self.action[pu.Agent.Host].sums_to_one(self.outcomes, self.messages)
+
+        return cont_out_domain or host_out_domain or cont_no_distribution or host_no_distribution
+
+    def get_expected_losses(self) -> Dict[pu.Agent, float]:
+        if self.any_illegal_action():
             return {agent.value: pu.inf_loss for agent in pu.Agent}
 
         return {agent.value: self.get_expected_loss(agent) for agent in pu.Agent}
-
-    def get_loss(self, agent: pu.Agent, x: pu.Outcome, y: pu.Message):
-        return self.loss[agent](self.action[pu.Agent.Cont], self.outcomes, x, y)
 
     def get_expected_loss(self, agent: pu.Agent) -> float:
         loss: float = 0
@@ -82,11 +86,14 @@ class Game(ABC):
 
         return np.sign(loss) * pu.inf_loss if math.isinf(loss) else loss
 
-    def get_entropy(self, agent: pu.Agent, y: pu.Message):
-        if self.entropy[agent]:
-            return self.entropy[agent](self.host_reverse, self.outcomes, y)
+    def get_loss(self, agent: pu.Agent, x: pu.Outcome, y: pu.Message):
+        return self.loss[agent](self.action[pu.Agent.Cont], self.outcomes, x, y)
 
-        return math.nan
+    def get_expected_entropies(self):
+        if self.any_illegal_action():
+            return {agent.value: pu.inf_loss for agent in pu.Agent}
+
+        return {agent.value: self.get_expected_entropy(agent) for agent in pu.Agent}
 
     def get_expected_entropy(self, agent: pu.Agent) -> Optional[float]:
         ent: float = 0
@@ -96,6 +103,12 @@ class Game(ABC):
                 ent += e
 
         return ent
+
+    def get_entropy(self, agent: pu.Agent, y: pu.Message):
+        if self.entropy[agent]:
+            return self.entropy[agent](self.host_reverse, self.outcomes, y)
+
+        return math.nan
 
     def get_action_space(self, agent: pu.Agent):
         if agent == pu.Agent.Cont:
@@ -225,8 +238,8 @@ class Game(ABC):
                     else:
                         table.add_row(['', f"{x}: {self.action[pu.Agent.Cont][x, y]}"])
 
-            table.add_row(['Cont expected loss', self.get_expected_loss(pu.Agent.Cont)])
-            table.add_row(['Cont expected entropy', self.get_expected_entropy(pu.Agent.Cont)])
+            table.add_row(['Cont expected loss', self.get_expected_losses()[pu.Agent.Cont.value]])
+            table.add_row(['Cont expected entropy', self.get_expected_entropies()[pu.Agent.Cont.value]])
         except AttributeError:
             table.add_row(['Cont action', None])
 
@@ -246,8 +259,8 @@ class Game(ABC):
             table.add_row(['RCAR SSE : ', self.strategy_util.rcar_sse()])
             table.add_row(['RCAR MSE : ', self.strategy_util.rcar_mse()])
             table.add_row(['RCAR RMSE: ', self.strategy_util.rcar_rmse()])
-            table.add_row(['Host expected loss', self.get_expected_loss(pu.Agent.Host)])
-            table.add_row(['Host expected entropy', self.get_expected_entropy(pu.Agent.Host)])
+            table.add_row(['Host expected loss', self.get_expected_losses()[pu.Agent.Host.value]])
+            table.add_row(['Host expected entropy', self.get_expected_entropies()[pu.Agent.Host.value]])
         except AttributeError:
             table.add_row(['Host action', None])
 
