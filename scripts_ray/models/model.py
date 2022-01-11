@@ -52,13 +52,12 @@ class Model(ABC):
             "num_cpus_for_driver": 1,
             "num_cpus_per_worker": 1,
             "framework": "torch",
-            # "framework": "tf",
             "evaluation_interval": 1,
             "evaluation_num_episodes": 1,
             "evaluation_config": {
                 "explore": False
             },
-            # "callbacks": CustomMetricCallbacks,
+            "callbacks": CustomMetricCallbacks,
         }
 
     @abstractmethod
