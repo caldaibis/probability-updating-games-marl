@@ -82,7 +82,7 @@ def run():
     # Essential configuration
     losses = {
         pu.Agent.Cont: pu.Loss.logarithmic(),
-        pu.Agent.Host: pu.Loss.logarithmic_negative()
+        pu.Agent.Host: pu.Loss.zero_one_negative()
     }
     game = pu.games.FairDie(losses)
 
@@ -102,7 +102,7 @@ def run():
         # ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)  # Running
         ray.init(local_mode=True, logging_level=logging.INFO, log_to_driver=True)  # Debugging
         t = PPOTrainer
-        min_total_time_s = 30
+        min_total_time_s = 10
         max_total_time_s = 60
 
         print()
@@ -115,9 +115,9 @@ def run():
         best = None
         # best = ray_model.load()
         if not best:
-            best = ray_model.learn()
-        ray_model.predict(best)
-        print(game)
+            best = ray_model.learn_and_perform()
+        # ray_model.predict(best)
+        # print(game)
 
     ray.shutdown()
 

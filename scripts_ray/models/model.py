@@ -10,7 +10,6 @@ import ray
 from ray.rllib.agents import Trainer
 from ray.rllib.env import ParallelPettingZooEnv
 from ray.tune import Trainable, register_env, sample_from, ExperimentAnalysis
-from ray.tune.result import EPISODE_REWARD_MEAN
 from ray.tune.stopper import CombinedStopper, ExperimentPlateauStopper, MaximumIterationStopper, Stopper
 
 import probability_updating as pu
@@ -39,6 +38,17 @@ class Model(ABC):
 
         register_env("pug", lambda _: self.env)
 
+        self.reporter = CLIReporter()
+        self.reporter.add_metric_column("policy_reward_mean_cont")
+        self.reporter.add_metric_column("policy_reward_mean_host")
+        self.reporter.add_metric_column("policy_reward_mean_min")
+        self.reporter.add_metric_column("policy_reward_mean_max")
+        self.reporter.add_metric_column("policy_reward_mean_diff")
+        self.reporter.add_metric_column("surrogate_reward_mean")
+
+        self.metric = "surrogate_reward_mean"
+        # self.metric = "episode_reward_mean"
+
     @abstractmethod
     def get_local_dir(self) -> str:
         pass
@@ -48,7 +58,7 @@ class Model(ABC):
         return {
             **self.hyper_param,
             "env": "pug",
-            "num_gpus": 0,  # int(os.environ.get("RLLIB_NUM_GPUS", "0"))
+            "num_gpus": 0,
             "num_cpus_for_driver": 1,
             "num_cpus_per_worker": 1,
             "framework": "torch",
@@ -65,14 +75,14 @@ class Model(ABC):
         return {
             "name": self.name,
             "config": self._create_model_config(),
-            "stop": CombinedStopper(ConjunctiveStopper(ExperimentPlateauStopper(EPISODE_REWARD_MEAN, mode="max", top=10, std=0.001), TotalTimeStopper(total_time_s=self.min_total_time_s)), TotalTimeStopper(total_time_s=self.max_total_time_s)),
+            "stop": CombinedStopper(ConjunctiveStopper(ExperimentPlateauStopper(self.metric, mode="max", top=10, std=0.001), TotalTimeStopper(total_time_s=self.min_total_time_s)), TotalTimeStopper(total_time_s=self.max_total_time_s)),
             "checkpoint_freq": 1,
             "checkpoint_at_end": True,
             "local_dir": self.get_local_dir(),
-            "verbose": 3,
-            "metric": "episode_reward_mean",
+            "verbose": 1,
+            "metric": self.metric,
             "mode": "max",
-            "progress_reporter": CLIReporter(),
+            "progress_reporter": self.reporter,
         }
 
     @classmethod
@@ -88,12 +98,22 @@ class Model(ABC):
         # best_result = analysis.best_result  # Get best trial's last results
         # best_result_df = analysis.best_result_df  # Get best result as pandas dataframe
         # return analysis.best_checkpoint  # Get best trial's best checkpoint
-        return analysis.get_last_checkpoint()
+
+        return analysis.best_checkpoint
+
+    def learn_and_perform(self):
+        analysis = ray.tune.run(self.trainer_type, **self._create_tune_config())
+
+        self.predict(analysis.best_checkpoint)
+        print(self.game)
+
+        self.predict(analysis.get_last_checkpoint())
+        print(self.game)
 
     def load(self) -> Optional[str]:
         """Safely loads an existing checkpoint. If none exists, returns None"""
         try:
-            analysis = ExperimentAnalysis(f"{self.get_local_dir()}/{self.name}", default_metric=EPISODE_REWARD_MEAN, default_mode="max")
+            analysis = ExperimentAnalysis(f"{self.get_local_dir()}/{self.name}", default_metric=self.metric, default_mode="max")
             return analysis.get_last_checkpoint()
         except Exception as e:
             return None
@@ -105,7 +125,6 @@ class Model(ABC):
 
 class ConjunctiveStopper(Stopper):
     """Combine several stoppers via 'AND'."""
-
     def __init__(self, *stoppers: Stopper):
         self._stoppers = stoppers
 
