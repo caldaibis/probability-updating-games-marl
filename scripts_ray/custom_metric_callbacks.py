@@ -1,17 +1,10 @@
 from __future__ import annotations
 
-import math
 from typing import List, Dict, Optional
 
 from ray.rllib import RolloutWorker, BaseEnv, Policy, SampleBatch
 from ray.rllib.agents import DefaultCallbacks
 from ray.rllib.evaluation import Episode
-
-# Custom metrics om toe te voegen:
-# - Min rewards over all agents
-# - Max rewards over all agents
-# - Sum of absolute rewards over all agents
-# - Mean of absolute rewards over all agents
 from ray.rllib.utils.typing import PolicyID
 
 import probability_updating as pu
@@ -42,8 +35,7 @@ class CustomMetricCallbacks(DefaultCallbacks):
         result["policy_reward_mean_host"] = result["policy_reward_mean"][pu.Agent.Host.value]
         result["policy_reward_mean_min"] = min(result["policy_reward_mean"][pu.Agent.Cont.value], result["policy_reward_mean"][pu.Agent.Host.value])
         result["policy_reward_mean_max"] = max(result["policy_reward_mean"][pu.Agent.Cont.value], result["policy_reward_mean"][pu.Agent.Host.value])
-        result["policy_reward_mean_diff"] = -abs(result["policy_reward_mean"][pu.Agent.Cont.value] - result["policy_reward_mean"][pu.Agent.Host.value])
-        result["surrogate_reward_mean"] = result["episode_reward_mean"] + result["policy_reward_mean_diff"]
+        result["surrogate_reward_mean"] = result["episode_reward_mean"] - (result["policy_reward_mean_max"] - result["policy_reward_mean_min"])
 
     def on_learn_on_batch(self, *, policy: Policy, train_batch: SampleBatch,
                           result: dict, **kwargs) -> None:

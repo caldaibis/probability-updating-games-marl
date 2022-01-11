@@ -14,8 +14,6 @@ from ray.rllib.agents.a3c import A2CTrainer
 from ray.rllib.agents.ddpg import DDPGTrainer, TD3Trainer
 from ray.rllib.agents.sac import SACTrainer
 
-from scripts_ray import CustomMetricCallbacks
-
 trainers = [PPOTrainer, A2CTrainer, DDPGTrainer, TD3Trainer, SACTrainer]
 hyper_param = {
     PPOTrainer: {
@@ -81,8 +79,8 @@ hyper_param = {
 def run():
     # Essential configuration
     losses = {
-        pu.Agent.Cont: pu.Loss.logarithmic(),
-        pu.Agent.Host: pu.Loss.zero_one_negative()
+        pu.Agent.Cont: pu.Loss.zero_one(),
+        pu.Agent.Host: pu.Loss.zero_one()
     }
     game = pu.games.FairDie(losses)
 
@@ -99,25 +97,21 @@ def run():
 
     if True:
         # Configuration
-        # ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)  # Running
-        ray.init(local_mode=True, logging_level=logging.INFO, log_to_driver=True)  # Debugging
+        ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)  # Running
+        # ray.init(local_mode=True, logging_level=logging.INFO, log_to_driver=True)  # Debugging
         t = PPOTrainer
         min_total_time_s = 10
         max_total_time_s = 60
 
-        print()
-        print("NOW USING " + t.__name__)
-        print()
-
-        ray_model = scripts_ray.IndependentLearning(game, losses, t, hyper_param[t], min_total_time_s, max_total_time_s)
+        ray_model = scripts_ray.ParameterSharingModel(game, losses, t, hyper_param[t], min_total_time_s, max_total_time_s)
 
         # Run
         best = None
         # best = ray_model.load()
         if not best:
-            best = ray_model.learn_and_perform()
-        # ray_model.predict(best)
-        # print(game)
+            best = ray_model.learn()
+        ray_model.predict(best)
+        print(game)
 
     ray.shutdown()
 

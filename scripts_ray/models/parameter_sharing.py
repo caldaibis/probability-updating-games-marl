@@ -1,23 +1,27 @@
 from __future__ import annotations
 
-import random
-from typing import Dict
+from typing import Dict, Type
 
-from hyperopt import hp
-from ray import tune
+from ray.rllib.agents import Trainer
 from ray.rllib.env import ParallelPettingZooEnv
+
 from ray.tune.schedulers import ASHAScheduler
 from ray.tune.schedulers.pb2 import PB2
 from ray.tune.suggest.hyperopt import HyperOptSearch
+from hyperopt import hp
 
 import probability_updating as pu
-import scripts_ray
 from scripts_ray import Model
 
 import supersuit as ss
 
 
 class ParameterSharingModel(Model):
+    def __init__(self, game: pu.Game, losses: Dict[pu.Agent, pu.Loss], trainer_type: Type[Trainer], hyper_param: Dict, min_total_time_s: int, max_total_time_s: int):
+        super(ParameterSharingModel, self).__init__(game, losses, trainer_type, hyper_param, min_total_time_s, max_total_time_s)
+
+        self.metric = "episode_reward_mean"
+
     def get_local_dir(self) -> str:
         return f"output_ray/parameter_sharing/{self.trainer_type.__name__}/"
 

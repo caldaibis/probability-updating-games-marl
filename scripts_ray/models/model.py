@@ -1,22 +1,16 @@
 from __future__ import annotations
 
-import os
-import time
 from abc import ABC, abstractmethod
-import random
 from typing import Dict, Optional, Type, Tuple
 
 import ray
 from ray.rllib.agents import Trainer
 from ray.rllib.env import ParallelPettingZooEnv
 from ray.tune import Trainable, register_env, sample_from, ExperimentAnalysis
-from ray.tune.stopper import CombinedStopper, ExperimentPlateauStopper, MaximumIterationStopper, Stopper
-
-import probability_updating as pu
-
+from ray.tune.stopper import CombinedStopper, ExperimentPlateauStopper, Stopper
 from ray.tune.progress_reporter import CLIReporter
 
-from scripts_ray import CustomMetricCallbacks
+import probability_updating as pu
 
 
 class Model(ABC):
@@ -25,6 +19,8 @@ class Model(ABC):
     env: ParallelPettingZooEnv
     hyper_param: Dict
     name: str
+    metric: str
+    reporter: CLIReporter
 
     def __init__(self, game: pu.Game, losses: Dict[pu.Agent, pu.Loss], trainer_type: Type[Trainer], hyper_param: Dict, min_total_time_s: int, max_total_time_s: int):
         self.game = game
@@ -33,21 +29,13 @@ class Model(ABC):
         self.hyper_param = hyper_param
         self.min_total_time_s = min_total_time_s
         self.max_total_time_s = max_total_time_s
+        self.reporter = CLIReporter()
 
         self.name = f"g={game.name()}_c={losses[pu.Agent.Cont].name}_q={losses[pu.Agent.Host].name}"
 
         register_env("pug", lambda _: self.env)
 
-        self.reporter = CLIReporter()
-        self.reporter.add_metric_column("policy_reward_mean_cont")
-        self.reporter.add_metric_column("policy_reward_mean_host")
-        self.reporter.add_metric_column("policy_reward_mean_min")
-        self.reporter.add_metric_column("policy_reward_mean_max")
-        self.reporter.add_metric_column("policy_reward_mean_diff")
-        self.reporter.add_metric_column("surrogate_reward_mean")
 
-        self.metric = "surrogate_reward_mean"
-        # self.metric = "episode_reward_mean"
 
     @abstractmethod
     def get_local_dir(self) -> str:
@@ -67,7 +55,6 @@ class Model(ABC):
             "evaluation_config": {
                 "explore": False
             },
-            "callbacks": CustomMetricCallbacks,
         }
 
     @abstractmethod
@@ -104,11 +91,7 @@ class Model(ABC):
     def learn_and_perform(self):
         analysis = ray.tune.run(self.trainer_type, **self._create_tune_config())
 
-        self.predict(analysis.best_checkpoint)
-        print(self.game)
-
-        self.predict(analysis.get_last_checkpoint())
-        print(self.game)
+        return analysis.best_checkpoint
 
     def load(self) -> Optional[str]:
         """Safely loads an existing checkpoint. If none exists, returns None"""

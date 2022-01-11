@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Dict
-from ray import tune
+from typing import Dict, Type
 from ray.rllib import MultiAgentEnv
-from ray.rllib.env import ParallelPettingZooEnv
+from ray.rllib.agents import Trainer
 from ray.rllib.policy.policy import PolicySpec
 
 import probability_updating as pu
@@ -12,7 +11,19 @@ from scripts_ray import Model, CustomMetricCallbacks
 
 import supersuit as ss
 
+
 class IndependentLearning(Model):
+    def __init__(self, game: pu.Game, losses: Dict[pu.Agent, pu.Loss], trainer_type: Type[Trainer], hyper_param: Dict, min_total_time_s: int, max_total_time_s: int):
+        super(IndependentLearning, self).__init__(game, losses, trainer_type, hyper_param, min_total_time_s, max_total_time_s)
+
+        self.reporter.add_metric_column("surrogate_reward_mean")
+        self.reporter.add_metric_column("policy_reward_mean_cont")
+        self.reporter.add_metric_column("policy_reward_mean_host")
+        self.reporter.add_metric_column("policy_reward_mean_min")
+        self.reporter.add_metric_column("policy_reward_mean_max")
+
+        self.metric = "surrogate_reward_mean"
+    
     def get_local_dir(self) -> str:
         return f"output_ray/independent_learning/{self.trainer_type.__name__}/"
 
@@ -26,14 +37,14 @@ class IndependentLearning(Model):
         return {
             **super()._create_model_config(),
             "multiagent": {
-                # "policies": set(self.env.agents),
                 "policies": {
                     pu.Agent.Cont.value: PolicySpec(None, self.env.observation_spaces[pu.Agent.Cont.value], self.env.action_spaces[pu.Agent.Cont.value], None),
                     pu.Agent.Host.value: PolicySpec(None, self.env.observation_spaces[pu.Agent.Host.value], self.env.action_spaces[pu.Agent.Host.value], None),
                 },
                 "policy_mapping_fn": lambda agent_id, episode, **kwargs: agent_id,
             },
-            "num_workers": 0,
+            "callbacks": CustomMetricCallbacks,
+            "num_workers": 6,
         }
 
     @classmethod
