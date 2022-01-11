@@ -17,6 +17,8 @@ import probability_updating as pu
 
 from ray.tune.progress_reporter import CLIReporter
 
+from scripts_ray import CustomMetricCallbacks
+
 
 class Model(ABC):
     game: pu.Game
@@ -49,12 +51,14 @@ class Model(ABC):
             "num_gpus": 0,  # int(os.environ.get("RLLIB_NUM_GPUS", "0"))
             "num_cpus_for_driver": 1,
             "num_cpus_per_worker": 1,
-            "framework": "torch",  # "tf"
+            "framework": "torch",
+            # "framework": "tf",
             "evaluation_interval": 1,
             "evaluation_num_episodes": 1,
             "evaluation_config": {
                 "explore": False
             },
+            # "callbacks": CustomMetricCallbacks,
         }
 
     @abstractmethod
@@ -62,8 +66,6 @@ class Model(ABC):
         return {
             "name": self.name,
             "config": self._create_model_config(),
-            # "stop": ExperimentPlateauStopper(EPISODE_REWARD_MEAN, mode="max", top=10, std=0.001),  # {"time_total_s": timeout_seconds},  # training_iteration, timesteps_total,   # TimeoutStopper(timeout_seconds),  # CombinedStopper(TimeoutStopper(timeout_seconds), ExperimentPlateauStopper(EPISODE_REWARD_MEAN, mode="max")),
-            # "stop": {"time_total_s": timeout_seconds},
             "stop": CombinedStopper(ConjunctiveStopper(ExperimentPlateauStopper(EPISODE_REWARD_MEAN, mode="max", top=10, std=0.001), TotalTimeStopper(total_time_s=self.min_total_time_s)), TotalTimeStopper(total_time_s=self.max_total_time_s)),
             "checkpoint_freq": 1,
             "checkpoint_at_end": True,
@@ -93,7 +95,7 @@ class Model(ABC):
         """Safely loads an existing checkpoint. If none exists, returns None"""
         try:
             analysis = ExperimentAnalysis(f"{self.get_local_dir()}/{self.name}", default_metric=EPISODE_REWARD_MEAN, default_mode="max")
-            return analysis.best_checkpoint
+            return analysis.get_last_checkpoint()
         except Exception as e:
             return None
 

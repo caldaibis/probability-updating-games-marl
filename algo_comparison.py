@@ -14,6 +14,8 @@ from ray.rllib.agents.a3c import A2CTrainer
 from ray.rllib.agents.ddpg import DDPGTrainer, TD3Trainer
 from ray.rllib.agents.sac import SACTrainer
 
+from scripts_ray import CustomMetricCallbacks
+
 trainers = [PPOTrainer, A2CTrainer, DDPGTrainer, TD3Trainer, SACTrainer]
 hyper_param = {
     PPOTrainer: {
@@ -100,14 +102,14 @@ def run():
         # ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)  # Running
         ray.init(local_mode=True, logging_level=logging.INFO, log_to_driver=True)  # Debugging
         t = PPOTrainer
-        min_total_time_s = 10
-        max_total_time_s = 60
+        min_total_time_s = 15
+        max_total_time_s = 40
 
         print()
         print("NOW USING " + t.__name__)
         print()
 
-        ray_model = scripts_ray.IndependentLearning(game, losses, t, hyper_param[t], 30, 60)
+        ray_model = scripts_ray.IndependentLearning(game, losses, t, hyper_param[t], min_total_time_s, max_total_time_s)
 
         # Run
         best = None
