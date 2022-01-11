@@ -81,10 +81,10 @@ hyper_param = {
 def run():
     # Essential configuration
     losses = {
-        pu.Agent.Cont: pu.Loss.zero_one(),
-        pu.Agent.Host: pu.Loss.zero_one_negative()
+        pu.Agent.Cont: pu.Loss.logarithmic(),
+        pu.Agent.Host: pu.Loss.logarithmic_negative()
     }
-    game = pu.games.MontyHall(losses)
+    game = pu.games.FairDie(losses)
 
     if True:
         # Manual configuration
@@ -102,8 +102,8 @@ def run():
         # ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)  # Running
         ray.init(local_mode=True, logging_level=logging.INFO, log_to_driver=True)  # Debugging
         t = PPOTrainer
-        min_total_time_s = 15
-        max_total_time_s = 40
+        min_total_time_s = 30
+        max_total_time_s = 60
 
         print()
         print("NOW USING " + t.__name__)

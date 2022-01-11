@@ -10,6 +10,7 @@ import probability_updating as pu
 import scripts_ray
 from scripts_ray import Model, CustomMetricCallbacks
 
+import supersuit as ss
 
 class IndependentLearning(Model):
     def get_local_dir(self) -> str:
@@ -38,29 +39,13 @@ class IndependentLearning(Model):
     @classmethod
     def _create_env(cls, game: pu.Game) -> MultiAgentEnv:
         env = pu.ProbabilityUpdatingEnv(game)
+        env = ss.agent_indicator_v0(env)
 
         return scripts_ray.RayProbabilityUpdatingEnv(env)
 
     def predict(self, checkpoint: str):
         trainer = self.trainer_type(config=self._create_model_config())
-
-        # print(trainer.step())
-        # print(trainer.train())
-
-        # print(trainer.get_policy(pu.Agent.Cont.value).get_weights())
-        # obs = self.env.reset()
-        # print(trainer.step())
-        # obs = self.env.reset()
-        # print({agent.value: trainer.compute_single_action(obs[agent.value], explore=False, policy_id=agent.value) for agent in pu.Agent})
-
         trainer.restore(checkpoint)
-
-        # obs = self.env.reset()
-        # print(trainer.get_policy(pu.Agent.Cont.value).get_weights())
-        # obs = self.env.reset()
-        # print(trainer.step())
-        # obs = self.env.reset()
-        # print({agent.value: trainer.compute_single_action(obs[agent.value], explore=False, policy_id=agent.value) for agent in pu.Agent})
 
         obs = self.env.reset()
         actions = {agent.value: trainer.compute_single_action(obs[agent.value], unsquash_action=True, explore=False, policy_id=agent.value) for agent in pu.Agent}
