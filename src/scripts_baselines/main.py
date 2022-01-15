@@ -12,7 +12,7 @@ import probability_updating.games as games
 
 import supersuit as ss
 
-local_dir: Path = Path("../output_baselines")
+local_dir: Path = Path("../../output_baselines")
 
 
 class Model:

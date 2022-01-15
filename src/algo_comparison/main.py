@@ -80,9 +80,9 @@ def run():
     # Essential configuration
     losses = {
         pu.Agent.Cont: pu.Loss.zero_one(),
-        pu.Agent.Host: pu.Loss.zero_one()
+        pu.Agent.Host: pu.Loss.zero_one_negative()
     }
-    game = pu.games.FairDie(losses)
+    game = pu.games.MontyHall(losses)
 
     if True:
         # Manual configuration
@@ -103,7 +103,7 @@ def run():
         min_total_time_s = 10
         max_total_time_s = 60
 
-        ray_model = scripts_ray.ParameterSharingModel(game, losses, t, hyper_param[t], min_total_time_s, max_total_time_s)
+        ray_model = scripts_ray.IndependentLearning(game, losses, t, hyper_param[t], min_total_time_s, max_total_time_s)
 
         # Run
         best = None

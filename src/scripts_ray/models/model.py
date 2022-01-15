@@ -11,6 +11,7 @@ from ray.tune.stopper import CombinedStopper, ExperimentPlateauStopper, Stopper
 from ray.tune.progress_reporter import CLIReporter
 
 import probability_updating as pu
+from src.scripts_ray.stoppers import ConjunctiveStopper, TotalTimeStopper
 
 
 class Model(ABC):
@@ -31,11 +32,9 @@ class Model(ABC):
         self.max_total_time_s = max_total_time_s
         self.reporter = CLIReporter()
 
-        self.name = f"g={game.name()}_c={losses[pu.Agent.Cont].name}_q={losses[pu.Agent.Host].name}"
+        self.name = f"{game.name()}_{pu.Agent.Cont}={losses[pu.Agent.Cont].name}_{pu.Agent.Host}={losses[pu.Agent.Host].name}"
 
         register_env("pug", lambda _: self.env)
-
-
 
     @abstractmethod
     def get_local_dir(self) -> str:
@@ -62,7 +61,7 @@ class Model(ABC):
         return {
             "name": self.name,
             "config": self._create_model_config(),
-            "stop": CombinedStopper(ConjunctiveStopper(ExperimentPlateauStopper(self.metric, mode="max", top=10, std=0.001), TotalTimeStopper(total_time_s=self.min_total_time_s)), TotalTimeStopper(total_time_s=self.max_total_time_s)),
+            "stop": CombinedStopper(ConjunctiveStopper(ExperimentPlateauStopper(self.metric, mode="max", top=10, std=0.005), TotalTimeStopper(total_time_s=self.min_total_time_s)), TotalTimeStopper(total_time_s=self.max_total_time_s)),
             "checkpoint_freq": 1,
             "checkpoint_at_end": True,
             "local_dir": self.get_local_dir(),
@@ -79,17 +78,6 @@ class Model(ABC):
 
     def learn(self) -> str:
         analysis = ray.tune.run(self.trainer_type, **self._create_tune_config())
-        # best_trial = analysis.best_trial  # Get best trial
-        # best_config = analysis.best_config  # Get best trial's hyperparameters
-        # best_logdir = analysis.best_logdir  # Get best trial's logdir
-        # best_result = analysis.best_result  # Get best trial's last results
-        # best_result_df = analysis.best_result_df  # Get best result as pandas dataframe
-        # return analysis.best_checkpoint  # Get best trial's best checkpoint
-
-        return analysis.best_checkpoint
-
-    def learn_and_perform(self):
-        analysis = ray.tune.run(self.trainer_type, **self._create_tune_config())
 
         return analysis.best_checkpoint
 
@@ -104,26 +92,3 @@ class Model(ABC):
     @abstractmethod
     def predict(self, checkpoint: str):
         pass
-
-
-class ConjunctiveStopper(Stopper):
-    """Combine several stoppers via 'AND'."""
-    def __init__(self, *stoppers: Stopper):
-        self._stoppers = stoppers
-
-    def __call__(self, trial_id, result):
-        return all(s(trial_id, result) for s in self._stoppers)
-
-    def stop_all(self):
-        return all(s.stop_all() for s in self._stoppers)
-
-
-class TotalTimeStopper(Stopper):
-    def __init__(self, total_time_s: Optional[int] = None):
-        self._total_time_s = total_time_s
-
-    def __call__(self, trial_id, result):
-        return result["time_total_s"] > self._total_time_s
-
-    def stop_all(self):
-        return False

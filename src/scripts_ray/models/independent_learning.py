@@ -6,8 +6,7 @@ from ray.rllib.agents import Trainer
 from ray.rllib.policy.policy import PolicySpec
 
 import probability_updating as pu
-import scripts_ray
-from scripts_ray import Model, CustomMetricCallbacks
+from src.scripts_ray import Model, CustomMetricCallbacks, RayProbabilityUpdatingEnv
 
 import supersuit as ss
 
@@ -44,7 +43,7 @@ class IndependentLearning(Model):
                 "policy_mapping_fn": lambda agent_id, episode, **kwargs: agent_id,
             },
             "callbacks": CustomMetricCallbacks,
-            "num_workers": 6,
+            "num_workers": 8,
         }
 
     @classmethod
@@ -52,7 +51,7 @@ class IndependentLearning(Model):
         env = pu.ProbabilityUpdatingEnv(game)
         env = ss.agent_indicator_v0(env)
 
-        return scripts_ray.RayProbabilityUpdatingEnv(env)
+        return RayProbabilityUpdatingEnv(env)
 
     def predict(self, checkpoint: str):
         trainer = self.trainer_type(config=self._create_model_config())

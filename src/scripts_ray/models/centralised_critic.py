@@ -19,7 +19,7 @@ from ray.rllib.models.tf import TFModelV2, FullyConnectedNetwork
 from ray.rllib.utils.typing import AgentID, PolicyID
 
 import probability_updating as pu
-from scripts_ray import Model
+from src.scripts_ray import Model
 
 
 class CentralisedCriticModel(Model):

@@ -11,7 +11,7 @@ from ray.tune.suggest.hyperopt import HyperOptSearch
 from hyperopt import hp
 
 import probability_updating as pu
-from scripts_ray import Model
+from src.scripts_ray import Model
 
 import supersuit as ss
 

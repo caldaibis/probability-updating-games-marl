@@ -26,12 +26,12 @@ class Loss:
     @staticmethod
     def zero_one() -> Loss:
         """Randomised 0-1 loss"""
-        return Loss("randomised 0-1", Loss._zero_one_fn)
+        return Loss("randomised_0-1", Loss._zero_one_fn)
 
     @staticmethod
     def zero_one_negative() -> Loss:
         """Negative randomised 0-1 loss"""
-        return Loss("negative randomised 0-1", lambda c, o, x, y: -Loss._zero_one_fn(c, o, x, y))
+        return Loss("negative_randomised 0-1", lambda c, o, x, y: -Loss._zero_one_fn(c, o, x, y))
 
     @staticmethod
     def brier() -> Loss:
@@ -41,7 +41,7 @@ class Loss:
     @staticmethod
     def brier_negative() -> Loss:
         """Negative Brier loss"""
-        return Loss("negative brier", lambda c, o, x, y: -Loss._brier_fn(c, o, x, y))
+        return Loss("negative_brier", lambda c, o, x, y: -Loss._brier_fn(c, o, x, y))
 
     @staticmethod
     def logarithmic() -> Loss:
@@ -51,7 +51,7 @@ class Loss:
     @staticmethod
     def logarithmic_negative() -> Loss:
         """negative logarithmic loss"""
-        return Loss("negative logarithmic", lambda c, o, x, y: -Loss._logarithmic_fn(c, o, x, y))
+        return Loss("negative_logarithmic", lambda c, o, x, y: -Loss._logarithmic_fn(c, o, x, y))
 
     @staticmethod
     def matrix(m: np.ndarray) -> Loss:
@@ -61,7 +61,7 @@ class Loss:
     @staticmethod
     def matrix_negative(m: np.ndarray) -> Loss:
         """Negative matrix loss"""
-        return Loss("negative matrix", lambda c, o, x, y: -Loss._matrix_fn(m, c, o, x, y))
+        return Loss("negative_matrix", lambda c, o, x, y: -Loss._matrix_fn(m, c, o, x, y))
 
     @staticmethod
     def _null_fn(_, __, ___, ____) -> float:

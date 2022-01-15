@@ -1,9 +1,9 @@
 # custom folders
 /.idea/
-probability_updating/__pycache__/
-probability_updating/games/__pycache__/
-output_ray/
-output_baselines/
+src/probability_updating/__pycache__/
+src/probability_updating/games/__pycache__/
+src/algo_comparison/output_ray
+src/main/output_ray
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
