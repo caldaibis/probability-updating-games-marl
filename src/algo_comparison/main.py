@@ -14,17 +14,25 @@ from ray.rllib.agents.a3c import A2CTrainer
 from ray.rllib.agents.ddpg import DDPGTrainer, TD3Trainer
 from ray.rllib.agents.sac import SACTrainer
 
+import visualisation
+
 trainers = [PPOTrainer, A2CTrainer, DDPGTrainer, TD3Trainer, SACTrainer]
 hyper_param = {
     PPOTrainer: {
-        "train_batch_size": 64,  # tune.grid_search([64, 96, 128]),
-        "sgd_minibatch_size": 8,  # tune.grid_search([4, 8, 16]),
+        "batch_mode": "complete_episodes",
+        "train_batch_size": 64,
+        "sgd_minibatch_size": 8,
         "num_sgd_iter": 1,
+        "lr": 8e-5,
     },
     A2CTrainer: {
-        "min_iter_time_s": 0,
+        "batch_mode": "complete_episodes",
+        "train_batch_size": 64,
+        "min_iter_time_s": 1,
     },
     DDPGTrainer: {
+        "train_batch_size": 64,
+        "rollout_fragment_length": 64,
         "evaluation_num_episodes": 1,
         "exploration_config": {
             "random_timesteps": 40,
@@ -35,11 +43,10 @@ hyper_param = {
         },
         "prioritized_replay_beta_annealing_timesteps": 80,
         "learning_starts": 40,
-        "train_batch_size": 64,
-        # "actor_hiddens": [400, 300], ??
-        # "critic_hiddens": [400, 300], ??
     },
     TD3Trainer: {
+        "train_batch_size": 64,
+        "rollout_fragment_length": 64,
         "evaluation_num_episodes": 1,
         "exploration_config": {
             "random_timesteps": 40,
@@ -50,27 +57,14 @@ hyper_param = {
         },
         "prioritized_replay_beta_annealing_timesteps": 80,
         "learning_starts": 40,
-        "train_batch_size": 64,
         "buffer_size": 1000,
-        # "actor_hiddens": [400, 300], ??
-        # "critic_hiddens": [400, 300], ??
     },
     SACTrainer: {
-        # "Q_model": {
-        #     # "fcnet_hiddens": [256, 256], ??
-        # }
-        # "policy_model": {
-        #     "fcnet_hiddens": [256, 256], ??
-        # }
-
-        "timesteps_per_iteration": 10,
-        "replay_buffer_config": {
-            "type": "LocalReplayBuffer",
-            "capacity": 1000,
-        },
-        "prioritized_replay_beta_annealing_timesteps": 200,
-        "learning_starts": 40,
         "train_batch_size": 64,
+        "rollout_fragment_length": 64,
+        "timesteps_per_iteration": 16,
+        "prioritized_replay_beta_annealing_timesteps": 16,
+        "learning_starts": 1,
         "min_iter_time_s": 0,
     },
 }
@@ -79,10 +73,10 @@ hyper_param = {
 def run():
     # Essential configuration
     losses = {
-        pu.Agent.Cont: pu.Loss.zero_one(),
-        pu.Agent.Host: pu.Loss.zero_one_negative()
+        pu.Agent.Cont: pu.Loss.brier(),
+        pu.Agent.Host: pu.Loss.brier()
     }
-    game = pu.games.MontyHall(losses)
+    game = pu.games.FairDie(losses)
 
     if True:
         # Manual configuration
@@ -99,8 +93,10 @@ def run():
         # Configuration
         ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)  # Running
         # ray.init(local_mode=True, logging_level=logging.INFO, log_to_driver=True)  # Debugging
+
         t = PPOTrainer
-        min_total_time_s = 10
+
+        min_total_time_s = 60
         max_total_time_s = 60
 
         ray_model = scripts_ray.IndependentLearning(game, losses, t, hyper_param[t], min_total_time_s, max_total_time_s)
@@ -109,7 +105,11 @@ def run():
         best = None
         # best = ray_model.load()
         if not best:
-            best = ray_model.learn()
+            analysis = ray_model.learn()
+            best = analysis.best_checkpoint
+            visualisation.direct(analysis.trials)
+            ray_model.save_to_results(analysis)
+
         ray_model.predict(best)
         print(game)
 
