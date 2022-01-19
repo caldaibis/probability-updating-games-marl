@@ -22,7 +22,7 @@ game_names = {
 algos = ['ppo', 'a2c', 'ddpg', 'td3', 'sac']
 
 
-def plot(game, loss, type, optimum, height):
+def plot(game, loss, type, optimum, bottom = None):
     plt.figure()
 
     # Load datasets
@@ -41,14 +41,19 @@ def plot(game, loss, type, optimum, height):
     # Plot miscellaneous
     plt.axhspan(optimum, optimum + 0.004, alpha=0.5, zorder=1, color='gold')
     lines.insert(0, Line2D([0], [0], label='[Nash equilibrium]', color='gold'))
-    plt.legend(frameon=False, handles=lines, loc='lower right', ncol=3, bbox_to_anchor=(1.0, 0))
+
+    lower_anchor = 0.0 if game == pu.games.MontyHall.name() else 0.07
+    plt.legend(frameon=False, handles=lines, loc='lower right', ncol=3, bbox_to_anchor=(1.0, lower_anchor))
 
     # Plot configurations
     plt.xlim(0, 60)
-    # plt.ylim(optimum - height, optimum + 0.05)
-    plt.title(f"{type.capitalize()} {game_names[game]} with {loss_names[loss]} loss")
+    if bottom:
+        plt.ylim(bottom=bottom)
+    # plt.title(f"{type.capitalize()} {game_names[game]} with {loss_names[loss]} loss")
     plt.xlabel("Total time in seconds")
     plt.ylabel("Surrogate reward mean")
+
+    plt.savefig(f'data/figures/{game}_{loss}_{type}.png', transparent=False, bbox_inches='tight', pad_inches=0.02)
 
 
 def show_results():
@@ -56,26 +61,26 @@ def show_results():
     sns.set()
 
     # Plot figures
-    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.zero_one().name, type='zero-sum', optimum=-0.66667, height=0.433)
-    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.zero_one().name, type='cooperative', optimum=-0.66667, height=0.433)
+    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.zero_one().name, type='zero-sum', optimum=-0.66667)
+    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.zero_one().name, type='cooperative', optimum=-0.66667)
 
-    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.logarithmic().name, type='zero-sum', optimum=-1.273, height=0.833)
-    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.logarithmic().name, type='cooperative', optimum=-0.924, height=1.233)
+    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.logarithmic().name, type='zero-sum', optimum=-1.273, bottom=-2.5)
+    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.logarithmic().name, type='cooperative', optimum=-0.924, bottom=-2.5)
 
-    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.brier().name, type='zero-sum', optimum=-0.888, height=0.633)
-    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.brier().name, type='cooperative', optimum=-0.666, height=0.833)
+    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.brier().name, type='zero-sum', optimum=-0.888)
+    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.brier().name, type='cooperative', optimum=-0.666)
 
-    plot(game=pu.games.FairDie.name(), loss=pu.Loss.zero_one().name, type='zero-sum', optimum=-1.333, height=10.133)
-    plot(game=pu.games.FairDie.name(), loss=pu.Loss.zero_one().name, type='cooperative', optimum=-1.333, height=10.133)
+    plot(game=pu.games.FairDie.name(), loss=pu.Loss.zero_one().name, type='zero-sum', optimum=-1.333)
+    plot(game=pu.games.FairDie.name(), loss=pu.Loss.zero_one().name, type='cooperative', optimum=-1.333)
 
-    plot(game=pu.games.FairDie.name(), loss=pu.Loss.logarithmic().name, type='zero-sum', optimum=-2.659, height=0.833)
-    plot(game=pu.games.FairDie.name(), loss=pu.Loss.logarithmic().name, type='cooperative', optimum=-2.197, height=1.233)
+    plot(game=pu.games.FairDie.name(), loss=pu.Loss.logarithmic().name, type='zero-sum', optimum=-2.659)
+    plot(game=pu.games.FairDie.name(), loss=pu.Loss.logarithmic().name, type='cooperative', optimum=-2.197)
 
-    plot(game=pu.games.FairDie.name(), loss=pu.Loss.brier().name, type='zero-sum', optimum=-1.444, height=0.633)
-    plot(game=pu.games.FairDie.name(), loss=pu.Loss.brier().name, type='cooperative', optimum=-1.333, height=0.833)
+    plot(game=pu.games.FairDie.name(), loss=pu.Loss.brier().name, type='zero-sum', optimum=-1.444)
+    plot(game=pu.games.FairDie.name(), loss=pu.Loss.brier().name, type='cooperative', optimum=-1.333)
 
     # Present plot(s)
-    plt.show()
+    # plt.show()
 
 
 if __name__ == '__main__':
