@@ -111,6 +111,18 @@ class Game(ABC):
         return math.nan
 
     def get_action_space(self, agent: pu.Agent):
+        # if agent == pu.Agent.Cont:
+        #     space = 0
+        #     for y in self.messages:
+        #         if len(y.outcomes) > 1:
+        #             space += len(y.outcomes)
+        #     return space
+        # elif agent == pu.Agent.Host:
+        #     space = 0
+        #     for x in self.outcomes:
+        #         if len(x.messages) > 1:
+        #             space += len(x.messages)
+        #     return space
         if agent == pu.Agent.Cont:
             return sum(len(y.outcomes) - 1 for y in self.messages)
         elif agent == pu.Agent.Host:
@@ -240,7 +252,7 @@ class Game(ABC):
 
             table.add_row(['Cont expected loss', self.get_expected_losses()[pu.Agent.Cont.value]])
             table.add_row(['Cont expected entropy', self.get_expected_entropies()[pu.Agent.Cont.value]])
-        except AttributeError:
+        except Exception as e:
             table.add_row(['Cont action', None])
 
         table.add_row(['', ''])
@@ -261,7 +273,7 @@ class Game(ABC):
             table.add_row(['RCAR RMSE: ', self.strategy_util.rcar_rmse()])
             table.add_row(['Host expected loss', self.get_expected_losses()[pu.Agent.Host.value]])
             table.add_row(['Host expected entropy', self.get_expected_entropies()[pu.Agent.Host.value]])
-        except AttributeError:
+        except Exception as e:
             table.add_row(['Host action', None])
 
         return str(table)

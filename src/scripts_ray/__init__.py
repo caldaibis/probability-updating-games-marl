@@ -7,3 +7,5 @@ from src.scripts_ray.models.parameter_sharing import ParameterSharingModel
 from src.scripts_ray.models.independent_learning import IndependentLearning
 from src.scripts_ray.models.centralised_critic import CentralisedCriticModel
 from src.scripts_ray.stoppers import *
+from src.scripts_ray.custom_fully_connected_network import CustomFullyConnectedNetwork
+from src.scripts_ray.multi_categorical_probs import MultiCategoricalProbs

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import logging
 
+from ray.rllib.models import ModelCatalog
+
 import util
 
 import probability_updating as pu
@@ -24,6 +26,17 @@ hyper_param = {
         "sgd_minibatch_size": 8,
         "num_sgd_iter": 1,
         "lr": 8e-5,
+        "exploration_config": {
+            "type": "NormalisedGaussianNoise",
+            "random_timesteps": 10000,
+            "stddev": 0.1,
+            "initial_scale": 1.0,
+            "final_scale": 1.0,
+            "scale_timesteps": 1
+        },
+        "model": {
+            "custom_action_dist": "multi_categorical_probs",
+        }
     },
     A2CTrainer: {
         "batch_mode": "complete_episodes",
@@ -71,12 +84,14 @@ hyper_param = {
 
 
 def run():
+    ModelCatalog.register_custom_action_dist("multi_categorical_probs", scripts_ray.MultiCategoricalProbs)
+
     # Essential configuration
     losses = {
         pu.Agent.Cont: pu.Loss.brier(),
         pu.Agent.Host: pu.Loss.brier()
     }
-    game = pu.games.FairDie(losses)
+    game = pu.games.MontyHall(losses)
 
     if True:
         # Manual configuration
@@ -86,18 +101,18 @@ def run():
         }
 
         # Run
-        util.manual_step(game, actions)
+        # util.manual_step(game, actions)
         print(game)
 
     if True:
         # Configuration
-        ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)  # Running
-        # ray.init(local_mode=True, logging_level=logging.INFO, log_to_driver=True)  # Debugging
+        # ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)  # Running
+        ray.init(local_mode=True, logging_level=logging.INFO, log_to_driver=True)  # Debugging
 
         t = PPOTrainer
 
-        min_total_time_s = 60
-        max_total_time_s = 60
+        min_total_time_s = 5
+        max_total_time_s = 5
 
         ray_model = scripts_ray.IndependentLearning(game, losses, t, hyper_param[t], min_total_time_s, max_total_time_s)
 
@@ -107,8 +122,8 @@ def run():
         if not best:
             analysis = ray_model.learn()
             best = analysis.best_checkpoint
-            visualisation.direct(analysis.trials)
-            ray_model.save_to_results(analysis)
+            # visualisation.direct(analysis.trials)
+            # ray_model.save_to_results(analysis)
 
         ray_model.predict(best)
         print(game)

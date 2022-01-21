@@ -17,7 +17,8 @@ class ProbabilityUpdatingEnv(ParallelEnv):
 
     game: games.Game
 
-    action_spaces: Dict[str, spaces.Box]
+    # action_spaces: Dict[str, spaces.Box]
+    action_spaces: Dict[str, spaces.MultiDiscrete]
     observation_spaces: Dict[str, spaces.Box]
 
     def __init__(self, g: games.Game):
@@ -32,7 +33,11 @@ class ProbabilityUpdatingEnv(ParallelEnv):
 
         self._agent_selector = agent_selector(self.agents)
 
-        self.action_spaces = {agent.value: spaces.Box(low=0.0, high=1.0, shape=(g.get_action_space(agent),), dtype=np.float32) for agent in pu.Agent}
+        # self.action_spaces = {agent.value: spaces.Box(low=0.0, high=1.0, shape=(g.get_action_space(agent),), dtype=np.float32) for agent in pu.Agent}
+        self.action_spaces = {
+            pu.Agent.Cont.value: spaces.MultiDiscrete([2, 2]),
+            pu.Agent.Host.value: spaces.MultiDiscrete([2]),
+        }
         self.observation_spaces = {agent.value: spaces.Box(low=0.0, high=1.0, shape=(0,), dtype=np.float32) for agent in pu.Agent}
 
     def seed(self, seed=None):

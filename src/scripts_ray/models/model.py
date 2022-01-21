@@ -4,8 +4,10 @@ from abc import ABC, abstractmethod
 from typing import Dict, Optional, Type, Tuple
 
 import ray
+from ray.rllib import MultiAgentEnv
 from ray.rllib.agents import Trainer
 from ray.rllib.env import ParallelPettingZooEnv
+from ray.rllib.models import ModelCatalog
 from ray.tune import Trainable, register_env, sample_from, ExperimentAnalysis
 from ray.tune.stopper import CombinedStopper, ExperimentPlateauStopper, Stopper
 from ray.tune.progress_reporter import CLIReporter
@@ -18,7 +20,7 @@ import visualisation
 class Model(ABC):
     game: pu.Game
     trainer_type: Type[Trainer]
-    env: ParallelPettingZooEnv
+    env: MultiAgentEnv
     hyper_param: Dict
     name: str
     metric: str
@@ -75,7 +77,7 @@ class Model(ABC):
 
     @classmethod
     @abstractmethod
-    def _create_env(cls, game: pu.Game) -> ParallelPettingZooEnv:
+    def _create_env(cls, game: pu.Game) -> MultiAgentEnv:
         pass
 
     def learn(self) -> ExperimentAnalysis:

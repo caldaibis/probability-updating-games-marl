@@ -29,11 +29,11 @@ class MontyHall(games.Game):
 
     @staticmethod
     def cont_optimal_zero_one() -> np.ndarray:
-        return np.array([1, 0])
+        return np.array([1, 0, 0, 1])
 
     @staticmethod
     def host_default() -> np.ndarray:
-        return np.array([1 / 2])
+        return np.array([1 / 2, 1 / 2])
 
     @staticmethod
     def cont_always_stay() -> np.ndarray:
