@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List
 
+import probability_updating
+
 
 @dataclass
 class Outcome:

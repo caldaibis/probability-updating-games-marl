@@ -49,7 +49,7 @@ class Game(ABC):
         try:
             self.action[agent] = pu.Action.get_class(agent).from_array(value, self.outcomes, self.messages)
         except IndexError:
-            raise InvalidStrategyError(value, self.get_action_space(agent))
+            raise InvalidStrategyError(value, self.get_action_shape(agent))
 
         if agent == pu.Agent.Host:
             self.marginal_message = self.strategy_util.update_message_marginal()
@@ -110,23 +110,17 @@ class Game(ABC):
 
         return math.nan
 
-    def get_action_space(self, agent: pu.Agent):
-        # if agent == pu.Agent.Cont:
-        #     space = 0
-        #     for y in self.messages:
-        #         if len(y.outcomes) > 1:
-        #             space += len(y.outcomes)
-        #     return space
-        # elif agent == pu.Agent.Host:
-        #     space = 0
-        #     for x in self.outcomes:
-        #         if len(x.messages) > 1:
-        #             space += len(x.messages)
-        #     return space
+    def get_action_shape(self, agent: pu.Agent) -> List[int]:
+        shape = []
         if agent == pu.Agent.Cont:
-            return sum(len(y.outcomes) - 1 for y in self.messages)
+            for y in self.messages:
+                if len(y.outcomes) > 1:
+                    shape.append(len(y.outcomes))
         elif agent == pu.Agent.Host:
-            return sum(len(x.messages) - 1 for x in self.outcomes)
+            for x in self.outcomes:
+                if len(x.messages) > 1:
+                    shape.append(len(x.messages))
+        return shape
 
     def is_graph_game(self) -> bool:
         return all(len(y.outcomes) <= 2 for y in self.messages)
@@ -240,7 +234,7 @@ class Game(ABC):
 
         table.add_row(['', ''])
         table.add_row(['Cont action', ''])
-        table.add_row(['Action space', self.get_action_space(pu.Agent.Cont)])
+        table.add_row(['Action space', self.get_action_shape(pu.Agent.Cont)])
 
         try:
             for y in self.messages:
@@ -257,7 +251,7 @@ class Game(ABC):
 
         table.add_row(['', ''])
         table.add_row(['Host action', ''])
-        table.add_row(['Action space', self.get_action_space(pu.Agent.Host)])
+        table.add_row(['Action space', self.get_action_shape(pu.Agent.Host)])
         try:
             for x in self.outcomes:
                 for y in self.messages:

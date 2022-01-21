@@ -79,25 +79,26 @@ class IndependentLearning(custom.Model):
         trainer = self.trainer_type(config=self._create_model_config())
         trainer.restore(checkpoint)
 
-        dist_class, dist_dim = ModelCatalog.get_action_dist(self.env.action_spaces[pu.Agent.Cont.value], {})
-        print("dist_class", dist_class)
-        print("dist_dim", dist_dim)
-
-        # model = ModelCatalog.get_model_v2(self.env.observation_spaces[pu.Agent.Cont.value], self.env.action_spaces[pu.Agent.Cont.value], self.env.action_spaces[pu.Agent.Cont.value], {})
-        # print("model", model)
-
-        policy_cont = trainer.get_policy(pu.Agent.Cont.value)
-        print("policy_cont dist class", policy_cont.dist_class)
-        # print("policy_cont state", policy_cont.get_state())
-        print(policy_cont.model)
-
-        # dist = dist_class(model.outputs, model)
-        # print("dist", dist)
-
-        # action = dist.sample()
-        # print("action", action)
-
+        # dist_class, dist_dim = ModelCatalog.get_action_dist(self.env.action_spaces[pu.Agent.Cont.value], {})
+        # print("dist_class", dist_class)
+        # print("dist_dim", dist_dim)
+        #
+        # # model = ModelCatalog.get_model_v2(self.env.observation_spaces[pu.Agent.Cont.value], self.env.action_spaces[pu.Agent.Cont.value], self.env.action_spaces[pu.Agent.Cont.value], {})
+        # # print("model", model)
+        #
+        # policy_cont = trainer.get_policy(pu.Agent.Cont.value)
+        # print("policy_cont dist class", policy_cont.dist_class)
+        # # print("policy_cont state", policy_cont.get_state())
+        # print(policy_cont.model)
+        #
+        # # dist = dist_class(model.outputs, model)
+        # # print("dist", dist)
+        #
+        # # action = dist.sample()
+        # # print("action", action)
 
         obs = self.env.reset()
-        actions = {agent.value: trainer.compute_single_action(obs[agent.value], unsquash_action=True, explore=False, policy_id=agent.value) for agent in pu.Agent}
+        # unsquash makes no difference now I guess
+        actions = {agent.value: trainer.compute_single_action(obs[agent.value], explore=False, policy_id=agent.value) for agent in pu.Agent}
         obs, rewards, dones, infos = self.env.step(actions)
+        print(self.game)

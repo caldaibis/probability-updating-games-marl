@@ -3,6 +3,10 @@ from __future__ import annotations
 import logging
 
 from ray.rllib.models import ModelCatalog
+from ray.rllib.utils.spaces.simplex import Simplex
+from torch.distributions import Dirichlet
+import torch
+from torch.nn.functional import softmax
 
 import util
 
@@ -18,6 +22,7 @@ from ray.rllib.agents.sac import SACTrainer
 
 import visualisation
 
+
 trainers = [PPOTrainer, A2CTrainer, DDPGTrainer, TD3Trainer, SACTrainer]
 hyper_param = {
     PPOTrainer: {
@@ -27,15 +32,15 @@ hyper_param = {
         "num_sgd_iter": 1,
         "lr": 8e-5,
         "exploration_config": {
-            "type": "NormalisedGaussianNoise",
-            "random_timesteps": 10000,
-            "stddev": 0.1,
-            "initial_scale": 1.0,
-            "final_scale": 1.0,
-            "scale_timesteps": 1
+            # "type": "NormalisedGaussianNoise",
+            # "random_timesteps": 10000,
+            # "stddev": 0.1,
+            # "initial_scale": 1.0,
+            # "final_scale": 1.0,
+            # "scale_timesteps": 1
         },
         "model": {
-            "custom_action_dist": "multi_categorical_probs",
+            # "custom_action_dist": "multi_categorical_probs",
         }
     },
     A2CTrainer: {
@@ -84,14 +89,48 @@ hyper_param = {
 
 
 def run():
-    ModelCatalog.register_custom_action_dist("multi_categorical_probs", scripts_ray.MultiCategoricalProbs)
+    # concentration = torch.tensor([1.0, 1.0])
+    # dirichlet = Dirichlet(concentration)
+    # print(dirichlet.sample())
+    # print(dirichlet.sample())
+    # print(dirichlet.sample())
+    # print(dirichlet.sample())
+    # print(dirichlet.sample())
+    # print("mean", dirichlet.mean)
+    # print("softmax", softmax(concentration))
+    # print()
+
+    # concentration = torch.tensor([100.0, 100.0])
+    # dirichlet2 = Dirichlet(concentration)
+    # print(dirichlet2.sample())
+    # print(dirichlet2.sample())
+    # print(dirichlet2.sample())
+    # print(dirichlet2.sample())
+    # print(dirichlet2.sample())
+    # print("mean", dirichlet2.mean)
+    # print("softmax", softmax(concentration))
+    # print()
+    #
+    # space = Simplex((2, 2), concentration=torch.tensor([100.0, 100.0]))
+    # print(torch.tensor(space.sample()))
+    # print(torch.tensor(space.sample()))
+    # print(torch.tensor(space.sample()))
+    # print(torch.tensor(space.sample()))
+    # print(torch.tensor(space.sample()))
+    #
+    # space_2 = scripts_ray.Simplex(2, concentration=[100.0, 100.0])
+    # print(torch.tensor(space_2.sample()))
+    # print(torch.tensor(space_2.sample()))
+    # print(torch.tensor(space_2.sample()))
+    # print(torch.tensor(space_2.sample()))
+    # print(torch.tensor(space_2.sample()))
 
     # Essential configuration
     losses = {
-        pu.Agent.Cont: pu.Loss.brier(),
-        pu.Agent.Host: pu.Loss.brier()
+        pu.Agent.Cont: pu.Loss.logarithmic(),
+        pu.Agent.Host: pu.Loss.logarithmic_negative()
     }
-    game = pu.games.MontyHall(losses)
+    game = pu.games.FairDie(losses)
 
     if True:
         # Manual configuration
@@ -111,8 +150,8 @@ def run():
 
         t = PPOTrainer
 
-        min_total_time_s = 5
-        max_total_time_s = 5
+        min_total_time_s = 30
+        max_total_time_s = 60
 
         ray_model = scripts_ray.IndependentLearning(game, losses, t, hyper_param[t], min_total_time_s, max_total_time_s)
 
@@ -122,7 +161,7 @@ def run():
         if not best:
             analysis = ray_model.learn()
             best = analysis.best_checkpoint
-            # visualisation.direct(analysis.trials)
+            visualisation.direct(analysis.trials)
             # ray_model.save_to_results(analysis)
 
         ray_model.predict(best)

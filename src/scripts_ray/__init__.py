@@ -9,3 +9,4 @@ from src.scripts_ray.models.centralised_critic import CentralisedCriticModel
 from src.scripts_ray.stoppers import *
 from src.scripts_ray.custom_fully_connected_network import CustomFullyConnectedNetwork
 from src.scripts_ray.multi_categorical_probs import MultiCategoricalProbs
+from src.scripts_ray.customsimplex import CustomSimplex

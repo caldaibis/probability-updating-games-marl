@@ -6,7 +6,6 @@ from typing import Dict, Optional, Type, Tuple
 import ray
 from ray.rllib import MultiAgentEnv
 from ray.rllib.agents import Trainer
-from ray.rllib.env import ParallelPettingZooEnv
 from ray.rllib.models import ModelCatalog
 from ray.tune import Trainable, register_env, sample_from, ExperimentAnalysis
 from ray.tune.stopper import CombinedStopper, ExperimentPlateauStopper, Stopper
@@ -14,7 +13,6 @@ from ray.tune.progress_reporter import CLIReporter
 
 import probability_updating as pu
 from src.scripts_ray.stoppers import ConjunctiveStopper, TotalTimeStopper
-import visualisation
 
 
 class Model(ABC):
@@ -65,7 +63,7 @@ class Model(ABC):
         return {
             "name": self.name,
             "config": self._create_model_config(),
-            "stop": CombinedStopper(ConjunctiveStopper(ExperimentPlateauStopper(self.metric, mode="max", top=10, std=0.005), TotalTimeStopper(total_time_s=self.min_total_time_s)), TotalTimeStopper(total_time_s=self.max_total_time_s)),
+            "stop": CombinedStopper(ConjunctiveStopper(ExperimentPlateauStopper(self.metric, mode="max", top=10, std=0.0005), TotalTimeStopper(total_time_s=self.min_total_time_s)), TotalTimeStopper(total_time_s=self.max_total_time_s)),
             "checkpoint_freq": 5,
             "checkpoint_at_end": True,
             "local_dir": self.get_local_dir(),

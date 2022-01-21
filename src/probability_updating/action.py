@@ -54,18 +54,20 @@ class ContAction(Action):
 
     @classmethod
     def from_array(cls, _input: np.ndarray, outcomes: List[pu.Outcome], messages: List[pu.Message]) -> Action:
-        i = 0
-        strategy = {y: {x: 0 for x in outcomes} for y in messages}
+        strategy = {y: {x: 0.0 for x in outcomes} for y in messages}
 
+        i = 0
+        cat = 0
         for y in messages:
-            sum_prob = 0
             for x in y.outcomes:
-                if x == y.outcomes[-1]:
-                    strategy[y][x] = 1 - sum_prob
+                if len(y.outcomes) == 1:
+                    strategy[y][x] = 1
                 else:
-                    strategy[y][x] = _input[i]
-                    sum_prob += _input[i]
+                    strategy[y][x] = _input[cat][i]
                     i += 1
+            if i > 0:
+                cat += 1
+                i = 0
 
         return cls(strategy)
 
@@ -84,18 +86,20 @@ class HostAction(Action):
 
     @classmethod
     def from_array(cls, _input: np.ndarray, outcomes: List[pu.Outcome], messages: List[pu.Message]) -> Action:
-        i = 0
-        strategy = {x: {y: 0 for y in messages} for x in outcomes}
+        strategy = {x: {y: 0.0 for y in messages} for x in outcomes}
 
+        i = 0
+        cat = 0
         for x in outcomes:
-            sum_prob = 0
             for y in x.messages:
-                if y == x.messages[-1]:
-                    strategy[x][y] = 1 - sum_prob
+                if len(x.messages) == 1:
+                    strategy[x][y] = 1
                 else:
-                    strategy[x][y] = _input[i]
-                    sum_prob += _input[i]
+                    strategy[x][y] = _input[cat][i]
                     i += 1
+            if i > 0:
+                cat += 1
+                i = 0
 
         return cls(strategy)
 
