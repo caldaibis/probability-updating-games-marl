@@ -53,7 +53,7 @@ def plot(game, loss, type, optimum, bottom = None):
     plt.xlabel("Total time in seconds")
     plt.ylabel("Surrogate reward mean")
 
-    plt.savefig(f'data/figures/{game}_{loss}_{type}.png', transparent=False, bbox_inches='tight', pad_inches=0.02)
+    plt.savefig(f'figures/{game}_{loss}_{type}.png', transparent=False, bbox_inches='tight', pad_inches=0.02)
 
 
 def show_results():
