@@ -8,9 +8,9 @@ from gym import spaces
 from pettingzoo import ParallelEnv
 from pettingzoo.utils.agent_selector import agent_selector
 
-import probability_updating as pu
-import probability_updating.games as games
-import scripts_ray
+import src.probability_updating as pu
+import src.probability_updating.games as games
+import src.learning as learning
 
 
 class ProbabilityUpdatingEnv(ParallelEnv):
@@ -34,7 +34,7 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         self._agent_selector = agent_selector(self.agents)
 
         self.action_spaces = {
-            agent.value: spaces.Tuple([scripts_ray.CustomSimplex(actions) for actions in g.get_action_shape(agent)])
+            agent.value: spaces.Tuple([learning.CustomSimplex(actions) for actions in g.get_action_shape(agent)])
             for agent in pu.Agent
         }
         self.observation_spaces = {

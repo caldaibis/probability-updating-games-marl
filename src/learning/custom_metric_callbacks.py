@@ -7,13 +7,14 @@ from ray.rllib.agents import DefaultCallbacks
 from ray.rllib.evaluation import Episode
 from ray.rllib.utils.typing import PolicyID
 
-import probability_updating as pu
+import src.probability_updating as pu
 
 
 class CustomMetricCallbacks(DefaultCallbacks):
     def on_episode_start(self, *, worker: "RolloutWorker", base_env: BaseEnv,
                          policies: Dict[PolicyID, Policy], episode: Episode,
                          **kwargs) -> None:
+        # print(episode.last_action_for(pu.Agent.Cont.value))
         pass
 
     def on_episode_step(self, *, worker: "RolloutWorker", base_env: BaseEnv,
@@ -36,6 +37,7 @@ class CustomMetricCallbacks(DefaultCallbacks):
         result["policy_reward_mean_min"] = min(result["policy_reward_mean"][pu.Agent.Cont.value], result["policy_reward_mean"][pu.Agent.Host.value])
         result["policy_reward_mean_max"] = max(result["policy_reward_mean"][pu.Agent.Cont.value], result["policy_reward_mean"][pu.Agent.Host.value])
         result["surrogate_reward_mean"] = result["episode_reward_mean"] - (result["policy_reward_mean_max"] - result["policy_reward_mean_min"])
+        result["rcar_rmse"] = result["episode_reward_mean"] - (result["policy_reward_mean_max"] - result["policy_reward_mean_min"])
 
     def on_learn_on_batch(self, *, policy: Policy, train_batch: SampleBatch,
                           result: dict, **kwargs) -> None:

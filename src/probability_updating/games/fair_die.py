@@ -4,13 +4,17 @@ from typing import List
 
 import numpy as np
 
-import probability_updating.games as games
+import src.probability_updating.games as games
 
 
 class FairDie(games.Game):
     @staticmethod
     def name() -> str:
         return "fair_die"
+    
+    @staticmethod
+    def pretty_name() -> str:
+        return "Fair Die"
 
     @staticmethod
     def default_marginal() -> List[float]:
@@ -30,10 +34,20 @@ class FairDie(games.Game):
             [2, 3, 4, 5]
         ]
 
+    # x1 < y1
+    # x2 < y1
+    # x3 < y1, y2
+    # x4 < y1, y2
+    # x5 < y2
+    # x6 < y2
+
+    # y1 < x1, x2, x3, x4
+    # y2 < x3, x4, x5, x5
+
     @staticmethod
     def cont_optimal_zero_one() -> np.ndarray:
-        return np.array([1 / 2, 1 / 2, 0, 0, 0, 1 / 2])
+        return np.array([[1 / 2, 1 / 2, 0., 0.], [0., 0., 1 / 2, 1 / 2]])
 
     @staticmethod
     def host_default() -> np.ndarray:
-        return np.array([1 / 2, 1 / 2])
+        return np.array([[1 / 2, 1 / 2], [1 / 2, 1 / 2]])

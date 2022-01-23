@@ -5,19 +5,7 @@ from matplotlib.lines import Line2D
 import pandas as pd
 import seaborn as sns
 
-import probability_updating as pu
-
-
-loss_names = {
-    pu.Loss.zero_one().name: 'randomised 0-1',
-    pu.Loss.logarithmic().name: 'logarithmic',
-    pu.Loss.brier().name: 'Brier'
-}
-
-game_names = {
-    pu.games.MontyHall.name(): 'Monty Hall',
-    pu.games.FairDie.name(): 'Fair Die'
-}
+import src.probability_updating as pu
 
 algos = ['ppo', 'a2c', 'ddpg', 'td3', 'sac']
 
@@ -61,26 +49,26 @@ def show_results():
     sns.set()
 
     # Plot figures
-    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.zero_one().name, type='zero-sum', optimum=-0.66667)
-    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.zero_one().name, type='cooperative', optimum=-0.66667)
+    plot(game=pu.games.MontyHall.name(), loss=pu.RANDOMISED_ZERO_ONE, type='zero-sum', optimum=-0.66667)
+    plot(game=pu.games.MontyHall.name(), loss=pu.RANDOMISED_ZERO_ONE, type='cooperative', optimum=-0.66667)
 
-    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.logarithmic().name, type='zero-sum', optimum=-1.273, bottom=-2.5)
-    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.logarithmic().name, type='cooperative', optimum=-0.924, bottom=-2.5)
+    plot(game=pu.games.MontyHall.name(), loss=pu.BRIER, type='zero-sum', optimum=-0.888)
+    plot(game=pu.games.MontyHall.name(), loss=pu.BRIER, type='cooperative', optimum=-0.666)
+    
+    plot(game=pu.games.MontyHall.name(), loss=pu.LOGARITHMIC, type='zero-sum', optimum=-1.273, bottom=-2.5)
+    plot(game=pu.games.MontyHall.name(), loss=pu.LOGARITHMIC, type='cooperative', optimum=-0.924, bottom=-2.5)
 
-    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.brier().name, type='zero-sum', optimum=-0.888)
-    plot(game=pu.games.MontyHall.name(), loss=pu.Loss.brier().name, type='cooperative', optimum=-0.666)
+    plot(game=pu.games.FairDie.name(), loss=pu.RANDOMISED_ZERO_ONE, type='zero-sum', optimum=-1.333)
+    plot(game=pu.games.FairDie.name(), loss=pu.RANDOMISED_ZERO_ONE, type='cooperative', optimum=-1.333)
 
-    plot(game=pu.games.FairDie.name(), loss=pu.Loss.zero_one().name, type='zero-sum', optimum=-1.333)
-    plot(game=pu.games.FairDie.name(), loss=pu.Loss.zero_one().name, type='cooperative', optimum=-1.333)
-
-    plot(game=pu.games.FairDie.name(), loss=pu.Loss.logarithmic().name, type='zero-sum', optimum=-2.659)
-    plot(game=pu.games.FairDie.name(), loss=pu.Loss.logarithmic().name, type='cooperative', optimum=-2.197)
-
-    plot(game=pu.games.FairDie.name(), loss=pu.Loss.brier().name, type='zero-sum', optimum=-1.444)
-    plot(game=pu.games.FairDie.name(), loss=pu.Loss.brier().name, type='cooperative', optimum=-1.333)
+    plot(game=pu.games.FairDie.name(), loss=pu.BRIER, type='zero-sum', optimum=-1.444)
+    plot(game=pu.games.FairDie.name(), loss=pu.BRIER, type='cooperative', optimum=-1.333)
+    
+    plot(game=pu.games.FairDie.name(), loss=pu.LOGARITHMIC, type='zero-sum', optimum=-2.659)
+    plot(game=pu.games.FairDie.name(), loss=pu.LOGARITHMIC, type='cooperative', optimum=-2.197)
 
     # Present plot(s)
-    # plt.show()
+    plt.show()
 
 
 if __name__ == '__main__':

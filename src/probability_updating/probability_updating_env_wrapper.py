@@ -5,10 +5,10 @@ from typing import Tuple
 from ray.rllib import MultiAgentEnv
 from ray.rllib.utils.typing import MultiAgentDict
 
-import probability_updating as pu
+import src.probability_updating as pu
 
 
-class RayProbabilityUpdatingEnv(MultiAgentEnv):
+class ProbabilityUpdatingEnvWrapper(MultiAgentEnv):
     env: pu.ProbabilityUpdatingEnv
 
     def __init__(self, env: pu.ProbabilityUpdatingEnv):

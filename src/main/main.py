@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import logging
 
-import util
-
-import probability_updating as pu
-
-import scripts_baselines
+import src.probability_updating as pu
+import src.learning as learning
+import src.util as util
+import src.scripts_baselines as scripts_baselines
 
 import ray
-import scripts_ray
 
 
 def run():
@@ -60,11 +58,11 @@ def run():
             # ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)  # Running
             ray.init(local_mode=True, logging_level=logging.DEBUG, log_to_driver=True)  # Debugging
             timeout_seconds = 60
-            ray_model = scripts_ray.ParameterSharingModel(game, losses)
+            ray_model = learning.ParameterSharingModel(game, losses)
 
             # Run
             checkpoint = None
-            checkpoint = ray_model.load()
+            checkpoint = ray_model.safe_load()
             if not checkpoint:
                 checkpoint = ray_model.learn(timeout_seconds)
             ray_model.predict(checkpoint)

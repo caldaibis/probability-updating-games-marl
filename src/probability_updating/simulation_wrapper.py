@@ -4,8 +4,8 @@ import random
 import numpy as np
 from typing import Dict
 
-import probability_updating as pu
-import probability_updating.games as games
+import src.probability_updating as pu
+import src.probability_updating.games as games
 
 
 class SimulationWrapper:

@@ -7,8 +7,8 @@ import numpy as np
 from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy
 
-import probability_updating as pu
-import probability_updating.games as games
+import src.probability_updating as pu
+import src.probability_updating.games as games
 
 import supersuit as ss
 

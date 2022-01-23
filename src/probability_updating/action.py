@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import json
 import math
 from abc import abstractmethod, ABC
 from typing import Dict, List
 
 import numpy as np
 
-import probability_updating as pu
+import src.probability_updating as pu
 
 
 class Action(ABC):
@@ -61,7 +60,7 @@ class ContAction(Action):
         for y in messages:
             for x in y.outcomes:
                 if len(y.outcomes) == 1:
-                    strategy[y][x] = 1
+                    strategy[y][x] = 1.0
                 else:
                     strategy[y][x] = _input[cat][i]
                     i += 1
@@ -93,7 +92,7 @@ class HostAction(Action):
         for x in outcomes:
             for y in x.messages:
                 if len(x.messages) == 1:
-                    strategy[x][y] = 1
+                    strategy[x][y] = 1.0
                 else:
                     strategy[x][y] = _input[cat][i]
                     i += 1
