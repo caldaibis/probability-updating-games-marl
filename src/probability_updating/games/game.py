@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Callable
 
 import numpy as np
 
-import probability_updating as pu
-from exceptions import *
+import src.probability_updating as pu
+import src.exceptions
 
 from prettytable import PrettyTable
 
@@ -19,18 +19,19 @@ class Game(ABC):
     marginal_outcome: Dict[pu.Outcome, float]
     marginal_message: Dict[pu.Message, float]
 
-    loss: Dict[pu.Agent, pu.Loss]
-    entropy: Dict[pu.Agent, Optional[pu.EntropyFunc]]
+    loss: Dict[pu.Agent, Callable[[pu.ContAction, List[pu.Outcome], pu.Outcome, pu.Message], float]]
+    loss_names: Dict[pu.Agent, str]
+    entropy: Dict[pu.Agent, Optional[Callable[[pu.ContAction, List[pu.Outcome], pu.Message], float]]]
 
     strategy_util: pu.StrategyUtil
     action: Dict[pu.Agent, pu.Action]
     host_reverse: pu.ContAction
 
-    def __init__(self, losses: Dict[pu.Agent, pu.Loss], random_marginal: bool = False):
+    def __init__(self, loss_names: Dict[pu.Agent, str], random_marginal: bool = False):
         outcomes, messages = self.create_structure(len(self.default_marginal()), self.message_structure())
 
         if random_marginal:
-            marginal_outcome = dict(zip(outcomes, pu.random_marginal_distribution(len(outcomes))))
+            marginal_outcome = dict(zip(outcomes, pu.sample_catagorical_distribution(len(outcomes))))
         else:
             marginal_outcome = dict(zip(outcomes, self.default_marginal()))
 
@@ -40,8 +41,9 @@ class Game(ABC):
         self.messages = messages
         self.marginal_outcome = marginal_outcome
 
-        self.loss = losses
-        self.entropy = {agent: pu.get_entropy_fn(losses[agent]) for agent in pu.Agent}
+        self.loss_names = loss_names
+        self.loss = {agent: pu.loss_fns[loss_names[agent]] for agent in pu.Agent}
+        self.entropy = {agent: pu.get_entropy_fn(loss_names[agent]) for agent in pu.Agent}
 
         self.action = {agent: None for agent in pu.Agent}
 
@@ -49,7 +51,7 @@ class Game(ABC):
         try:
             self.action[agent] = pu.Action.get_class(agent).from_array(value, self.outcomes, self.messages)
         except IndexError:
-            raise InvalidStrategyError(value, self.get_action_space(agent))
+            raise src.exceptions.InvalidStrategyError(value, self.get_action_shape(agent))
 
         if agent == pu.Agent.Host:
             self.marginal_message = self.strategy_util.update_message_marginal()
@@ -72,7 +74,7 @@ class Game(ABC):
 
     def get_expected_losses(self) -> Dict[pu.Agent, float]:
         if self.any_illegal_action():
-            return {agent.value: pu.inf_loss for agent in pu.Agent}
+            return {agent.value: pu.CLIPPED_INFINITY_LOSS for agent in pu.Agent}
 
         return {agent.value: self.get_expected_loss(agent) for agent in pu.Agent}
 
@@ -84,14 +86,14 @@ class Game(ABC):
                 if not math.isnan(_l):
                     loss += _l
 
-        return np.sign(loss) * pu.inf_loss if math.isinf(loss) else loss
+        return np.sign(loss) * pu.CLIPPED_INFINITY_LOSS if math.isinf(loss) else loss
 
     def get_loss(self, agent: pu.Agent, x: pu.Outcome, y: pu.Message):
         return self.loss[agent](self.action[pu.Agent.Cont], self.outcomes, x, y)
 
     def get_expected_entropies(self):
         if self.any_illegal_action():
-            return {agent.value: pu.inf_loss for agent in pu.Agent}
+            return {agent.value: pu.CLIPPED_INFINITY_LOSS for agent in pu.Agent}
 
         return {agent.value: self.get_expected_entropy(agent) for agent in pu.Agent}
 
@@ -110,11 +112,17 @@ class Game(ABC):
 
         return math.nan
 
-    def get_action_space(self, agent: pu.Agent):
+    def get_action_shape(self, agent: pu.Agent) -> List[int]:
+        shape = []
         if agent == pu.Agent.Cont:
-            return sum(len(y.outcomes) - 1 for y in self.messages)
+            for y in self.messages:
+                if len(y.outcomes) > 1:
+                    shape.append(len(y.outcomes))
         elif agent == pu.Agent.Host:
-            return sum(len(x.messages) - 1 for x in self.outcomes)
+            for x in self.outcomes:
+                if len(x.messages) > 1:
+                    shape.append(len(x.messages))
+        return shape
 
     def is_graph_game(self) -> bool:
         return all(len(y.outcomes) <= 2 for y in self.messages)
@@ -184,6 +192,11 @@ class Game(ABC):
     @abstractmethod
     def name() -> str:
         pass
+    
+    @staticmethod
+    @abstractmethod
+    def pretty_name() -> str:
+        pass
 
     @staticmethod
     @abstractmethod
@@ -223,12 +236,12 @@ class Game(ABC):
                 table.add_row([y, "p=?     | " + str([str(x) for x in y.outcomes]).translate({39: None}).strip('[]')])
 
         table.add_row(['', ''])
-        table.add_row(['Cont loss', self.loss[pu.Agent.Cont].name])
-        table.add_row(['Host loss', self.loss[pu.Agent.Host].name])
+        table.add_row(['Cont loss', self.loss_names[pu.Agent.Cont]])
+        table.add_row(['Host loss', self.loss_names[pu.Agent.Host]])
 
         table.add_row(['', ''])
         table.add_row(['Cont action', ''])
-        table.add_row(['Action space', self.get_action_space(pu.Agent.Cont)])
+        table.add_row(['Action space', self.get_action_shape(pu.Agent.Cont)])
 
         try:
             for y in self.messages:
@@ -240,12 +253,12 @@ class Game(ABC):
 
             table.add_row(['Cont expected loss', self.get_expected_losses()[pu.Agent.Cont.value]])
             table.add_row(['Cont expected entropy', self.get_expected_entropies()[pu.Agent.Cont.value]])
-        except AttributeError:
+        except Exception as e:
             table.add_row(['Cont action', None])
 
         table.add_row(['', ''])
         table.add_row(['Host action', ''])
-        table.add_row(['Action space', self.get_action_space(pu.Agent.Host)])
+        table.add_row(['Action space', self.get_action_shape(pu.Agent.Host)])
         try:
             for x in self.outcomes:
                 for y in self.messages:
@@ -261,7 +274,7 @@ class Game(ABC):
             table.add_row(['RCAR RMSE: ', self.strategy_util.rcar_rmse()])
             table.add_row(['Host expected loss', self.get_expected_losses()[pu.Agent.Host.value]])
             table.add_row(['Host expected entropy', self.get_expected_entropies()[pu.Agent.Host.value]])
-        except AttributeError:
+        except Exception as e:
             table.add_row(['Host action', None])
 
         return str(table)

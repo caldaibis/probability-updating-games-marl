@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, List
 
 import numpy as np
 
@@ -14,9 +14,9 @@ class InvalidStrategyError(Exception):
         """
 
     strategy: np.ndarray
-    shape: int
+    shape: List[int]
 
-    def __init__(self, strategy: np.ndarray, shape: int):
+    def __init__(self, strategy: np.ndarray, shape: List[int]):
         self.strategy = strategy
         self.shape = shape
 

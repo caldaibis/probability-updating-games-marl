@@ -8,8 +8,9 @@ from gym import spaces
 from pettingzoo import ParallelEnv
 from pettingzoo.utils.agent_selector import agent_selector
 
-import probability_updating as pu
-import probability_updating.games as games
+import src.probability_updating as pu
+import src.probability_updating.games as games
+import src.learning as learning
 
 
 class ProbabilityUpdatingEnv(ParallelEnv):
@@ -17,7 +18,7 @@ class ProbabilityUpdatingEnv(ParallelEnv):
 
     game: games.Game
 
-    action_spaces: Dict[str, spaces.Box]
+    action_spaces: Dict[str, spaces.Tuple]
     observation_spaces: Dict[str, spaces.Box]
 
     def __init__(self, g: games.Game):
@@ -32,8 +33,14 @@ class ProbabilityUpdatingEnv(ParallelEnv):
 
         self._agent_selector = agent_selector(self.agents)
 
-        self.action_spaces = {agent.value: spaces.Box(low=0.0, high=1.0, shape=(g.get_action_space(agent),), dtype=np.float32) for agent in pu.Agent}
-        self.observation_spaces = {agent.value: spaces.Box(low=0.0, high=1.0, shape=(0,), dtype=np.float32) for agent in pu.Agent}
+        self.action_spaces = {
+            agent.value: spaces.Tuple([learning.CustomSimplex(actions) for actions in g.get_action_shape(agent)])
+            for agent in pu.Agent
+        }
+        self.observation_spaces = {
+            agent.value: spaces.Box(low=0.0, high=1.0, shape=(0,), dtype=np.float32)
+            for agent in pu.Agent
+        }
 
     def seed(self, seed=None):
         """
@@ -80,7 +87,10 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         observations = {agent: [] for agent in self.agents}
         rewards = {a: -loss for a, loss in losses.items()}
         dones = {agent: True for agent in self.agents}
-        infos = {agent: {} for agent in self.agents}
+        infos = {
+            pu.Agent.Cont.value: {},
+            pu.Agent.Host.value: {"rcar_rmse": self.game.strategy_util.rcar_rmse()},
+        }
 
         return observations, rewards, dones, infos
 

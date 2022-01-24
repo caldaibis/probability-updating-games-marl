@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import math
 from typing import Dict
-import probability_updating as pu
-import probability_updating.games as games
+import src.probability_updating as pu
+import src.probability_updating.games as games
 
 
 class StrategyUtil:

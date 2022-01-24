@@ -4,16 +4,12 @@ from typing import Dict
 
 import numpy as np
 
-import probability_updating as pu
+import src.probability_updating as pu
 from pettingzoo.test import parallel_api_test
 
 
 def manual_step(game: pu.Game, actions: Dict[pu.Agent, np.ndarray]):
-    print("MANUAL STEP")
-    print()
-    import supersuit as ss
     env = pu.ProbabilityUpdatingEnv(game)
-    env = ss.pad_action_space_v0(env)
     env.reset()
 
     env.step({a.value: actions[a] for a in actions.keys()})

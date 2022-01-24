@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import math
-from typing import List, Optional
-import probability_updating as pu
-import probability_updating.util as util
+from typing import List, Optional, Callable
+import src.probability_updating as pu
+import src.probability_updating.util as util
 
 
-def get_entropy_fn(loss: pu.Loss) -> Optional[pu.EntropyFunc]:
-    return entropy_fns.get(loss.name)
+def get_entropy_fn(loss: str) -> Optional[Callable[[pu.ContAction, List[pu.Outcome], pu.Message], float]]:
+    return entropy_fns.get(loss)
 
 
 def _zero_one_fn(host_reverse: pu.ContAction, outcomes: List[pu.Outcome], y: pu.Message) -> float:
@@ -38,7 +38,9 @@ def _logarithmic_fn(host_reverse: pu.ContAction, outcomes: List[pu.Outcome], y: 
 
 
 entropy_fns = {
-    "randomised 0-1": _zero_one_fn,
-    "brier": _brier_fn,
-    "logarithmic": _logarithmic_fn,
+    pu.RANDOMISED_ZERO_ONE: _zero_one_fn,
+    
+    pu.BRIER: _brier_fn,
+    
+    pu.LOGARITHMIC: _logarithmic_fn,
 }

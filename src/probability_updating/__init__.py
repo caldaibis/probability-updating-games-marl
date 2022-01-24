@@ -1,24 +1,32 @@
 from __future__ import annotations
 
-from typing import Callable
+CLIPPED_INFINITY_LOSS = 5
 
-from .probability_updating_env import ProbabilityUpdatingEnv
-from .games import Game
+RANDOMISED_ZERO_ONE = "randomised_0_1"
+RANDOMISED_ZERO_ONE_NEG = RANDOMISED_ZERO_ONE + "_neg"
 
-from .action import Action, ContAction, HostAction
-from .message import Message
-from .outcome import Outcome
+BRIER = "brier"
+BRIER_NEG = BRIER + "_neg"
 
-from .agent import *
-from .strategy_util import StrategyUtil
-from .simulation_wrapper import SimulationWrapper
+LOGARITHMIC = "logarithmic"
+LOGARITHMIC_NEG = LOGARITHMIC + "_neg"
 
-from .loss import *
-from .entropy import get_entropy_fn, entropy_fns
+MATRIX = "matrix"
+MATRIX_NEG = MATRIX + "_neg"
 
-from .util import random_marginal_distribution_alternative, random_marginal_distribution
+from src.probability_updating.probability_updating_env import ProbabilityUpdatingEnv
+from src.probability_updating.probability_updating_env_wrapper import ProbabilityUpdatingEnvWrapper
+from src.probability_updating.games import Game
 
-LossFunc = Callable[[ContAction, List[Outcome], Outcome, Message], float]
-EntropyFunc = Callable[[ContAction, List[Outcome], Message], float]
+from src.probability_updating.action import Action, ContAction, HostAction
+from src.probability_updating.message import Message
+from src.probability_updating.outcome import Outcome
 
-inf_loss = 5
+from src.probability_updating.agent import *
+from src.probability_updating.strategy_util import StrategyUtil
+from src.probability_updating.simulation_wrapper import SimulationWrapper
+
+from src.probability_updating.loss import *
+from src.probability_updating.entropy import get_entropy_fn, entropy_fns
+
+from src.probability_updating.util import sample_categorical_distribution
