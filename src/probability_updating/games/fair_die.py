@@ -4,13 +4,14 @@ from typing import List
 
 import numpy as np
 
+import src.probability_updating as pu
 import src.probability_updating.games as games
 
 
 class FairDie(games.Game):
     @staticmethod
     def name() -> str:
-        return "fair_die"
+        return pu.FAIR_DIE
     
     @staticmethod
     def pretty_name() -> str:

@@ -12,7 +12,6 @@ from ray.tune.progress_reporter import CLIReporter
 
 import src.probability_updating as pu
 import src.learning
-import supersuit as ss
 
 import shutil
 import os
@@ -114,7 +113,6 @@ class ModelWrapper:
                 "policy_mapping_fn": lambda agent_id, episode, **kwargs: agent_id,
             },
             "callbacks": src.learning.CustomMetricCallbacks,
-            "num_workers": 9,
         }
 
     def _create_tune_config(self) -> dict:
@@ -135,7 +133,6 @@ class ModelWrapper:
     @staticmethod
     def _create_env(game: pu.Game) -> MultiAgentEnv:
         env = pu.ProbabilityUpdatingEnv(game)
-        env = ss.agent_indicator_v0(env)
         return pu.ProbabilityUpdatingEnvWrapper(env)
 
     def _save_progress(self, analysis: ExperimentAnalysis):

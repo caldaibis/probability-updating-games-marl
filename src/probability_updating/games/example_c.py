@@ -4,13 +4,14 @@ from typing import List
 
 import numpy as np
 
+import src.probability_updating as pu
 import src.probability_updating.games as games
 
 
 class ExampleC(games.Game):
     @staticmethod
     def name() -> str:
-        return "example_c"
+        return pu.EXAMPLE_C
     
     @staticmethod
     def pretty_name() -> str:

@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+MONTY_HALL = "monty_hall"
+FAIR_DIE = "fair_die"
+EXAMPLE_C = "example_c"
+EXAMPLE_D = "example_d"
+EXAMPLE_E = "example_e"
+EXAMPLE_F = "example_f"
+EXAMPLE_H = "example_h"
+
 CLIPPED_INFINITY_LOSS = 5
 
 RANDOMISED_ZERO_ONE = "randomised_0_1"

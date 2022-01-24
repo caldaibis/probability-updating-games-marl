@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Dict
 
-import numpy as np
 from gym import spaces
 
 from pettingzoo import ParallelEnv
@@ -38,8 +37,7 @@ class ProbabilityUpdatingEnv(ParallelEnv):
             for agent in pu.Agent
         }
         self.observation_spaces = {
-            agent.value: spaces.Box(low=0.0, high=1.0, shape=(0,), dtype=np.float32)
-            for agent in pu.Agent
+            agent.value: spaces.Discrete(1) for agent in pu.Agent
         }
 
     def seed(self, seed=None):
@@ -84,8 +82,8 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         """
         losses = self.game.step(actions)
 
-        observations = {agent: [] for agent in self.agents}
-        rewards = {a: -loss for a, loss in losses.items()}
+        observations = {agent: 0 for agent in self.agents}
+        rewards = {agent: -loss for agent, loss in losses.items()}
         dones = {agent: True for agent in self.agents}
         infos = {
             pu.Agent.Cont.value: {},
@@ -117,4 +115,4 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         """
         self.agents = self.possible_agents[:]
 
-        return {agent: [] for agent in self.agents}
+        return {agent: 0 for agent in self.agents}
