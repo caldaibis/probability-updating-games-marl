@@ -14,7 +14,6 @@ class CustomMetricCallbacks(DefaultCallbacks):
     def on_episode_start(self, *, worker: "RolloutWorker", base_env: BaseEnv,
                          policies: Dict[PolicyID, Policy], episode: Episode,
                          **kwargs) -> None:
-        # print(episode.last_action_for(pu.Agent.Cont.value))
         pass
 
     def on_episode_step(self, *, worker: "RolloutWorker", base_env: BaseEnv,
@@ -25,19 +24,31 @@ class CustomMetricCallbacks(DefaultCallbacks):
     def on_episode_end(self, *, worker: "RolloutWorker", base_env: BaseEnv,
                        policies: Dict[PolicyID, Policy], episode: Episode,
                        **kwargs) -> None:
-        pass
-
+        episode.custom_metrics["reward_cont"] = episode.last_reward_for(pu.Agent.Cont.value)
+        episode.custom_metrics["reward_host"] = episode.last_reward_for(pu.Agent.Host.value)
+        
+        episode.custom_metrics["reward_min"] = min(episode.custom_metrics["reward_cont"], episode.custom_metrics["reward_host"])
+        episode.custom_metrics["reward_max"] = max(episode.custom_metrics["reward_cont"], episode.custom_metrics["reward_host"])
+        
+        episode.custom_metrics["universal_reward"] = episode.custom_metrics["reward_cont"] + episode.custom_metrics["reward_host"] - (episode.custom_metrics["reward_max"] - episode.custom_metrics["reward_min"])
+        
+        episode.custom_metrics["rcar_rmse"] = episode.last_info_for(pu.Agent.Host.value)["rcar_rmse"]
+        
     def on_sample_end(self, *, worker: RolloutWorker, samples: SampleBatch,
                       **kwargs):
         pass
 
     def on_train_result(self, *, trainer, result: dict, **kwargs):
-        result["policy_reward_mean_cont"] = result["policy_reward_mean"][pu.Agent.Cont.value]
-        result["policy_reward_mean_host"] = result["policy_reward_mean"][pu.Agent.Host.value]
-        result["policy_reward_mean_min"] = min(result["policy_reward_mean"][pu.Agent.Cont.value], result["policy_reward_mean"][pu.Agent.Host.value])
-        result["policy_reward_mean_max"] = max(result["policy_reward_mean"][pu.Agent.Cont.value], result["policy_reward_mean"][pu.Agent.Host.value])
-        result["surrogate_reward_mean"] = result["episode_reward_mean"] - (result["policy_reward_mean_max"] - result["policy_reward_mean_min"])
-        result["rcar_rmse"] = result["episode_reward_mean"] - (result["policy_reward_mean_max"] - result["policy_reward_mean_min"])
+        result["reward_cont_mean"] = result["custom_metrics"]["reward_cont_mean"]
+        result["reward_cont_eval_mean"] = result["evaluation"]["custom_metrics"]["reward_cont_mean"]
+        result["reward_host_mean"] = result["custom_metrics"]["reward_host_mean"]
+        result["reward_host_eval_mean"] = result["evaluation"]["custom_metrics"]["reward_host_mean"]
+        
+        result["universal_reward_mean"] = result["custom_metrics"]["universal_reward_mean"]
+        result["universal_reward_eval_mean"] = result["evaluation"]["custom_metrics"]["universal_reward_mean"]
+        
+        result["rcar_rmse_mean"] = result["custom_metrics"]["rcar_rmse_mean"]
+        result["rcar_rmse_eval_mean"] = result["evaluation"]["custom_metrics"]["rcar_rmse_mean"]
 
     def on_learn_on_batch(self, *, policy: Policy, train_batch: SampleBatch,
                           result: dict, **kwargs) -> None:

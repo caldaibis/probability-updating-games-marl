@@ -6,7 +6,7 @@ RANDOMISED_ZERO_ONE = "randomised_0_1"
 RANDOMISED_ZERO_ONE_NEG = RANDOMISED_ZERO_ONE + "_neg"
 
 BRIER = "brier"
-BRIER_NEG = BRIER + "_+neg"
+BRIER_NEG = BRIER + "_neg"
 
 LOGARITHMIC = "logarithmic"
 LOGARITHMIC_NEG = LOGARITHMIC + "_neg"

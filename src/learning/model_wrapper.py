@@ -43,26 +43,31 @@ class ModelWrapper:
 
         register_env("pug", lambda _: self.env)
 
-        self.reporter.add_metric_column("surrogate_reward_mean")
-        self.reporter.add_metric_column("rcar_rmse")
-        self.reporter.add_metric_column("policy_reward_mean_cont")
-        self.reporter.add_metric_column("policy_reward_mean_host")
-        self.reporter.add_metric_column("policy_reward_mean_min")
-        self.reporter.add_metric_column("policy_reward_mean_max")
+        self.reporter.add_metric_column("universal_reward_mean")
+        self.reporter.add_metric_column("universal_reward_eval_mean")
         
-        self.metric = "surrogate_reward_mean"
+        self.reporter.add_metric_column("rcar_rmse_mean")
+        self.reporter.add_metric_column("rcar_rmse_eval_mean")
+        
+        self.reporter.add_metric_column("reward_cont_mean")
+        self.reporter.add_metric_column("reward_cont_eval_mean")
+        
+        self.reporter.add_metric_column("reward_host_mean")
+        self.reporter.add_metric_column("reward_host_eval_mean")
+        
+        self.metric = "universal_reward_mean"
 
     def get_local_dir(self) -> str:
         return f"output_ray/{self.trainer_type.__name__}/"
 
-    def learn(self, show_figure: bool = False, save_figure: bool = False) -> ExperimentAnalysis:
+    def learn(self, show_figure: bool = False, save_progress: bool = False) -> ExperimentAnalysis:
         analysis = ray.tune.run(self.trainer_type, **self._create_tune_config())
 
+        if save_progress:
+            self._save_progress(analysis)
+        
         if show_figure:
-            visualisation.direct(analysis.trials)
-
-        if save_figure:
-            self._save_to_results(analysis)
+            visualisation.show_figure(analysis.trials, self.max_total_time_s)
 
         return analysis
 
@@ -94,7 +99,7 @@ class ModelWrapper:
             "num_cpus_for_driver": 1,
             "num_cpus_per_worker": 1,
             "framework": "torch",
-            "evaluation_interval": 5,
+            "evaluation_interval": 1,
             "evaluation_num_episodes": 1,
             "evaluation_config": {
                 "explore": False
@@ -109,14 +114,14 @@ class ModelWrapper:
                 "policy_mapping_fn": lambda agent_id, episode, **kwargs: agent_id,
             },
             "callbacks": src.learning.CustomMetricCallbacks,
-            "num_workers": 6,
+            "num_workers": 9,
         }
 
     def _create_tune_config(self) -> dict:
         return {
             "name": self.name,
             "config": self._create_model_config(),
-            "stop": CombinedStopper(src.learning.ConjunctiveStopper(ExperimentPlateauStopper(self.metric, mode="max", top=10, std=0.0005), src.learning.TotalTimeStopper(total_time_s=self.min_total_time_s)), src.learning.TotalTimeStopper(total_time_s=self.max_total_time_s)),
+            "stop": CombinedStopper(src.learning.ConjunctiveStopper(ExperimentPlateauStopper(self.metric, mode="max", top=10, std=0.0001), src.learning.TotalTimeStopper(total_time_s=self.min_total_time_s)), src.learning.TotalTimeStopper(total_time_s=self.max_total_time_s)),
             "checkpoint_freq": 5,
             "checkpoint_at_end": True,
             "local_dir": self.get_local_dir(),
@@ -133,15 +138,15 @@ class ModelWrapper:
         env = ss.agent_indicator_v0(env)
         return pu.ProbabilityUpdatingEnvWrapper(env)
 
-    def _save_to_results(self, analysis: ExperimentAnalysis):
-        loss = self.game.loss[pu.Agent.Cont]
-        same = self.game.loss[pu.Agent.Cont] == self.game.loss[pu.Agent.Host]
-        type_t = 'cooperative' if same else 'zero-sum'
+    def _save_progress(self, analysis: ExperimentAnalysis):
+        loss = self.game.loss_names[pu.Agent.Cont]
+        same = self.game.loss_names[pu.Agent.Cont] == self.game.loss_names[pu.Agent.Host]
+        interaction_type = 'cooperative' if same else 'zero-sum'
 
         algo = self.trainer_type.__name__
 
         original = Path(f'{analysis.best_logdir}/progress.csv')
-        destination_dir = Path(f'../visualisation/data/{loss}/{self.game.name()}/{type_t}/')
+        destination_dir = Path(f'../visualisation/data_new/{self.game.name()}/{loss}/{interaction_type}/')
 
         if os.path.isfile(Path(destination_dir / f'{algo.lower()}.csv')):
             i = 1
