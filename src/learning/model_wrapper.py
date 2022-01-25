@@ -141,7 +141,7 @@ class ModelWrapper:
         algo = self.trainer_type.__name__
 
         original = Path(f'{analysis.best_logdir}/progress.csv')
-        destination_dir = Path(f'../visualisation/data_new/{self.game.name()}/{loss}/{interaction_type}/')
+        destination_dir = Path(f'../visualisation/data/new/{self.game.name()}/{loss}/{interaction_type}/')
 
         if os.path.isfile(Path(destination_dir / f'{algo.lower()}.csv')):
             i = 1

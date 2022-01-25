@@ -19,9 +19,10 @@ if __name__ == '__main__':
         args['algorithm'] = algo
         for game in main.game_list:
             args['game'] = game
-            for (cont, host) in main.loss_zero_sum_list:
+            for (cont, host) in [(pu.RANDOMISED_ZERO_ONE, pu.RANDOMISED_ZERO_ONE_NEG)]:  # main.loss_zero_sum_list:
                 args[pu.CONT] = cont
                 args[pu.HOST] = host
-                print(f'START: running {args["algorithm"]} on {args["game"]} with {args[pu.CONT]} + {args[pu.HOST]} loss')
-                subprocess.call(["../../venv/Scripts/python", 'main.py', *output_args(args)])
-                print(f'END: ran {args["algorithm"]} on {args["game"]} with {args[pu.CONT]} + {args[pu.HOST]} loss')
+                
+                output = output_args(args)
+                print(output)
+                subprocess.call(["../../venv/Scripts/python", 'main.py', *output])

@@ -28,6 +28,16 @@ LOGARITHMIC_NEG = LOGARITHMIC + "_neg"
 MATRIX = "matrix"
 MATRIX_NEG = MATRIX + "_neg"
 
+PPO = 'ppo'
+A2C = 'a2c'
+DDPG = 'ddpg'
+TD3 = 'td3'
+SAC = 'sac'
+IMPALA = "impala"
+MARWIL = 'marwil'
+
+ALGOS = [PPO, A2C, DDPG, TD3, SAC, IMPALA, MARWIL]
+
 from src.probability_updating.probability_updating_env import ProbabilityUpdatingEnv
 from src.probability_updating.probability_updating_env_wrapper import ProbabilityUpdatingEnvWrapper
 from src.probability_updating.games import Game
