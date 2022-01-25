@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import statistics
 from typing import Dict
 import probability_updating as pu
 import probability_updating.games as games
@@ -45,42 +46,21 @@ class StrategyUtil:
         return True
 
     def is_rcar(self) -> bool:
-        rcar_vector = [float('nan') for _ in range(len(self.game.outcomes))]
+        rcar_vector = {x: float('nan') for x in self.game.outcomes}
         for x in self.game.outcomes:
             for y in x.messages:
-                if math.isnan(rcar_vector[x.id]):
-                    rcar_vector[x.id] = self.game.host_reverse[x, y]
-                elif not math.isclose(rcar_vector[x.id], self.game.host_reverse[x, y], rel_tol=1e-5):
+                if math.isnan(rcar_vector[x]):
+                    rcar_vector[x] = self.game.host_reverse[x, y]
+                elif not math.isclose(rcar_vector[x], self.game.host_reverse[x, y], rel_tol=1e-5):
                     return False
 
         return True
 
-    """Returns the SSE (sum of squared errors) or RSS (residual sum of squares) between the actual values and the RCAR values"""
-    def rcar_sse(self) -> float:
-        _sum = 0
-        rcar_vector = [float('nan') for _ in range(len(self.game.outcomes))]
+    """Returns an approximation of the distance between a potential RCAR vector and the actual vector"""
+    def rcar_dist(self) -> float:
+        dist = 0
         for x in self.game.outcomes:
-            for y in x.messages:
-                if math.isnan(rcar_vector[x.id]):
-                    rcar_vector[x.id] = self.game.host_reverse[x, y]
-                _sum += math.pow(rcar_vector[x.id] - self.game.host_reverse[x, y], 2)
+            mean = statistics.mean(self.game.host_reverse[x, y] for y in x.messages)
+            dist += math.sqrt(sum(math.pow(mean - self.game.host_reverse[x, y], 2) for y in x.messages))
 
-        return _sum
-
-    """Returns the MSE (mean square error) between the actual values and the RCAR values"""
-    def rcar_mse(self) -> float:
-        _sum = 0
-        _n = 0
-        rcar_vector = [float('nan') for _ in range(len(self.game.outcomes))]
-        for x in self.game.outcomes:
-            for y in x.messages:
-                if math.isnan(rcar_vector[x.id]):
-                    rcar_vector[x.id] = self.game.host_reverse[x, y]
-                _sum += math.pow(rcar_vector[x.id] - self.game.host_reverse[x, y], 2)
-                _n += 1
-
-        return _sum / _n
-
-    """Returns the RMSE (root mean square error) between the actual values and the RCAR values"""
-    def rcar_rmse(self) -> float:
-        return math.sqrt(self.rcar_mse())
+        return dist

@@ -26,12 +26,12 @@ class Loss:
     @staticmethod
     def zero_one() -> Loss:
         """Randomised 0-1 loss"""
-        return Loss("randomised_0-1", Loss._zero_one_fn)
+        return Loss("randomised_0_1", Loss._zero_one_fn)
 
     @staticmethod
     def zero_one_negative() -> Loss:
         """Negative randomised 0-1 loss"""
-        return Loss("negative_randomised_0-1", lambda c, o, x, y: -Loss._zero_one_fn(c, o, x, y))
+        return Loss("negative_randomised_0_1", lambda c, o, x, y: -Loss._zero_one_fn(c, o, x, y))
 
     @staticmethod
     def brier() -> Loss:

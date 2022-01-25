@@ -80,7 +80,10 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         observations = {agent: [] for agent in self.agents}
         rewards = {a: -loss for a, loss in losses.items()}
         dones = {agent: True for agent in self.agents}
-        infos = {agent: {} for agent in self.agents}
+        infos = {
+            pu.Agent.Cont.value: {},
+            pu.Agent.Host.value: {"rcar_dist": self.game.strategy_util.rcar_dist()},
+        }
 
         return observations, rewards, dones, infos
 

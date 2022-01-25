@@ -6,13 +6,16 @@ from typing import Dict, Optional, Type, Tuple
 import ray
 from ray.rllib.agents import Trainer
 from ray.rllib.env import ParallelPettingZooEnv
-from ray.tune import Trainable, register_env, sample_from, ExperimentAnalysis
+from ray.tune import Trainable, register_env, ExperimentAnalysis
 from ray.tune.stopper import CombinedStopper, ExperimentPlateauStopper, Stopper
 from ray.tune.progress_reporter import CLIReporter
 
 import probability_updating as pu
 from src.scripts_ray.stoppers import ConjunctiveStopper, TotalTimeStopper
-import visualisation
+
+import shutil
+import os
+from pathlib import Path
 
 
 class Model(ABC):
@@ -51,7 +54,7 @@ class Model(ABC):
             "num_cpus_for_driver": 1,
             "num_cpus_per_worker": 1,
             "framework": "torch",
-            "evaluation_interval": 5,
+            "evaluation_interval": 1,
             "evaluation_num_episodes": 1,
             "evaluation_config": {
                 "explore": False
@@ -82,18 +85,14 @@ class Model(ABC):
         return ray.tune.run(self.trainer_type, **self._create_tune_config())
 
     def save_to_results(self, analysis):
-        import shutil
-        import os
-        from pathlib import Path
-
         loss = self.game.loss[pu.Agent.Cont].name
         same = self.game.loss[pu.Agent.Cont].name == self.game.loss[pu.Agent.Host].name
         type_t = 'cooperative' if same else 'zero-sum'
 
-        algo = self.trainer_type._name
+        algo = self.trainer_type.__name__
 
         original = Path(f'{analysis.best_logdir}/progress.csv')
-        destination_dir = Path(f'../visualisation/data/{loss}/{self.game.name()}/{type_t}/')
+        destination_dir = Path(f'../visualisation/data_old_rcar_dist/{self.game.name()}/{loss}/{type_t}/')
 
         if os.path.isfile(Path(destination_dir / f'{algo.lower()}.csv')):
             i = 1

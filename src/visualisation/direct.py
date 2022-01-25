@@ -15,13 +15,13 @@ def direct(trials: List[Trial]):
     plt.figure()
 
     for t in trials:
-        data = pd.read_csv(f'{t.logdir}/progress.csv')[['time_total_s', 'surrogate_reward_mean']]
-        plt.plot(data['time_total_s'], data['surrogate_reward_mean'], label=t.experiment_tag)
+        data = pd.read_csv(f'{t.logdir}/progress.csv')[['time_total_s', 'universal_reward_mean']]
+        plt.plot(data['time_total_s'], data['universal_reward_mean'], label=t.experiment_tag)
 
     plt.legend(frameon=False, loc='lower right', ncol=1)
 
     plt.xlim(0, 60)
     plt.xlabel("Total time in seconds")
-    plt.ylabel("Surrogate reward mean")
+    plt.ylabel("Reward mean")
 
     plt.show()

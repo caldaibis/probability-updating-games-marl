@@ -73,10 +73,10 @@ hyper_param = {
 def run():
     # Essential configuration
     losses = {
-        pu.Agent.Cont: pu.Loss.brier(),
-        pu.Agent.Host: pu.Loss.brier()
+        pu.Agent.Cont: pu.Loss.zero_one(),
+        pu.Agent.Host: pu.Loss.zero_one_negative()
     }
-    game = pu.games.FairDie(losses)
+    game = pu.games.MontyHall(losses)
 
     if True:
         # Manual configuration
@@ -102,16 +102,14 @@ def run():
         ray_model = scripts_ray.IndependentLearning(game, losses, t, hyper_param[t], min_total_time_s, max_total_time_s)
 
         # Run
-        best = None
-        # best = ray_model.load()
-        if not best:
+        analysis = None
+        # analysis = ray_model.load()
+        if not analysis:
             analysis = ray_model.learn()
-            best = analysis.best_checkpoint
-            visualisation.direct(analysis.trials)
-            ray_model.save_to_results(analysis)
-
-        ray_model.predict(best)
-        print(game)
+            
+        ray_model.predict(analysis.best_checkpoint)
+        ray_model.save_to_results(analysis)
+        visualisation.direct(analysis.trials)
 
     ray.shutdown()
 

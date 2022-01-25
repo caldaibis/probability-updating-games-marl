@@ -29,14 +29,14 @@ def plot(game, loss, type, optimum, bottom = None):
     data = {}
     for algo in algos:
         try:
-            data[algo] = pd.read_csv(f'data/{loss}/{game}/{type}/{algo}.csv')[['time_total_s', 'surrogate_reward_mean']]
+            data[algo] = pd.read_csv(f'data/{loss}/{game}/{type}/{algo}.csv')[['time_total_s', 'universal_reward_mean']]
         except FileNotFoundError as e:
             pass
 
     # Plot datasets
     lines = []
     for algo in data:
-        lines.append(plt.plot(data[algo]['time_total_s'], data[algo]['surrogate_reward_mean'], label=algo.upper())[0])
+        lines.append(plt.plot(data[algo]['time_total_s'], data[algo]['universal_reward_mean'], label=algo.upper())[0])
 
     # Plot miscellaneous
     plt.axhspan(optimum, optimum + 0.004, alpha=0.5, zorder=1, color='gold')
@@ -51,7 +51,7 @@ def plot(game, loss, type, optimum, bottom = None):
         plt.ylim(bottom=bottom)
     # plt.title(f"{type.capitalize()} {game_names[game]} with {loss_names[loss]} loss")
     plt.xlabel("Total time in seconds")
-    plt.ylabel("Surrogate reward mean")
+    plt.ylabel("Reward mean")
 
     plt.savefig(f'data/figures/{game}_{loss}_{type}.png', transparent=False, bbox_inches='tight', pad_inches=0.02)
 

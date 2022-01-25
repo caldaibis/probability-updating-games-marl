@@ -15,13 +15,19 @@ class IndependentLearning(Model):
     def __init__(self, game: pu.Game, losses: Dict[pu.Agent, pu.Loss], trainer_type: Type[Trainer], hyper_param: Dict, min_total_time_s: int, max_total_time_s: int):
         super(IndependentLearning, self).__init__(game, losses, trainer_type, hyper_param, min_total_time_s, max_total_time_s)
 
-        self.reporter.add_metric_column("surrogate_reward_mean")
-        self.reporter.add_metric_column("policy_reward_mean_cont")
-        self.reporter.add_metric_column("policy_reward_mean_host")
-        self.reporter.add_metric_column("policy_reward_mean_min")
-        self.reporter.add_metric_column("policy_reward_mean_max")
-
-        self.metric = "surrogate_reward_mean"
+        self.reporter.add_metric_column("universal_reward_mean")
+        self.reporter.add_metric_column("universal_reward_eval_mean")
+        
+        self.reporter.add_metric_column("rcar_dist_mean")
+        self.reporter.add_metric_column("rcar_dist_eval_mean")
+        
+        self.reporter.add_metric_column("reward_cont_mean")
+        self.reporter.add_metric_column("reward_cont_eval_mean")
+        
+        self.reporter.add_metric_column("reward_host_mean")
+        self.reporter.add_metric_column("reward_host_eval_mean")
+        
+        self.metric = "universal_reward_mean"
     
     def get_local_dir(self) -> str:
         return f"output_ray/independent_learning/{self.trainer_type.__name__}/"
@@ -60,3 +66,4 @@ class IndependentLearning(Model):
         obs = self.env.reset()
         actions = {agent.value: trainer.compute_single_action(obs[agent.value], unsquash_action=True, explore=False, policy_id=agent.value) for agent in pu.Agent}
         obs, rewards, dones, infos = self.env.step(actions)
+        print(self.game)

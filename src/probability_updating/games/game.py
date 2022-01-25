@@ -256,9 +256,7 @@ class Game(ABC):
 
             table.add_row(['CAR?', self.strategy_util.is_car()])
             table.add_row(['RCAR?', self.strategy_util.is_rcar()])
-            table.add_row(['RCAR SSE : ', self.strategy_util.rcar_sse()])
-            table.add_row(['RCAR MSE : ', self.strategy_util.rcar_mse()])
-            table.add_row(['RCAR RMSE: ', self.strategy_util.rcar_rmse()])
+            table.add_row(['RCAR RMSE: ', self.strategy_util.rcar_dist()])
             table.add_row(['Host expected loss', self.get_expected_losses()[pu.Agent.Host.value]])
             table.add_row(['Host expected entropy', self.get_expected_entropies()[pu.Agent.Host.value]])
         except AttributeError:
