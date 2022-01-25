@@ -45,8 +45,8 @@ class ModelWrapper:
         self.reporter.add_metric_column("universal_reward_mean")
         self.reporter.add_metric_column("universal_reward_eval_mean")
         
-        self.reporter.add_metric_column("rcar_rmse_mean")
-        self.reporter.add_metric_column("rcar_rmse_eval_mean")
+        self.reporter.add_metric_column("rcar_dist_mean")
+        self.reporter.add_metric_column("rcar_dist_eval_mean")
         
         self.reporter.add_metric_column("reward_cont_mean")
         self.reporter.add_metric_column("reward_cont_eval_mean")
@@ -59,23 +59,21 @@ class ModelWrapper:
     def get_local_dir(self) -> str:
         return f"output_ray/{self.trainer_type.__name__}/"
 
-    def learn(self, show_figure: bool = False, save_progress: bool = False) -> ExperimentAnalysis:
+    def learn(self, predict: bool = False, show_figure: bool = False, save_progress: bool = False) -> None:
         analysis = ray.tune.run(self.trainer_type, **self._create_tune_config())
 
+        if predict:
+            self.predict(analysis.best_checkpoint)
+            
         if save_progress:
             self._save_progress(analysis)
         
         if show_figure:
             visualisation.show_figure(analysis.trials, self.max_total_time_s)
 
-        return analysis
-
-    def safe_load(self) -> Optional[ExperimentAnalysis]:
-        """Safely loads an existing checkpoint. If none exists, returns None"""
-        try:
-            return ExperimentAnalysis(f"{self.get_local_dir()}/{self.name}", default_metric=self.metric, default_mode="max")
-        except Exception as e:
-            return None
+    def load_and_predict(self) -> None:
+        """Loads the best existing checkpoint and predicts. If it fails, it will throw an exception."""
+        self.predict(ExperimentAnalysis(f"{self.get_local_dir()}/{self.name}", default_metric=self.metric, default_mode="max").best_checkpoint)
 
     def predict(self, checkpoint: str):
         trainer = self.trainer_type(config=self._create_model_config())

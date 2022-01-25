@@ -113,7 +113,7 @@ def run(args: Optional[Dict[str, str]]):
     if not args:
         args = {
             'algorithm': 'ppo',
-            'game_type': pu.FAIR_DIE,
+            'game_type': pu.EXAMPLE_H,
             'loss_type': pu.LOGARITHMIC,
             'interaction_type': 'zero-sum',
         }
@@ -126,7 +126,7 @@ def run(args: Optional[Dict[str, str]]):
     
     game = game_list[args['game_type']](losses)
 
-    if False:
+    if True:
         # Manual configuration
         actions = {
             pu.Agent.Cont: game.cont_optimal_zero_one(),
@@ -141,8 +141,8 @@ def run(args: Optional[Dict[str, str]]):
         # Configuration
         debug = False
         t = algo_list[args['algorithm']]
-        min_total_time_s = 60
-        max_total_time_s = 60
+        min_total_time_s = 0
+        max_total_time_s = 120
         custom_config = hyper_param[t]
         
         if debug:
@@ -153,13 +153,10 @@ def run(args: Optional[Dict[str, str]]):
             custom_config['num_workers'] = 9
 
         # Run
-        ray_model = learning.ModelWrapper(game, losses, t, hyper_param[t], min_total_time_s, max_total_time_s)
-        analysis = None
+        ray_model = learning.ModelWrapper(game, losses, t, custom_config, min_total_time_s, max_total_time_s)
         # analysis = ray_model.load()
-        if not analysis:
-            analysis = ray_model.learn(show_figure=True, save_progress=False)
-        # ray_model.predict(analysis.best_checkpoint)
-            
+        ray_model.learn(predict=True, show_figure=True, save_progress=False)
+        
         ray.shutdown()
 
 

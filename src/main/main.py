@@ -62,7 +62,7 @@ def run():
 
             # Run
             checkpoint = None
-            checkpoint = ray_model.safe_load()
+            checkpoint = ray_model.load_and_predict()
             if not checkpoint:
                 checkpoint = ray_model.learn(timeout_seconds)
             ray_model.predict(checkpoint)

@@ -87,7 +87,7 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         dones = {agent: True for agent in self.agents}
         infos = {
             pu.Agent.Cont.value: {},
-            pu.Agent.Host.value: {"rcar_rmse": self.game.strategy_util.rcar_rmse()},
+            pu.Agent.Host.value: {"rcar_dist": self.game.strategy_util.rcar_dist()},
         }
 
         return observations, rewards, dones, infos

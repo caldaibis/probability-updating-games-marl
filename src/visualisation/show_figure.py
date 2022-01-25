@@ -31,13 +31,13 @@ def show_figure(trials: List[Trial], max_total_time_s):
     plt.figure()
 
     for key in data:
-        plt.plot(data[key]['time_total_s'], data[key]['rcar_rmse_mean'], label=key.experiment_tag + ' RCAR RMSE')
-        plt.plot(data[key]['time_total_s'], data[key]['rcar_rmse_eval_mean'], label=key.experiment_tag + ' RCAR RMSE (eval)')
+        plt.plot(data[key]['time_total_s'], data[key]['rcar_dist_mean'], label=key.experiment_tag + ' RCAR dist')
+        plt.plot(data[key]['time_total_s'], data[key]['rcar_dist_eval_mean'], label=key.experiment_tag + ' RCAR dist (eval)')
 
     plt.legend(frameon=False, loc='lower right', ncol=1)
 
     plt.xlim(0, max(60, max_total_time_s))
     plt.xlabel("Total time in seconds")
-    plt.ylabel("RMSE")
+    plt.ylabel("RCAR distance")
 
     plt.show()

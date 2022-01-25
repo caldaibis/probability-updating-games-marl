@@ -32,7 +32,7 @@ class CustomMetricCallbacks(DefaultCallbacks):
         
         episode.custom_metrics["universal_reward"] = episode.custom_metrics["reward_cont"] + episode.custom_metrics["reward_host"] - (episode.custom_metrics["reward_max"] - episode.custom_metrics["reward_min"])
         
-        episode.custom_metrics["rcar_rmse"] = episode.last_info_for(pu.Agent.Host.value)["rcar_rmse"]
+        episode.custom_metrics["rcar_dist"] = episode.last_info_for(pu.Agent.Host.value)["rcar_dist"]
         
     def on_sample_end(self, *, worker: RolloutWorker, samples: SampleBatch,
                       **kwargs):
@@ -47,8 +47,8 @@ class CustomMetricCallbacks(DefaultCallbacks):
         result["universal_reward_mean"] = result["custom_metrics"]["universal_reward_mean"]
         result["universal_reward_eval_mean"] = result["evaluation"]["custom_metrics"]["universal_reward_mean"]
         
-        result["rcar_rmse_mean"] = result["custom_metrics"]["rcar_rmse_mean"]
-        result["rcar_rmse_eval_mean"] = result["evaluation"]["custom_metrics"]["rcar_rmse_mean"]
+        result["rcar_dist_mean"] = result["custom_metrics"]["rcar_dist_mean"]
+        result["rcar_dist_eval_mean"] = result["evaluation"]["custom_metrics"]["rcar_dist_mean"]
 
     def on_learn_on_batch(self, *, policy: Policy, train_batch: SampleBatch,
                           result: dict, **kwargs) -> None:
