@@ -13,7 +13,7 @@ import src.probability_updating.games as games
 algos = ['ppo']  # 'a2c', 'ddpg', 'td3', 'sac'
 
 
-def plot(new: bool, old: bool, no_eval: bool, eval: bool, game_type: Type[games.Game], loss: str, interaction_type: str, optimum: float, bottom: Optional[float] = None):
+def plot(new: bool, old: bool, no_eval: bool, eval: bool, game_type: Type[games.Game], loss: str, interaction_type: str, optimum: float, bottom: Optional[float] = None, rcar: bool = False):
     plt.figure()
 
     # Load datasets
@@ -22,7 +22,9 @@ def plot(new: bool, old: bool, no_eval: bool, eval: bool, game_type: Type[games.
         try:
             if new:
                 data['new'][algo] = pd.read_csv(f'data_new/{game_type.name()}/{loss}/{interaction_type}/{algo}.csv')
-            if old:
+            if old and rcar:
+                data['old'][algo] = pd.read_csv(f'data_old_rcar_dist/{loss}/{game_type.name()}/{interaction_type}/{algo}.csv')
+            elif old:
                 data['old'][algo] = pd.read_csv(f'data/{loss}/{game_type.name()}/{interaction_type}/{algo}.csv')
         except FileNotFoundError as e:
             pass
@@ -30,9 +32,18 @@ def plot(new: bool, old: bool, no_eval: bool, eval: bool, game_type: Type[games.
     # Plot datasets
     lines = []
     for algo in data['old']:
-        lines.append(plt.plot(data['old'][algo]['time_total_s'], data['old'][algo]['surrogate_reward_mean'], label=('old '+algo.upper()))[0])
+        if rcar and eval:
+            lines.append(plt.plot(data['old'][algo]['time_total_s'], data['old'][algo]['rcar_dist_eval_mean'], label=('old '+algo.upper()+' (eval)'))[0])
+        elif rcar:
+            lines.append(plt.plot(data['old'][algo]['time_total_s'], data['old'][algo]['rcar_dist_mean'], label=('old '+algo.upper()))[0])
+        else:
+            lines.append(plt.plot(data['old'][algo]['time_total_s'], data['old'][algo]['surrogate_reward_mean'], label=('old '+algo.upper()))[0])
     for algo in data['new']:
-        if eval:
+        if rcar and eval:
+            lines.append(plt.plot(data['new'][algo]['time_total_s'], data['new'][algo]['rcar_dist_eval_mean'], label=('new '+algo.upper()+' (eval)'))[0])
+        elif rcar:
+            lines.append(plt.plot(data['new'][algo]['time_total_s'], data['new'][algo]['rcar_dist_mean'], label=('new '+algo.upper()))[0])
+        elif eval:
             lines.append(plt.plot(data['new'][algo]['time_total_s'], data['new'][algo]['universal_reward_eval_mean'], label=('new '+algo.upper()+' (eval)'))[0])
         if no_eval:
             lines.append(plt.plot(data['new'][algo]['time_total_s'], data['new'][algo]['universal_reward_mean'], label=('new '+algo.upper()))[0])
@@ -67,11 +78,26 @@ def plot(new: bool, old: bool, no_eval: bool, eval: bool, game_type: Type[games.
         plt.savefig(f'figures/{game_type.name()}_{loss}_{interaction_type}.png', transparent=False, bbox_inches='tight', pad_inches=0.02)
 
 
-def show_all(new: bool = True, old: bool = False, no_eval: bool = False, eval: bool = True):
+def show_all(new: bool = True, old: bool = False, no_eval: bool = False, eval: bool = True, rcar: bool = False):
     # Set style
     sns.set()
     
-    # Plot figures
+    if rcar:
+        # Plot rcar figures
+        plot(new, old, no_eval, eval, game_type=pu.games.MontyHall, loss=pu.RANDOMISED_ZERO_ONE, interaction_type='zero-sum', optimum=-0.66667, rcar=rcar)
+
+        plot(new, old, no_eval, eval, game_type=pu.games.MontyHall, loss=pu.BRIER, interaction_type='zero-sum', optimum=-0.888, rcar=rcar)
+
+        plot(new, old, no_eval, eval, game_type=pu.games.MontyHall, loss=pu.LOGARITHMIC, interaction_type='zero-sum', optimum=-1.273, bottom=-2.5, rcar=rcar)
+
+        plot(new, old, no_eval, eval, game_type=pu.games.FairDie, loss=pu.RANDOMISED_ZERO_ONE, interaction_type='zero-sum', optimum=-1.333, rcar=rcar)
+
+        plot(new, old, no_eval, eval, game_type=pu.games.FairDie, loss=pu.BRIER, interaction_type='zero-sum', optimum=-1.444, rcar=rcar)
+
+        plot(new, old, no_eval, eval, game_type=pu.games.FairDie, loss=pu.LOGARITHMIC, interaction_type='zero-sum', optimum=-2.659, rcar=rcar)
+
+
+    # Plot mean reward figures
     plot(new, old, no_eval, eval, game_type=pu.games.MontyHall, loss=pu.RANDOMISED_ZERO_ONE, interaction_type='zero-sum', optimum=-0.66667)
     plot(new, old, no_eval, eval, game_type=pu.games.MontyHall, loss=pu.RANDOMISED_ZERO_ONE, interaction_type='cooperative', optimum=-0.66667)
 
@@ -95,4 +121,4 @@ def show_all(new: bool = True, old: bool = False, no_eval: bool = False, eval: b
 
 
 if __name__ == '__main__':
-    show_all(new=True, old=True, no_eval=True, eval=False)
+    show_all(new=True, old=True, no_eval=False, eval=True, rcar=True)

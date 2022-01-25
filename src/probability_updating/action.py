@@ -38,9 +38,9 @@ class Action(ABC):
 
     @staticmethod
     def get_class(agent: pu.Agent):
-        if agent == pu.Agent.Cont:
+        if agent == pu.CONT:
             return ContAction
-        if agent == pu.Agent.Host:
+        if agent == pu.HOST:
             return HostAction
         return KeyError("Did you input a wrong agent name?")
 

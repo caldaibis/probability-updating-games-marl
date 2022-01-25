@@ -38,7 +38,7 @@ class ModelWrapper:
         self.max_total_time_s = max_total_time_s
         self.reporter = CLIReporter(max_report_frequency=10)
 
-        self.name = f"{game.name()}_{pu.Agent.Cont}={losses[pu.Agent.Cont]}_{pu.Agent.Host}={losses[pu.Agent.Host]}"
+        self.name = f"{game.name()}_{pu.CONT}={losses[pu.CONT]}_{pu.HOST}={losses[pu.HOST]}"
 
         register_env("pug", lambda _: self.env)
 
@@ -81,8 +81,8 @@ class ModelWrapper:
 
         obs = self.env.reset()
         actions = {
-            agent.value: trainer.compute_single_action(obs[agent.value], explore=False, policy_id=agent.value)
-            for agent in pu.Agent
+            agent: trainer.compute_single_action(obs[agent], explore=False, policy_id=agent)
+            for agent in pu.AGENTS
         }
         obs, rewards, dones, infos = self.env.step(actions)
         print(self.game)
@@ -103,10 +103,10 @@ class ModelWrapper:
             },
             "multiagent": {
                 "policies": {
-                    pu.Agent.Cont.value: PolicySpec(None, self.env.observation_spaces[pu.Agent.Cont.value],
-                                                    self.env.action_spaces[pu.Agent.Cont.value], None),
-                    pu.Agent.Host.value: PolicySpec(None, self.env.observation_spaces[pu.Agent.Host.value],
-                                                    self.env.action_spaces[pu.Agent.Host.value], None),
+                    pu.CONT: PolicySpec(None, self.env.observation_spaces[pu.CONT],
+                                                    self.env.action_spaces[pu.CONT], None),
+                    pu.HOST: PolicySpec(None, self.env.observation_spaces[pu.HOST],
+                                                    self.env.action_spaces[pu.HOST], None),
                 },
                 "policy_mapping_fn": lambda agent_id, episode, **kwargs: agent_id,
             },
@@ -134,8 +134,8 @@ class ModelWrapper:
         return pu.ProbabilityUpdatingEnvWrapper(env)
 
     def _save_progress(self, analysis: ExperimentAnalysis):
-        loss = self.game.loss_names[pu.Agent.Cont]
-        same = self.game.loss_names[pu.Agent.Cont] == self.game.loss_names[pu.Agent.Host]
+        loss = self.game.loss_names[pu.CONT]
+        same = self.game.loss_names[pu.CONT] == self.game.loss_names[pu.HOST]
         interaction_type = 'cooperative' if same else 'zero-sum'
 
         algo = self.trainer_type.__name__

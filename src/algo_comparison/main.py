@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import distutils.util
 import logging
 import sys
 from typing import Dict, Optional
@@ -18,8 +19,15 @@ from ray.rllib.agents.sac import SACTrainer
 from ray.rllib.agents.impala import ImpalaTrainer
 from ray.rllib.agents.marwil import MARWILTrainer
 
+args_keys = [
+    'algorithm',
+    'game',
+    pu.CONT,
+    pu.HOST,
+    'show_example',
+    'debug_mode',
+]
 
-trainers = [PPOTrainer, A2CTrainer, DDPGTrainer, TD3Trainer, SACTrainer]
 hyper_param = {
     PPOTrainer: {
         "batch_mode": "complete_episodes",
@@ -94,75 +102,81 @@ algo_list = {
     'a2c': A2CTrainer,
 }
 
-loss_list = [pu.RANDOMISED_ZERO_ONE, pu.BRIER, pu.LOGARITHMIC]
+loss_list = [
+    pu.RANDOMISED_ZERO_ONE,
+    pu.BRIER,
+    pu.LOGARITHMIC
+]
+
+loss_neg_list = [
+    pu.RANDOMISED_ZERO_ONE_NEG,
+    pu.BRIER_NEG,
+    pu.LOGARITHMIC_NEG
+]
+
+loss_cooperative_list = zip(loss_list, loss_list)
+loss_zero_sum_list = zip(loss_list, loss_neg_list)
 
 game_list = {
     pu.MONTY_HALL: games.MontyHall,
     pu.FAIR_DIE  : games.FairDie,
-    pu.EXAMPLE_C : games.ExampleC,
-    pu.EXAMPLE_D : games.ExampleD,
-    pu.EXAMPLE_E : games.ExampleE,
-    pu.EXAMPLE_F : games.ExampleF,
-    pu.EXAMPLE_H : games.ExampleH,
+    # pu.EXAMPLE_C : games.ExampleC,
+    # pu.EXAMPLE_D : games.ExampleD,
+    # pu.EXAMPLE_E : games.ExampleE,
+    # pu.EXAMPLE_F : games.ExampleF,
+    # pu.EXAMPLE_H : games.ExampleH,
 }
 
-interaction_list = ['zero-sum', 'cooperative']
+interaction_list = [
+    'zero-sum',
+    # 'cooperative',
+]
 
 
 def run(args: Optional[Dict[str, str]]):
     if not args:
         args = {
             'algorithm': 'ppo',
-            'game_type': pu.EXAMPLE_H,
-            'loss_type': pu.LOGARITHMIC,
-            'interaction_type': 'zero-sum',
+            'game': pu.MONTY_HALL,
+            pu.CONT: pu.LOGARITHMIC,
+            pu.HOST: pu.LOGARITHMIC_NEG,
+            'show_example': True,
+            'debug_mode': False,
         }
         
     # Essential configuration
     losses = {
-        pu.Agent.Cont: args['loss_type'],
-        pu.Agent.Host: args['loss_type'] if args['interaction_type'] == 'cooperative' else args['loss_type'] + '_neg'
+        pu.CONT: args[pu.CONT],
+        pu.HOST: args[pu.HOST],
     }
     
-    game = game_list[args['game_type']](losses)
+    game = game_list[args['game']](losses)
 
-    if True:
-        # Manual configuration
-        actions = {
-            pu.Agent.Cont: game.cont_optimal_zero_one(),
-            pu.Agent.Host: game.host_default()
-        }
+    if distutils.util.strtobool(args['show_example']):
+        util.example_step(game, {pu.CONT: game.cont_optimal_zero_one(), pu.HOST: game.host_default()})
 
-        # Run
-        util.manual_step(game, actions)
-        print(game)
+    # Configuration
+    t = algo_list[args['algorithm']]
+    min_total_time_s = 60
+    max_total_time_s = 60
+    custom_config = hyper_param[t]
+    
+    if distutils.util.strtobool(args['debug_mode']):
+        ray.init(local_mode=True, logging_level=logging.DEBUG, log_to_driver=True)
+        custom_config['num_workers'] = 1
+    else:
+        ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)
+        custom_config['num_workers'] = 9
 
-    if True:
-        # Configuration
-        debug = False
-        t = algo_list[args['algorithm']]
-        min_total_time_s = 0
-        max_total_time_s = 120
-        custom_config = hyper_param[t]
-        
-        if debug:
-            ray.init(local_mode=True, logging_level=logging.DEBUG, log_to_driver=True)
-            custom_config['num_workers'] = 1
-        else:
-            ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)
-            custom_config['num_workers'] = 9
-
-        # Run
-        ray_model = learning.ModelWrapper(game, losses, t, custom_config, min_total_time_s, max_total_time_s)
-        # analysis = ray_model.load()
-        ray_model.learn(predict=True, show_figure=True, save_progress=False)
-        
-        ray.shutdown()
+    # Run
+    ray_model = learning.ModelWrapper(game, losses, t, custom_config, min_total_time_s, max_total_time_s)
+    # analysis = ray_model.load()
+    ray_model.learn(predict=False, show_figure=False, save_progress=True)
+    
+    ray.shutdown()
 
 
 if __name__ == '__main__':
-    args_keys = ['algorithm', 'game_type', 'loss_type', 'interaction_type']
-    
     if len(sys.argv) == 1:
         run(None)
     else:

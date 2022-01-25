@@ -21,7 +21,7 @@ class StrategyUtil:
                 if self.game.marginal_message[y] == 0:
                     reverse[y][x] = 0
                 else:
-                    reverse[y][x] = self.game.action[pu.Agent.Host][x, y] * self.game.marginal_outcome[x] / self.game.marginal_message[y]
+                    reverse[y][x] = self.game.action[pu.HOST][x, y] * self.game.marginal_outcome[x] / self.game.marginal_message[y]
 
         return pu.ContAction(reverse)
 
@@ -30,7 +30,7 @@ class StrategyUtil:
         for y in self.game.messages:
             probs[y] = 0
             for x in self.game.outcomes:
-                probs[y] += self.game.action[pu.Agent.Host][x, y] * self.game.marginal_outcome[x]
+                probs[y] += self.game.action[pu.HOST][x, y] * self.game.marginal_outcome[x]
 
         return probs
 
@@ -39,8 +39,8 @@ class StrategyUtil:
             val = float('nan')
             for x in y.outcomes:
                 if math.isnan(val):
-                    val = self.game.action[pu.Agent.Host][x, y]
-                elif not math.isclose(val, self.game.action[pu.Agent.Host][x, y], rel_tol=1e-5):
+                    val = self.game.action[pu.HOST][x, y]
+                elif not math.isclose(val, self.game.action[pu.HOST][x, y], rel_tol=1e-5):
                     return False
 
         return True

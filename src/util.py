@@ -8,11 +8,12 @@ import src.probability_updating as pu
 from pettingzoo.test import parallel_api_test
 
 
-def manual_step(game: pu.Game, actions: Dict[pu.Agent, np.ndarray]):
+def example_step(game: pu.Game, actions: Dict[pu.Agent, np.ndarray]):
     env = pu.ProbabilityUpdatingEnv(game)
     env.reset()
 
-    env.step({a.value: actions[a] for a in actions.keys()})
+    env.step(actions)
+    print(game)
 
 
 def simulate(game: pu.Game, actions: Dict[pu.Agent, np.ndarray]):
@@ -32,12 +33,12 @@ def simulate(game: pu.Game, actions: Dict[pu.Agent, np.ndarray]):
         print(f"y{y.id}: {y_count[y]} times")
 
     print()
-    print(f"Mean loss (cont): {mean_loss[pu.Agent.Cont]}")
-    print(f"Mean loss (host): {mean_loss[pu.Agent.Host]}")
+    print(f"Mean loss (cont): {mean_loss[pu.CONT]}")
+    print(f"Mean loss (host): {mean_loss[pu.HOST]}")
 
     print()
-    print(f"Mean entropy (cont): {mean_entropy[pu.Agent.Cont]}")
-    print(f"Mean entropy (host): {mean_entropy[pu.Agent.Host]}")
+    print(f"Mean entropy (cont): {mean_entropy[pu.CONT]}")
+    print(f"Mean entropy (host): {mean_entropy[pu.HOST]}")
 
     print()
     print("SIMULATION END")
@@ -46,7 +47,7 @@ def simulate(game: pu.Game, actions: Dict[pu.Agent, np.ndarray]):
 def test(game: pu.Game, actions: Dict[pu.Agent, np.ndarray]):
     print("MANUAL TEST RUN BEGIN")
 
-    manual_step(game, actions)
+    example_step(game, actions)
     print(game)
 
     simulate(game, actions)

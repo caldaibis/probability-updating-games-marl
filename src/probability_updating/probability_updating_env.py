@@ -27,17 +27,17 @@ class ProbabilityUpdatingEnv(ParallelEnv):
 
         self.seed()
 
-        self.agents = [agent.value for agent in pu.Agent]
+        self.agents = [agent for agent in pu.AGENTS]
         self.possible_agents = self.agents[:]
 
         self._agent_selector = agent_selector(self.agents)
 
         self.action_spaces = {
-            agent.value: spaces.Tuple([learning.CustomSimplex(actions) for actions in g.get_action_shape(agent)])
-            for agent in pu.Agent
+            agent: spaces.Tuple([learning.CustomSimplex(actions) for actions in g.get_action_shape(agent)])
+            for agent in pu.AGENTS
         }
         self.observation_spaces = {
-            agent.value: spaces.Discrete(1) for agent in pu.Agent
+            agent: spaces.Discrete(1) for agent in pu.AGENTS
         }
 
     def seed(self, seed=None):
@@ -86,8 +86,8 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         rewards = {agent: -loss for agent, loss in losses.items()}
         dones = {agent: True for agent in self.agents}
         infos = {
-            pu.Agent.Cont.value: {},
-            pu.Agent.Host.value: {"rcar_dist": self.game.strategy_util.rcar_dist()},
+            pu.CONT: {},
+            pu.HOST: {"rcar_dist": self.game.strategy_util.rcar_dist()},
         }
 
         return observations, rewards, dones, infos

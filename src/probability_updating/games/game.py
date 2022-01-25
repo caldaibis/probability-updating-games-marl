@@ -42,10 +42,10 @@ class Game(ABC):
         self.marginal_outcome = marginal_outcome
 
         self.loss_names = loss_names
-        self.loss = {agent: pu.loss_fns[loss_names[agent]] for agent in pu.Agent}
-        self.entropy = {agent: pu.get_entropy_fn(loss_names[agent]) for agent in pu.Agent}
+        self.loss = {agent: pu.loss_fns[loss_names[agent]] for agent in pu.AGENTS}
+        self.entropy = {agent: pu.get_entropy_fn(loss_names[agent]) for agent in pu.AGENTS}
 
-        self.action = {agent: None for agent in pu.Agent}
+        self.action = {agent: None for agent in pu.AGENTS}
 
     def set_action(self, agent: pu.Agent, value: np.ndarray):
         try:
@@ -53,49 +53,49 @@ class Game(ABC):
         except IndexError:
             raise src.exceptions.InvalidStrategyError(value, self.get_action_shape(agent))
 
-        if agent == pu.Agent.Host:
+        if agent == pu.HOST:
             self.marginal_message = self.strategy_util.update_message_marginal()
             self.host_reverse = self.strategy_util.update_strategy_host_reverse()
 
     def step(self, actions: Dict[str, np.ndarray]) -> Dict[pu.Agent, float]:
-        for agent in pu.Agent:
-            self.set_action(agent, actions[agent.value])
+        for agent in pu.AGENTS:
+            self.set_action(agent, actions[agent])
 
         return self.get_expected_losses()
 
     def any_illegal_action(self) -> bool:
-        cont_out_domain = not self.action[pu.Agent.Cont].is_within_domain(self.outcomes, self.messages)
-        host_out_domain = not self.action[pu.Agent.Host].is_within_domain(self.outcomes, self.messages)
+        cont_out_domain = not self.action[pu.CONT].is_within_domain(self.outcomes, self.messages)
+        host_out_domain = not self.action[pu.HOST].is_within_domain(self.outcomes, self.messages)
 
-        cont_no_distribution = not self.action[pu.Agent.Cont].sums_to_one(self.outcomes, self.messages)
-        host_no_distribution = not self.action[pu.Agent.Host].sums_to_one(self.outcomes, self.messages)
+        cont_no_distribution = not self.action[pu.CONT].sums_to_one(self.outcomes, self.messages)
+        host_no_distribution = not self.action[pu.HOST].sums_to_one(self.outcomes, self.messages)
 
         return cont_out_domain or host_out_domain or cont_no_distribution or host_no_distribution
 
     def get_expected_losses(self) -> Dict[pu.Agent, float]:
         if self.any_illegal_action():
-            return {agent.value: pu.CLIPPED_INFINITY_LOSS for agent in pu.Agent}
+            return {agent: pu.CLIPPED_INFINITY_LOSS for agent in pu.AGENTS}
 
-        return {agent.value: self.get_expected_loss(agent) for agent in pu.Agent}
+        return {agent: self.get_expected_loss(agent) for agent in pu.AGENTS}
 
     def get_expected_loss(self, agent: pu.Agent) -> float:
         loss: float = 0
         for x in self.outcomes:
             for y in self.messages:
-                _l = self.marginal_outcome[x] * self.action[pu.Agent.Host][x, y] * self.get_loss(agent, x, y)
+                _l = self.marginal_outcome[x] * self.action[pu.HOST][x, y] * self.get_loss(agent, x, y)
                 if not math.isnan(_l):
                     loss += _l
 
         return np.sign(loss) * pu.CLIPPED_INFINITY_LOSS if math.isinf(loss) else loss
 
     def get_loss(self, agent: pu.Agent, x: pu.Outcome, y: pu.Message):
-        return self.loss[agent](self.action[pu.Agent.Cont], self.outcomes, x, y)
+        return self.loss[agent](self.action[pu.CONT], self.outcomes, x, y)
 
     def get_expected_entropies(self):
         if self.any_illegal_action():
-            return {agent.value: pu.CLIPPED_INFINITY_LOSS for agent in pu.Agent}
+            return {agent: pu.CLIPPED_INFINITY_LOSS for agent in pu.AGENTS}
 
-        return {agent.value: self.get_expected_entropy(agent) for agent in pu.Agent}
+        return {agent: self.get_expected_entropy(agent) for agent in pu.AGENTS}
 
     def get_expected_entropy(self, agent: pu.Agent) -> Optional[float]:
         ent: float = 0
@@ -114,11 +114,11 @@ class Game(ABC):
 
     def get_action_shape(self, agent: pu.Agent) -> List[int]:
         shape = []
-        if agent == pu.Agent.Cont:
+        if agent == pu.CONT:
             for y in self.messages:
                 if len(y.outcomes) > 1:
                     shape.append(len(y.outcomes))
-        elif agent == pu.Agent.Host:
+        elif agent == pu.HOST:
             for x in self.outcomes:
                 if len(x.messages) > 1:
                     shape.append(len(x.messages))
@@ -236,42 +236,42 @@ class Game(ABC):
                 table.add_row([y, "p=?     | " + str([str(x) for x in y.outcomes]).translate({39: None}).strip('[]')])
 
         table.add_row(['', ''])
-        table.add_row(['Cont loss', self.loss_names[pu.Agent.Cont]])
-        table.add_row(['Host loss', self.loss_names[pu.Agent.Host]])
+        table.add_row(['Cont loss', self.loss_names[pu.CONT]])
+        table.add_row(['Host loss', self.loss_names[pu.HOST]])
 
         table.add_row(['', ''])
         table.add_row(['Cont action', ''])
-        table.add_row(['Action space', self.get_action_shape(pu.Agent.Cont)])
+        table.add_row(['Action space', self.get_action_shape(pu.CONT)])
 
         try:
             for y in self.messages:
                 for x in self.outcomes:
                     if x == self.outcomes[0]:
-                        table.add_row([y, f"{x}: {self.action[pu.Agent.Cont][x, y]}"])
+                        table.add_row([y, f"{x}: {self.action[pu.CONT][x, y]}"])
                     else:
-                        table.add_row(['', f"{x}: {self.action[pu.Agent.Cont][x, y]}"])
+                        table.add_row(['', f"{x}: {self.action[pu.CONT][x, y]}"])
 
-            table.add_row(['Cont expected loss', self.get_expected_losses()[pu.Agent.Cont.value]])
-            table.add_row(['Cont expected entropy', self.get_expected_entropies()[pu.Agent.Cont.value]])
+            table.add_row(['Cont expected loss', self.get_expected_losses()[pu.CONT]])
+            table.add_row(['Cont expected entropy', self.get_expected_entropies()[pu.CONT]])
         except Exception as e:
             table.add_row(['Cont action', None])
 
         table.add_row(['', ''])
         table.add_row(['Host action', ''])
-        table.add_row(['Action space', self.get_action_shape(pu.Agent.Host)])
+        table.add_row(['Action space', self.get_action_shape(pu.HOST)])
         try:
             for x in self.outcomes:
                 for y in self.messages:
                     if y == self.messages[0]:
-                        table.add_row([x, f"{y}: {self.action[pu.Agent.Host][x, y]}"])
+                        table.add_row([x, f"{y}: {self.action[pu.HOST][x, y]}"])
                     else:
-                        table.add_row(['', f"{y}: {self.action[pu.Agent.Host][x, y]}"])
+                        table.add_row(['', f"{y}: {self.action[pu.HOST][x, y]}"])
 
             table.add_row(['CAR?', self.strategy_util.is_car()])
             table.add_row(['RCAR?', self.strategy_util.is_rcar()])
             table.add_row(['RCAR dist: ', self.strategy_util.rcar_dist()])
-            table.add_row(['Host expected loss', self.get_expected_losses()[pu.Agent.Host.value]])
-            table.add_row(['Host expected entropy', self.get_expected_entropies()[pu.Agent.Host.value]])
+            table.add_row(['Host expected loss', self.get_expected_losses()[pu.HOST]])
+            table.add_row(['Host expected entropy', self.get_expected_entropies()[pu.HOST]])
         except Exception as e:
             table.add_row(['Host action', None])
 

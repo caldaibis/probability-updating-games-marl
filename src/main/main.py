@@ -15,8 +15,8 @@ def run():
     # _games = pu.Game.__subclasses__()
     _games = [pu.games.MontyHall]
     losses = {
-        pu.Agent.Cont: pu.Loss.zero_one(),
-        pu.Agent.Host: pu.Loss.zero_one()
+        pu.CONT: pu.Loss.zero_one(),
+        pu.HOST: pu.Loss.zero_one()
     }
 
     # ---------------------------------------------------------------
@@ -29,13 +29,13 @@ def run():
         if False:
             # Manual run configuration
             actions = {
-                pu.Agent.Cont: game.cont_optimal_zero_one(),
-                pu.Agent.Host: game.host_default()
+                pu.CONT: game.cont_optimal_zero_one(),
+                pu.HOST: game.host_default()
             }
 
             # Run
             # util.test(game, actions)
-            util.manual_step(game, actions)
+            util.example_step(game, actions)
             print(game)
 
         # ---------------------------------------------------------------

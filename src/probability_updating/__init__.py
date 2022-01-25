@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+CONT = "cont"
+HOST = "host"
+
+AGENTS = [CONT, HOST]
+Agent = str
+
 MONTY_HALL = "monty_hall"
 FAIR_DIE = "fair_die"
 EXAMPLE_C = "example_c"
@@ -30,7 +36,6 @@ from src.probability_updating.action import Action, ContAction, HostAction
 from src.probability_updating.message import Message
 from src.probability_updating.outcome import Outcome
 
-from src.probability_updating.agent import *
 from src.probability_updating.strategy_util import StrategyUtil
 from src.probability_updating.simulation_wrapper import SimulationWrapper
 

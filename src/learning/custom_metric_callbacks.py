@@ -24,15 +24,15 @@ class CustomMetricCallbacks(DefaultCallbacks):
     def on_episode_end(self, *, worker: "RolloutWorker", base_env: BaseEnv,
                        policies: Dict[PolicyID, Policy], episode: Episode,
                        **kwargs) -> None:
-        episode.custom_metrics["reward_cont"] = episode.last_reward_for(pu.Agent.Cont.value)
-        episode.custom_metrics["reward_host"] = episode.last_reward_for(pu.Agent.Host.value)
+        episode.custom_metrics["reward_cont"] = episode.last_reward_for(pu.CONT)
+        episode.custom_metrics["reward_host"] = episode.last_reward_for(pu.HOST)
         
         episode.custom_metrics["reward_min"] = min(episode.custom_metrics["reward_cont"], episode.custom_metrics["reward_host"])
         episode.custom_metrics["reward_max"] = max(episode.custom_metrics["reward_cont"], episode.custom_metrics["reward_host"])
         
         episode.custom_metrics["universal_reward"] = episode.custom_metrics["reward_cont"] + episode.custom_metrics["reward_host"] - (episode.custom_metrics["reward_max"] - episode.custom_metrics["reward_min"])
         
-        episode.custom_metrics["rcar_dist"] = episode.last_info_for(pu.Agent.Host.value)["rcar_dist"]
+        episode.custom_metrics["rcar_dist"] = episode.last_info_for(pu.HOST)["rcar_dist"]
         
     def on_sample_end(self, *, worker: RolloutWorker, samples: SampleBatch,
                       **kwargs):
