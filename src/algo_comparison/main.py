@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import logging
+import sys
+from typing import Optional, Dict
 
 import util
 
 import probability_updating as pu
+import probability_updating.games as games
 
 import ray
 import scripts_ray
@@ -69,16 +72,51 @@ hyper_param = {
     },
 }
 
+algo_list = {
+    'ppo': PPOTrainer,
+    'a2c': A2CTrainer
+}
 
-def run():
+loss_list = {
+    pu.Loss.zero_one().name: pu.Loss.zero_one(),
+    pu.Loss.brier().name: pu.Loss.brier(),
+    pu.Loss.logarithmic().name: pu.Loss.logarithmic(),
+}
+
+loss_neg_list = {
+    pu.Loss.zero_one().name: pu.Loss.zero_one_negative(),
+    pu.Loss.brier().name: pu.Loss.brier_negative(),
+    pu.Loss.logarithmic().name: pu.Loss.logarithmic_negative(),
+}
+
+game_list = {
+    games.MontyHall.name(): games.MontyHall,
+    games.FairDie.name(): games.FairDie,
+}
+
+# games.ExampleC
+# games.ExampleD
+# games.ExampleE
+# games.ExampleF
+# games.ExampleH
+
+
+def run(args: Optional[Dict[str, str]]):
+    if not args:
+        args = {
+            'algorithm': PPOTrainer,
+            'game_type': games.MontyHall,
+            'loss': pu.Loss.zero_one(),
+        }
+    
     # Essential configuration
     losses = {
-        pu.Agent.Cont: pu.Loss.zero_one(),
-        pu.Agent.Host: pu.Loss.zero_one_negative()
+        pu.Agent.Cont: loss_list[args['loss']],
+        pu.Agent.Host: loss_neg_list[args['loss']],
     }
-    game = pu.games.MontyHall(losses)
+    game = game_list[args['game_type']](losses)
 
-    if True:
+    if False:
         # Manual configuration
         actions = {
             pu.Agent.Cont: game.cont_optimal_zero_one(),
@@ -94,7 +132,7 @@ def run():
         ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)  # Running
         # ray.init(local_mode=True, logging_level=logging.INFO, log_to_driver=True)  # Debugging
 
-        t = PPOTrainer
+        t = algo_list[args['algorithm']]
 
         min_total_time_s = 60
         max_total_time_s = 60
@@ -109,10 +147,15 @@ def run():
             
         ray_model.predict(analysis.best_checkpoint)
         ray_model.save_to_results(analysis)
-        visualisation.direct(analysis.trials)
+        # visualisation.direct(analysis.trials)
 
     ray.shutdown()
 
 
 if __name__ == '__main__':
-    run()
+    args_keys = ['algorithm', 'game_type', 'loss']
+    
+    if len(sys.argv) == 1:
+        run(None)
+    else:
+        run(dict(zip(args_keys, sys.argv[1:])))

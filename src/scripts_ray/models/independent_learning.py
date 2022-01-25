@@ -49,7 +49,7 @@ class IndependentLearning(Model):
                 "policy_mapping_fn": lambda agent_id, episode, **kwargs: agent_id,
             },
             "callbacks": CustomMetricCallbacks,
-            "num_workers": 6,
+            "num_workers": 9,
         }
 
     @classmethod
