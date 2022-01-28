@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import Dict, Type
 from ray.rllib import MultiAgentEnv
 from ray.rllib.agents import Trainer
+from ray.rllib.models import ModelCatalog
+from ray.rllib.models.torch.torch_action_dist import TorchDeterministic
 from ray.rllib.policy.policy import PolicySpec
 
 import probability_updating as pu

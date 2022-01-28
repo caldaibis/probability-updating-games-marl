@@ -13,7 +13,6 @@ def manual_step(game: pu.Game, actions: Dict[pu.Agent, np.ndarray]):
     print()
     import supersuit as ss
     env = pu.ProbabilityUpdatingEnv(game)
-    env = ss.pad_action_space_v0(env)
     env.reset()
 
     env.step({a.value: actions[a] for a in actions.keys()})

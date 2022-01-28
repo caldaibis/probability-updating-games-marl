@@ -6,6 +6,8 @@ import numpy as np
 
 import probability_updating.games as games
 
+# Alleen voor deze random kansverdelingen draaien!
+# Grapgh en Matroid
 
 class MontyHall(games.Game):
     @staticmethod
@@ -28,25 +30,25 @@ class MontyHall(games.Game):
         ]
 
     @staticmethod
-    def cont_optimal_zero_one() -> np.ndarray:
-        return np.array([1, 0])
+    def cont_optimal_zero_one() -> list:
+        return [1, 0, 0, 1]
 
     @staticmethod
-    def host_default() -> np.ndarray:
-        return np.array([1 / 2])
+    def host_default() -> list:
+        return [1 / 2, 1 / 2]
 
     @staticmethod
-    def cont_always_stay() -> np.ndarray:
-        return np.array([0, 1])
+    def cont_always_stay() -> list:
+        return [0, 1, 1, 0]
 
     @staticmethod
-    def cont_min_loss_logarithmic() -> np.ndarray:
-        return np.array([2 / 3, 1 / 3])
+    def cont_min_loss_logarithmic() -> list:
+        return [2 / 3, 1 / 3, 1 / 3, 2 / 3]
 
     @staticmethod
-    def host_always_y1() -> np.ndarray:
-        return np.array([1])
+    def host_always_y1() -> list:
+        return [1, 0]
 
     @staticmethod
-    def host_always_y2() -> np.ndarray:
-        return np.array([0])
+    def host_always_y2() -> list:
+        return [0, 1]

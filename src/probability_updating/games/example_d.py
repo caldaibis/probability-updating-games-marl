@@ -29,9 +29,9 @@ class ExampleD(games.Game):
         ]
 
     @staticmethod
-    def cont_optimal_zero_one() -> np.ndarray:
-        return np.array([1, 1 / 2, 1 / 2])
+    def cont_optimal_zero_one() -> list:
+        return [1, 1 / 2, 1 / 2]
 
     @staticmethod
-    def host_default() -> np.ndarray:
-        return np.array([1 / 2])
+    def host_default() -> list:
+        return [1 / 2]

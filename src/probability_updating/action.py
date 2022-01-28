@@ -6,6 +6,7 @@ from abc import abstractmethod, ABC
 from typing import Dict, List
 
 import numpy as np
+from ray.rllib.utils import softmax
 
 import probability_updating as pu
 
@@ -20,7 +21,7 @@ class Action(ABC):
 
     @classmethod
     @abstractmethod
-    def from_array(cls, _input: np.ndarray, outcomes: List[pu.Outcome], messages: List[pu.Message]) -> Action:
+    def from_array(cls, _input: np.ndarray, outcomes: List[pu.Outcome], messages: List[pu.Message], is_numpy_array: bool) -> Action:
         pass
 
     @abstractmethod
@@ -53,20 +54,28 @@ class ContAction(Action):
         return self.action[idx[1]][idx[0]]
 
     @classmethod
-    def from_array(cls, _input: np.ndarray, outcomes: List[pu.Outcome], messages: List[pu.Message]) -> Action:
+    def from_array(cls, _input: np.ndarray, outcomes: List[pu.Outcome], messages: List[pu.Message], is_numpy_array: bool) -> Action:
         i = 0
         strategy = {y: {x: 0 for x in outcomes} for y in messages}
-
+        
         for y in messages:
-            sum_prob = 0
-            for x in y.outcomes:
-                if x == y.outcomes[-1]:
-                    strategy[y][x] = 1 - sum_prob
-                else:
-                    strategy[y][x] = _input[i]
-                    sum_prob += _input[i]
-                    i += 1
+            if len(y.outcomes) == 0:
+                continue
+                
+            if len(y.outcomes) == 1:
+                strategy[y][y.outcomes[0]] = 1
+                continue
 
+            tup = [_input[j] for j in range(i, i + len(y.outcomes))]
+            if is_numpy_array:
+                tup = softmax(np.array(tup))
+            
+            j = 0
+            for x in y.outcomes:
+                strategy[y][x] = tup[j]
+                j += 1
+                i += 1
+                
         return cls(strategy)
 
     def is_all_zero(self, outcomes: List[pu.Outcome], messages: List[pu.Message]) -> bool:
@@ -83,20 +92,28 @@ class HostAction(Action):
         return self.action[idx[0]][idx[1]]
 
     @classmethod
-    def from_array(cls, _input: np.ndarray, outcomes: List[pu.Outcome], messages: List[pu.Message]) -> Action:
+    def from_array(cls, _input: np.ndarray, outcomes: List[pu.Outcome], messages: List[pu.Message], is_numpy_array: bool) -> Action:
         i = 0
         strategy = {x: {y: 0 for y in messages} for x in outcomes}
-
+        
         for x in outcomes:
-            sum_prob = 0
-            for y in x.messages:
-                if y == x.messages[-1]:
-                    strategy[x][y] = 1 - sum_prob
-                else:
-                    strategy[x][y] = _input[i]
-                    sum_prob += _input[i]
-                    i += 1
+            if len(x.messages) == 0:
+                continue
+                
+            if len(x.messages) == 1:
+                strategy[x][x.messages[0]] = 1
+                continue
 
+            tup = [_input[j] for j in range(i, i + len(x.messages))]
+            if is_numpy_array:
+                tup = softmax(np.array(tup))
+            
+            j = 0
+            for y in x.messages:
+                strategy[x][y] = tup[j]
+                j += 1
+                i += 1
+                
         return cls(strategy)
 
     def is_all_zero(self, outcomes: List[pu.Outcome], messages: List[pu.Message]) -> bool:

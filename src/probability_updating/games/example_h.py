@@ -6,6 +6,8 @@ import numpy as np
 
 import probability_updating.games as games
 
+# Matroid en Graph
+
 
 class ExampleH(games.Game):
     @staticmethod
@@ -29,9 +31,9 @@ class ExampleH(games.Game):
         ]
 
     @staticmethod
-    def cont_optimal_zero_one() -> np.ndarray:
-        return np.array([0, 1, 1 / 2])
+    def cont_optimal_zero_one() -> list:
+        return [0, 1, 1 / 2]
 
     @staticmethod
-    def host_default() -> np.ndarray:
-        return np.array([1, 1 / 2, 1])
+    def host_default() -> list:
+        return [1, 1 / 2, 1]

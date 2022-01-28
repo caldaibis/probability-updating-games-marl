@@ -4,6 +4,8 @@ import logging
 import sys
 from typing import Optional, Dict
 
+from torch.distributions import Categorical, Dirichlet
+
 import util
 
 import probability_updating as pu
@@ -27,11 +29,14 @@ hyper_param = {
         "sgd_minibatch_size": 8,
         "num_sgd_iter": 1,
         "lr": 8e-5,
+        "clip_param": 0.1,
+        "vf_clip_param": 0.1,
     },
     A2CTrainer: {
         "batch_mode": "complete_episodes",
         "train_batch_size": 64,
-        "min_iter_time_s": 1,
+        "microbatch_size": 8,
+        "min_iter_time_s": 0,
     },
     DDPGTrainer: {
         "train_batch_size": 64,
@@ -74,24 +79,34 @@ hyper_param = {
 
 algo_list = {
     'ppo': PPOTrainer,
-    'a2c': A2CTrainer
+    'a2c': A2CTrainer,
+    'td3': TD3Trainer,
+    'sac': SACTrainer,
 }
 
 loss_list = {
     pu.Loss.zero_one().name: pu.Loss.zero_one(),
+    pu.Loss.zero_one_negative().name: pu.Loss.zero_one_negative(),
     pu.Loss.brier().name: pu.Loss.brier(),
+    pu.Loss.brier_negative().name: pu.Loss.brier_negative(),
     pu.Loss.logarithmic().name: pu.Loss.logarithmic(),
+    pu.Loss.logarithmic_negative().name: pu.Loss.logarithmic_negative(),
 }
 
-loss_neg_list = {
-    pu.Loss.zero_one().name: pu.Loss.zero_one_negative(),
-    pu.Loss.brier().name: pu.Loss.brier_negative(),
-    pu.Loss.logarithmic().name: pu.Loss.logarithmic_negative(),
-}
+loss_pair_list = [
+    (pu.Loss.zero_one().name, pu.Loss.zero_one().name),
+    # (pu.Loss.zero_one().name, pu.Loss.zero_one_negative().name),
+    
+    (pu.Loss.brier().name, pu.Loss.brier().name),
+    # (pu.Loss.brier().name, pu.Loss.brier_negative().name),
+    
+    (pu.Loss.logarithmic().name, pu.Loss.logarithmic().name),
+    # (pu.Loss.logarithmic().name, pu.Loss.logarithmic_negative().name),
+]
 
 game_list = {
     games.MontyHall.name(): games.MontyHall,
-    games.FairDie.name(): games.FairDie,
+    # games.FairDie.name(): games.FairDie,
 }
 
 # games.ExampleC
@@ -104,15 +119,16 @@ game_list = {
 def run(args: Optional[Dict[str, str]]):
     if not args:
         args = {
-            'algorithm': PPOTrainer,
-            'game_type': games.MontyHall,
-            'loss': pu.Loss.zero_one(),
+            'algorithm': 'ppo',
+            'game_type': games.FairDie.name(),
+            'cont': pu.Loss.brier().name,
+            'host': pu.Loss.brier_negative().name,
         }
     
     # Essential configuration
     losses = {
-        pu.Agent.Cont: loss_list[args['loss']],
-        pu.Agent.Host: loss_neg_list[args['loss']],
+        pu.Agent.Cont: loss_list[args['cont']],
+        pu.Agent.Host: loss_list[args['host']],
     }
     game = game_list[args['game_type']](losses)
 
@@ -153,7 +169,7 @@ def run(args: Optional[Dict[str, str]]):
 
 
 if __name__ == '__main__':
-    args_keys = ['algorithm', 'game_type', 'loss']
+    args_keys = ['algorithm', 'game_type', 'cont', 'host']
     
     if len(sys.argv) == 1:
         run(None)

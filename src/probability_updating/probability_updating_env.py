@@ -32,7 +32,7 @@ class ProbabilityUpdatingEnv(ParallelEnv):
 
         self._agent_selector = agent_selector(self.agents)
 
-        self.action_spaces = {agent.value: spaces.Box(low=0.0, high=1.0, shape=(g.get_action_space(agent),), dtype=np.float32) for agent in pu.Agent}
+        self.action_spaces = {agent.value: spaces.Box(low=-5.0, high=5.0, shape=(g.get_action_space(agent),), dtype=np.float32) for agent in pu.Agent}
         self.observation_spaces = {agent.value: spaces.Box(low=0.0, high=1.0, shape=(0,), dtype=np.float32) for agent in pu.Agent}
 
     def seed(self, seed=None):
@@ -75,7 +75,8 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         Returns the observation dictionary, reward dictionary, done dictionary, and info dictionary,
         where each dictionary is keyed by the agent.
         """
-        losses = self.game.step(actions)
+        is_numpy_array = isinstance(actions[pu.Agent.Cont.value], np.ndarray)
+        losses = self.game.step(actions, is_numpy_array)
 
         observations = {agent: [] for agent in self.agents}
         rewards = {a: -loss for a, loss in losses.items()}

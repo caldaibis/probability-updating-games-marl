@@ -6,6 +6,7 @@ import numpy as np
 
 import probability_updating.games as games
 
+# RCAR conditie interessant! Want bepaalde Y=0
 
 class ExampleC(games.Game):
     @staticmethod
@@ -30,9 +31,9 @@ class ExampleC(games.Game):
         ]
 
     @staticmethod
-    def cont_optimal_zero_one() -> np.ndarray:
-        return np.array([1 / 2, 1 / 2, 0])
+    def cont_optimal_zero_one() -> list:
+        return [1 / 2, 1 / 2, 0]
 
     @staticmethod
-    def host_default() -> np.ndarray:
-        return np.array([1, 0])
+    def host_default() -> list:
+        return [1, 0]

@@ -27,13 +27,13 @@ class FairDie(games.Game):
     def message_structure() -> List[List[int]]:
         return [
             [0, 1, 2, 3],
-            [2, 3, 4, 5]
+            [2, 3, 4, 5],
         ]
 
     @staticmethod
-    def cont_optimal_zero_one() -> np.ndarray:
-        return np.array([1 / 2, 1 / 2, 0, 0, 0, 1 / 2])
+    def cont_optimal_zero_one() -> list:
+        return [1 / 2, 1 / 2, 0, 0, 0, 0, 1 / 2, 1 / 2]
 
     @staticmethod
-    def host_default() -> np.ndarray:
-        return np.array([1 / 2, 1 / 2])
+    def host_default() -> list:
+        return [1 / 2, 1 / 2, 1 / 2, 1 / 2]

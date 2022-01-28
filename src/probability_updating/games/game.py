@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 
 import numpy as np
 
@@ -45,9 +45,9 @@ class Game(ABC):
 
         self.action = {agent: None for agent in pu.Agent}
 
-    def set_action(self, agent: pu.Agent, value: np.ndarray):
+    def set_action(self, agent: pu.Agent, value: np.ndarray, is_numpy_array: bool):
         try:
-            self.action[agent] = pu.Action.get_class(agent).from_array(value, self.outcomes, self.messages)
+            self.action[agent] = pu.Action.get_class(agent).from_array(value, self.outcomes, self.messages, is_numpy_array)
         except IndexError:
             raise InvalidStrategyError(value, self.get_action_space(agent))
 
@@ -55,9 +55,9 @@ class Game(ABC):
             self.marginal_message = self.strategy_util.update_message_marginal()
             self.host_reverse = self.strategy_util.update_strategy_host_reverse()
 
-    def step(self, actions: Dict[str, np.ndarray]) -> Dict[pu.Agent, float]:
+    def step(self, actions: Dict[str, Union[np.ndarray, List]], is_numpy_array: bool) -> Dict[pu.Agent, float]:
         for agent in pu.Agent:
-            self.set_action(agent, actions[agent.value])
+            self.set_action(agent, actions[agent.value], is_numpy_array)
 
         return self.get_expected_losses()
 
@@ -112,9 +112,9 @@ class Game(ABC):
 
     def get_action_space(self, agent: pu.Agent):
         if agent == pu.Agent.Cont:
-            return sum(len(y.outcomes) - 1 for y in self.messages)
+            return sum(len(y.outcomes) if len(y.outcomes) > 1 else 0 for y in self.messages)
         elif agent == pu.Agent.Host:
-            return sum(len(x.messages) - 1 for x in self.outcomes)
+            return sum(len(x.messages) if len(x.messages) > 1 else 0 for x in self.outcomes)
 
     def is_graph_game(self) -> bool:
         return all(len(y.outcomes) <= 2 for y in self.messages)

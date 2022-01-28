@@ -92,15 +92,15 @@ class Model(ABC):
         algo = self.trainer_type.__name__
 
         original = Path(f'{analysis.best_logdir}/progress.csv')
-        destination_dir = Path(f'../visualisation/data_old_rcar_dist/{self.game.name()}/{loss}/{type_t}/')
+        destination_dir = Path(f'../visualisation/data_mid/')
 
-        if os.path.isfile(Path(destination_dir / f'{algo.lower()}.csv')):
+        if os.path.isfile(Path(destination_dir / f'{self.game.name()}_{loss}_{type_t}_{algo.lower()}.csv')):
             i = 1
-            while os.path.isfile(destination_dir / f'{algo.lower()}{str(i)}.csv'):
+            while os.path.isfile(destination_dir / f'{self.game.name()}_{loss}_{type_t}_{algo.lower()}{str(i)}.csv'):
                 i += 1
-            destination = destination_dir / f'{algo.lower()}{str(i)}.csv'
+            destination = destination_dir / f'{self.game.name()}_{loss}_{type_t}_{algo.lower()}{str(i)}.csv'
         else:
-            destination = destination_dir / f'{algo.lower()}.csv'
+            destination = destination_dir / f'{self.game.name()}_{loss}_{type_t}_{algo.lower()}.csv'
 
         shutil.copy(original, destination)
 

@@ -29,7 +29,7 @@ def plot(game, loss, type, optimum, bottom = None):
     data = {}
     for algo in algos:
         try:
-            data[algo] = pd.read_csv(f'data/{loss}/{game}/{type}/{algo}.csv')[['time_total_s', 'universal_reward_mean']]
+            data[algo] = pd.read_csv(f'data_mid/{game}_{loss}_{type}_{algo}.csv')
         except FileNotFoundError as e:
             pass
 
@@ -53,7 +53,7 @@ def plot(game, loss, type, optimum, bottom = None):
     plt.xlabel("Total time in seconds")
     plt.ylabel("Reward mean")
 
-    plt.savefig(f'data/figures/{game}_{loss}_{type}.png', transparent=False, bbox_inches='tight', pad_inches=0.02)
+    plt.savefig(f'figures_mid/{game}_{loss}_{type}.png', transparent=False, bbox_inches='tight', pad_inches=0.02)
 
 
 def show_results():
@@ -80,7 +80,7 @@ def show_results():
     plot(game=pu.games.FairDie.name(), loss=pu.Loss.brier().name, type='cooperative', optimum=-1.333)
 
     # Present plot(s)
-    # plt.show()
+    plt.show()
 
 
 if __name__ == '__main__':
