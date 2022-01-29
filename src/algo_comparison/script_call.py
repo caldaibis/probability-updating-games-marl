@@ -1,25 +1,31 @@
 import subprocess
 from typing import Dict, Any, List
 
-import src.probability_updating as pu
+import src.pu_lib as pu
+import src.pu_lib.games as pu_games
+import src.marl_lib as marl
 import main
 
 
 def output_args(_args: Dict[str, Any]) -> List[str]:
-    return [str(_args[key]) for key in main.args_keys]
+    return [str(_args[key]) for key in main.arg_keys]
 
 
 if __name__ == '__main__':
     args = {
-        'show_example': False,
         'debug_mode': False,
+        'show_example': True,
+        'learn': False,
+        'predict': False,
+        'show_figure': False,
+        'save_progress': False,
     }
     
-    for algo in main.algo_list:
+    for algo in [marl.PPO]:  # marl.ALGOS:
         args['algorithm'] = algo
-        for game in main.game_list:
+        for game in pu_games.GAMES:
             args['game'] = game
-            for (cont, host) in [(pu.RANDOMISED_ZERO_ONE, pu.RANDOMISED_ZERO_ONE_NEG)]:  # main.loss_zero_sum_list:
+            for (cont, host) in pu.LOSS_PAIRS_ALL:
                 args[pu.CONT] = cont
                 args[pu.HOST] = host
                 

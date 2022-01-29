@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List
 
-import src.probability_updating as pu
+import src.pu_lib as pu
 
 
 @dataclass

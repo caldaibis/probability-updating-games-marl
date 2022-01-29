@@ -6,6 +6,7 @@ from ray.rllib.agents.ddpg import DDPGTrainer, TD3Trainer
 from ray.rllib.agents.sac import SACTrainer
 from ray.rllib.agents.impala import ImpalaTrainer
 from ray.rllib.agents.marwil import MARWILTrainer
+from ray import tune
 
 hyper_parameters = {
     PPOTrainer: {

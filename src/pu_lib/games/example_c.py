@@ -4,25 +4,25 @@ from typing import List
 
 import numpy as np
 
-import src.probability_updating as pu
-import src.probability_updating.games as games
+import src.pu_lib.games as pu_games
 
 
-class ExampleF(games.Game):
+class ExampleC(pu_games.Game):
     @staticmethod
     def name() -> str:
-        return pu.EXAMPLE_F
+        return pu_games.EXAMPLE_C
     
     @staticmethod
     def pretty_name() -> str:
-        return "Example F"
+        return "Example C"
 
     @staticmethod
-    def default_marginal() -> List[float]:
+    def default_outcome_dist() -> List[float]:
         return [
-            1 / 3,
-            1 / 3,
-            1 / 3
+            1 / 5,
+            1 / 5,
+            1 / 5,
+            2 / 5
         ]
 
     @staticmethod
@@ -30,21 +30,22 @@ class ExampleF(games.Game):
         return [
             [0, 1],
             [1, 2],
-            [0, 2]
+            [2, 3]
         ]
 
-    # x1 < y1, y3
+    # x1 < y1
     # x2 < y1, y2
     # x3 < y2, y3
+    # x4 < y3
 
     # y1 < x1, x2
     # y2 < x2, x3
-    # y3 < x1, x3
+    # y3 < x3, x4
 
     @staticmethod
     def cont_optimal_zero_one() -> np.ndarray:
-        return np.array([[1 / 2, 1 / 2], [1 / 2, 1 / 2], [1 / 2, 1 / 2]])
+        return np.array([[1 / 2, 1 / 2], [1 / 2, 1 / 2], [0., 1.]])
 
     @staticmethod
     def host_default() -> np.ndarray:
-        return np.array([[1 / 2, 1 / 2], [1 / 2, 1 / 2], [1 / 2, 1 / 2]])
+        return np.array([[1., 0.], [0., 1.]])

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import math
 from typing import Dict
-import src.probability_updating as pu
-import src.probability_updating.games as games
+import src.pu_lib as pu
+import src.pu_lib.games as games
 import statistics
 
 
@@ -18,19 +18,19 @@ class StrategyUtil:
         for y in self.game.messages:
             reverse[y] = {}
             for x in self.game.outcomes:
-                if self.game.marginal_message[y] == 0:
+                if self.game.message_dist[y] == 0:
                     reverse[y][x] = 0
                 else:
-                    reverse[y][x] = self.game.action[pu.HOST][x, y] * self.game.marginal_outcome[x] / self.game.marginal_message[y]
+                    reverse[y][x] = self.game.action[pu.HOST][x, y] * self.game.outcome_dist[x] / self.game.message_dist[y]
 
         return pu.ContAction(reverse)
 
-    def update_message_marginal(self) -> Dict[pu.Message, float]:
+    def update_message_dist(self) -> Dict[pu.Message, float]:
         probs = {}
         for y in self.game.messages:
             probs[y] = 0
             for x in self.game.outcomes:
-                probs[y] += self.game.action[pu.HOST][x, y] * self.game.marginal_outcome[x]
+                probs[y] += self.game.action[pu.HOST][x, y] * self.game.outcome_dist[x]
 
         return probs
 

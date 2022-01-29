@@ -4,7 +4,7 @@ from typing import Dict
 
 import numpy as np
 
-import src.probability_updating as pu
+import src.pu_lib as pu
 from pettingzoo.test import parallel_api_test
 
 
@@ -42,18 +42,6 @@ def simulate(game: pu.Game, actions: Dict[pu.Agent, np.ndarray]):
 
     print()
     print("SIMULATION END")
-
-
-def test(game: pu.Game, actions: Dict[pu.Agent, np.ndarray]):
-    print("MANUAL TEST RUN BEGIN")
-
-    example_step(game, actions)
-    print(game)
-
-    simulate(game, actions)
-
-    print("MANUAL TEST RUN END")
-    print()
 
 
 def environment_api_test(game: pu.Game):

@@ -1,7 +1,7 @@
 # custom folders
 /.idea/
-src/probability_updating/__pycache__/
-src/probability_updating/games/__pycache__/
+src/pu_lib/__pycache__/
+src/pu_lib/games/__pycache__/
 src/algo_comparison/output_ray
 src/main/output_ray
 

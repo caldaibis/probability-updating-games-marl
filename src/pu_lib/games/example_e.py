@@ -4,21 +4,20 @@ from typing import List
 
 import numpy as np
 
-import src.probability_updating as pu
-import src.probability_updating.games as games
+import src.pu_lib.games as pu_games
 
 
-class ExampleE(games.Game):
+class ExampleE(pu_games.Game):
     @staticmethod
     def name() -> str:
-        return pu.EXAMPLE_E
+        return pu_games.EXAMPLE_E
     
     @staticmethod
     def pretty_name() -> str:
         return "Example E"
 
     @staticmethod
-    def default_marginal() -> List[float]:
+    def default_outcome_dist() -> List[float]:
         return [
             0.45,
             0.05,

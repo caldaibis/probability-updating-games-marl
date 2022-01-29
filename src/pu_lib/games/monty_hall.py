@@ -4,21 +4,20 @@ from typing import List
 
 import numpy as np
 
-import src.probability_updating as pu
-import src.probability_updating.games as games
+import src.pu_lib.games as pu_games
 
 
-class MontyHall(games.Game):
+class MontyHall(pu_games.Game):
     @staticmethod
     def name() -> str:
-        return pu.MONTY_HALL
+        return pu_games.MONTY_HALL
     
     @staticmethod
     def pretty_name() -> str:
         return "Monty Hall"
 
     @staticmethod
-    def default_marginal() -> List[float]:
+    def default_outcome_dist() -> List[float]:
         return [
             1 / 3,
             1 / 3,

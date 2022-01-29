@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import logging
 
-import src.probability_updating as pu
-import src.learning as learning
+import src.pu_lib as pu
+import src.marl_lib as learning
 import src.util as util
 import src.scripts_baselines as scripts_baselines
 
@@ -58,7 +58,7 @@ def run():
             # ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)  # Running
             ray.init(local_mode=True, logging_level=logging.DEBUG, log_to_driver=True)  # Debugging
             timeout_seconds = 60
-            ray_model = learning.ParameterSharingModel(game, losses)
+            ray_model = marl_lib.ParameterSharingModel(game, losses)
 
             # Run
             checkpoint = None

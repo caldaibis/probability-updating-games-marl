@@ -10,8 +10,8 @@ from ray.tune import Trainable, register_env, ExperimentAnalysis
 from ray.tune.stopper import CombinedStopper, ExperimentPlateauStopper
 from ray.tune.progress_reporter import CLIReporter
 
-import src.probability_updating as pu
-import src.learning
+import src.pu_lib as pu
+import src.marl_lib as marl
 
 import shutil
 import os
@@ -110,14 +110,14 @@ class ModelWrapper:
                 },
                 "policy_mapping_fn": lambda agent_id, episode, **kwargs: agent_id,
             },
-            "callbacks": src.learning.CustomMetricCallbacks,
+            "callbacks": marl.CustomMetricCallbacks,
         }
 
     def _create_tune_config(self) -> dict:
         return {
             "name": self.name,
             "config": self._create_model_config(),
-            "stop": CombinedStopper(src.learning.ConjunctiveStopper(ExperimentPlateauStopper(self.metric, mode="max", top=10, std=0.0001), src.learning.TotalTimeStopper(total_time_s=self.min_total_time_s)), src.learning.TotalTimeStopper(total_time_s=self.max_total_time_s)),
+            "stop": CombinedStopper(marl.ConjunctiveStopper(ExperimentPlateauStopper(self.metric, mode="max", top=10, std=0.0001), marl.TotalTimeStopper(total_time_s=self.min_total_time_s)), marl.TotalTimeStopper(total_time_s=self.max_total_time_s)),
             "checkpoint_freq": 5,
             "checkpoint_at_end": True,
             "local_dir": self.get_local_dir(),

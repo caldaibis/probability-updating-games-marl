@@ -7,20 +7,20 @@ from gym import spaces
 from pettingzoo import ParallelEnv
 from pettingzoo.utils.agent_selector import agent_selector
 
-import src.probability_updating as pu
-import src.probability_updating.games as games
-import src.learning as learning
+import src.pu_lib as pu
+import src.pu_lib.games as pu_games
+import src.marl_lib as marl
 
 
 class ProbabilityUpdatingEnv(ParallelEnv):
     metadata = {'render.modes': ['human'], "name": "probability_updating_game"}
 
-    game: games.Game
+    game: pu_games.Game
 
     action_spaces: Dict[str, spaces.Tuple]
     observation_spaces: Dict[str, spaces.Box]
 
-    def __init__(self, g: games.Game):
+    def __init__(self, g: pu_games.Game):
         super().__init__()
 
         self.game = g
@@ -33,7 +33,7 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         self._agent_selector = agent_selector(self.agents)
 
         self.action_spaces = {
-            agent: spaces.Tuple([learning.CustomSimplex(actions) for actions in g.get_action_shape(agent)])
+            agent: spaces.Tuple([marl.CustomSimplex(actions) for actions in g.get_action_shape(agent)])
             for agent in pu.AGENTS
         }
         self.observation_spaces = {

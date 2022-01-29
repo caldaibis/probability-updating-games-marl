@@ -6,7 +6,7 @@ from typing import Dict, List
 
 import numpy as np
 
-import src.probability_updating as pu
+import src.pu_lib as pu
 
 
 class Action(ABC):

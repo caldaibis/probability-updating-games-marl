@@ -7,7 +7,7 @@ from ray.rllib.agents import DefaultCallbacks
 from ray.rllib.evaluation import Episode
 from ray.rllib.utils.typing import PolicyID
 
-import src.probability_updating as pu
+import src.pu_lib as pu
 
 
 class CustomMetricCallbacks(DefaultCallbacks):

@@ -4,8 +4,8 @@ import random
 import numpy as np
 from typing import Dict
 
-import src.probability_updating as pu
-import src.probability_updating.games as games
+import src.pu_lib as pu
+import src.pu_lib.games as games
 
 
 class SimulationWrapper:
@@ -17,7 +17,7 @@ class SimulationWrapper:
             self.game.set_action(agent, actions[agent])
 
     def _simulate_single(self) -> (pu.Outcome, pu.Message, Dict[pu.Agent, float], Dict[pu.Agent, float]):
-        x = random.choices(list(self.game.marginal_outcome.keys()), list(self.game.marginal_outcome.values()), k=1)[0]
+        x = random.choices(list(self.game.outcome_dist.keys()), list(self.game.outcome_dist.values()), k=1)[0]
         vv = [self.game.action[pu.HOST][x, y] for y in x.messages]
         y = random.choices(x.messages, vv, k=1)[0]
 

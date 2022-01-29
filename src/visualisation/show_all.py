@@ -7,8 +7,9 @@ from matplotlib.lines import Line2D
 import pandas as pd
 import seaborn as sns
 
-import src.probability_updating as pu
-import src.probability_updating.games as games
+import src.marl_lib as marl
+import src.pu_lib as pu
+import src.pu_lib.games as games
 
 
 def plot(algos: List[str], new: bool, old: bool, eval: bool, game_type: Type[games.Game], loss: str, interaction_type: str, optimum: Optional[float] = None, bottom: Optional[float] = None, rcar: bool = False):
@@ -85,7 +86,7 @@ def plot(algos: List[str], new: bool, old: bool, eval: bool, game_type: Type[gam
     plt.savefig(figure_path, transparent=False, bbox_inches='tight', pad_inches=0.02)
 
 
-def show_all(new: bool = True, old: bool = False, eval: bool = True, rcar: bool = False, algos: List[str] = pu.ALGOS):
+def show_all(new: bool = True, old: bool = False, eval: bool = True, rcar: bool = False, algos: List[str] = marl.ALGOS):
     # Set style
     sns.set()
     

@@ -4,21 +4,20 @@ from typing import List
 
 import numpy as np
 
-import src.probability_updating as pu
-import src.probability_updating.games as games
+import src.pu_lib.games as pu_games
 
 
-class FairDie(games.Game):
+class FairDie(pu_games.Game):
     @staticmethod
     def name() -> str:
-        return pu.FAIR_DIE
+        return pu_games.FAIR_DIE
     
     @staticmethod
     def pretty_name() -> str:
         return "Fair Die"
 
     @staticmethod
-    def default_marginal() -> List[float]:
+    def default_outcome_dist() -> List[float]:
         return [
             1 / 6,
             1 / 6,
