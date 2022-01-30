@@ -4,7 +4,7 @@ from typing import Dict
 
 import numpy as np
 
-import src.pu_lib as pu
+import src.lib_pu as pu
 from pettingzoo.test import parallel_api_test
 
 
