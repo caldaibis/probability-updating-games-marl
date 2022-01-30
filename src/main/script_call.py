@@ -23,9 +23,9 @@ if __name__ == '__main__':
     
     for algo in [marl.PPO]:  # marl.ALGOS:
         args['algorithm'] = algo
-        for game in pu_games.GAMES:
+        for game in [pu_games.MONTY_HALL]:  # pu_games.GAMES:
             args['game'] = game
-            for (cont, host) in pu.LOSS_PAIRS_ALL:
+            for (cont, host) in [(pu.MATRIX, pu.MATRIX)]:  # pu.LOSS_ALL_PAIRS:
                 args[pu.CONT] = cont
                 args[pu.HOST] = host
                 

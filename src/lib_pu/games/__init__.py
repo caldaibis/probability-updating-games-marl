@@ -31,6 +31,16 @@ GAMES = {
     EXAMPLE_H : example_h.ExampleH,
 }
 
+GAME_NAMES = {
+    MONTY_HALL: monty_hall.MontyHall.name(),
+    FAIR_DIE  : fair_die.FairDie.name(),
+    EXAMPLE_C : example_c.ExampleC.name(),
+    EXAMPLE_D : example_d.ExampleD.name(),
+    EXAMPLE_E : example_e.ExampleE.name(),
+    EXAMPLE_F : example_f.ExampleF.name(),
+    EXAMPLE_H : example_h.ExampleH.name(),
+}
+
 
 from src.lib_pu.games.monty_hall import MontyHall
 from src.lib_pu.games.fair_die import FairDie

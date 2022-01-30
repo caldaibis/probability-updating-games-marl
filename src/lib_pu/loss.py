@@ -21,22 +21,22 @@ LOGARITHMIC_NEG = LOGARITHMIC + "_neg"
 
 MATRIX = "matrix"
 
-LOSS_LIST = [
+LOSSES = [
     RANDOMISED_ZERO_ONE,
     BRIER,
     LOGARITHMIC,
     MATRIX,
 ]
 
-LOSS_NEG_LIST = [
+LOSSES_NEG = [
     RANDOMISED_ZERO_ONE_NEG,
     BRIER_NEG,
     LOGARITHMIC_NEG,
 ]
 
-LOSS_PAIRS_COOPERATIVE = list(zip(LOSS_LIST, LOSS_LIST))
-LOSS_PAIRS_ZERO_SUM = list(zip(LOSS_LIST, LOSS_NEG_LIST))
-LOSS_PAIRS_ALL = [*LOSS_PAIRS_ZERO_SUM, *LOSS_PAIRS_COOPERATIVE]
+LOSS_PAIRS_COOPERATIVE = list(zip(LOSSES, LOSSES))
+LOSS_PAIRS_ZERO_SUM = list(zip(LOSSES, LOSSES_NEG))
+LOSS_ALL_PAIRS = [*LOSS_PAIRS_ZERO_SUM, *LOSS_PAIRS_COOPERATIVE]
 
 
 def safe_log(x) -> float:
@@ -107,7 +107,7 @@ def _matrix_fn(m: np.ndarray, cont: pu.ContAction, outcomes: List[pu.Outcome], x
     return sum(cont[x_prime, y] * m[x.id, x_prime.id] for x_prime in outcomes)
 
 
-LOSS_FN_LIST = {
+LOSS_FNS = {
     RANDOMISED_ZERO_ONE    : _zero_one_fn,
     RANDOMISED_ZERO_ONE_NEG: lambda c, o, x, y: -_zero_one_fn(c, o, x, y),
     BRIER                  : _brier_fn,
@@ -117,7 +117,7 @@ LOSS_FN_LIST = {
     MATRIX                 : _matrix_fn,
 }
 
-LOSS_PRETTY_NAME_LIST = {
+LOSS_NAMES = {
     RANDOMISED_ZERO_ONE: 'randomised 0-1',
     BRIER: 'Brier',
     LOGARITHMIC: 'logarithmic',
@@ -139,7 +139,7 @@ def randomised_entropy_fn(_, host_reverse: pu.ContAction, outcomes: List[pu.Outc
     return 1 - max(host_reverse[x, y] for x in outcomes)
 
 
-ENTROPY_FN_LIST = {
+ENTROPY_FNS = {
     RANDOMISED_ZERO_ONE: lambda l, p, o, y:      randomised_entropy_fn(l, p, o, y),
     RANDOMISED_ZERO_ONE_NEG: lambda l, p, o, y: -randomised_entropy_fn(l, p, o, y),
     

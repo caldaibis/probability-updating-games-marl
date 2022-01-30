@@ -48,11 +48,11 @@ class Game(ABC):
         self.loss_names = loss_names
         
         if loss_names[pu.CONT] == pu.MATRIX:
-            self.loss = {agent: partial(pu.LOSS_FN_LIST[loss_names[agent]], self.matrix[agent]) for agent in pu.AGENTS}
+            self.loss = {agent: partial(pu.LOSS_FNS[loss_names[agent]], self.matrix[agent]) for agent in pu.AGENTS}
         else:
-            self.loss = {agent: pu.LOSS_FN_LIST[loss_names[agent]] for agent in pu.AGENTS}
+            self.loss = {agent: pu.LOSS_FNS[loss_names[agent]] for agent in pu.AGENTS}
             
-        self.entropy = {agent: pu.ENTROPY_FN_LIST[loss_names[agent]] for agent in pu.AGENTS}
+        self.entropy = {agent: pu.ENTROPY_FNS[loss_names[agent]] for agent in pu.AGENTS}
 
         self.action = {agent: None for agent in pu.AGENTS}
 
@@ -278,7 +278,7 @@ class Game(ABC):
     
             table.add_row(['CAR?', self.strategy_util.is_car()])
             table.add_row(['RCAR?', self.strategy_util.is_rcar()])
-            table.add_row(['RCAR dist: ', self.strategy_util.rcar_dist()])
+            table.add_row(['RCAR dist: ', "{:.3f}".format(self.strategy_util.rcar_dist())])
             table.add_row(['Host expected loss', self.get_expected_loss(pu.HOST)])
             table.add_row(['Host expected entropy', self.get_expected_entropy(pu.HOST)])
         except Exception as e:

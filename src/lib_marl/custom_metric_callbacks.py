@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Dict, Optional
+from typing import Dict, Optional
 
 from ray.rllib import RolloutWorker, BaseEnv, Policy, SampleBatch
 from ray.rllib.agents import DefaultCallbacks

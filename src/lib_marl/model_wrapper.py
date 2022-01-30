@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Optional, Type
+from typing import Dict, Type
 
 import ray
 from ray.rllib import MultiAgentEnv
@@ -17,7 +17,7 @@ import shutil
 import os
 from pathlib import Path
 
-import src.lib_vis as visualisation
+import src.lib_vis as vis
 
 
 class ModelWrapper:
@@ -29,7 +29,8 @@ class ModelWrapper:
     metric: str
     reporter: CLIReporter
 
-    def __init__(self, game: pu.Game, losses: Dict[pu.Agent, str], trainer_type: Type[Trainer], hyper_param: Dict, min_total_time_s: int, max_total_time_s: int):
+    def __init__(self, experiment_name, game: pu.Game, losses: Dict[pu.Agent, str], trainer_type: Type[Trainer], hyper_param: Dict, min_total_time_s: int, max_total_time_s: int):
+        self.experiment_name = experiment_name
         self.game = game
         self.trainer_type = trainer_type
         self.env = self._create_env(game)
@@ -69,7 +70,7 @@ class ModelWrapper:
             self._save_progress(analysis)
         
         if show_figure:
-            lib_vis.show_figure(analysis.trials, self.max_total_time_s)
+            vis.show_figure(analysis.trials, self.max_total_time_s)
 
     def load_and_predict(self) -> None:
         """Loads the best existing checkpoint and predicts. If it fails, it will throw an exception."""
@@ -133,15 +134,15 @@ class ModelWrapper:
         env = pu.ProbabilityUpdatingEnv(game)
         return pu.ProbabilityUpdatingEnvWrapper(env)
 
-    def _save_progress(self, analysis: ExperimentAnalysis, title: str):
+    def _save_progress(self, analysis: ExperimentAnalysis):
         loss = self.game.loss_names[pu.CONT]
         same = self.game.loss_names[pu.CONT] == self.game.loss_names[pu.HOST]
-        interaction_type = 'cooperative' if same else 'zero_sum'
+        interaction_type = pu.COOPERATIVE if same else pu.ZERO_SUM
 
         algo = self.trainer_type.__name__
 
         original = Path(f'{analysis.best_logdir}/progress.csv')
-        destination_dir = Path(f'../lib_vis/data/{title}/{self.game.name()}_{loss}_{interaction_type}_{algo.lower()}')
+        destination_dir = Path(f'../lib_vis/data/{self.experiment_name}/{self.game.name()}_{loss}_{interaction_type}_{algo.lower()}')
 
         destination = Path(f'{destination_dir}.csv')
         if os.path.isfile(destination):

@@ -12,7 +12,7 @@ import src.lib_pu.games as pu_games
 import src.lib_marl as marl
 import src.util as util
 
-from main import algo_config
+from src.main import algo_config
 
 
 string_arg_keys: List[str] = [
@@ -85,7 +85,7 @@ def run(args: Optional[Dict[str, Any]]):
             model_config['num_workers'] = 10
         
         # Run
-        model = marl.ModelWrapper(game, losses, t, model_config, min_total_time_s, max_total_time_s)
+        model = marl.ModelWrapper('experimental_dirichlet', game, losses, t, model_config, min_total_time_s, max_total_time_s)
         # analysis = model.load()
         model.learn(predict=args['predict'], show_figure=args['show_figure'], save_progress=args['save_progress'])
         

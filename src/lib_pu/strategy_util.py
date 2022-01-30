@@ -44,23 +44,31 @@ class StrategyUtil:
                     return False
 
         return True
-
+    
     def is_rcar(self) -> bool:
-        rcar_vector = {x: float('nan') for x in self.game.outcomes}
-        for x in self.game.outcomes:
-            for y in x.messages:
-                if math.isnan(rcar_vector[x]):
-                    rcar_vector[x] = self.game.host_reverse[x, y]
-                elif not math.isclose(rcar_vector[x], self.game.host_reverse[x, y], rel_tol=1e-5):
-                    return False
-
-        return True
+        return self.rcar_dist() < pu.RCAR_EPSILON
+        # rcar_vec = {x: None for x in self.game.outcomes}
+        # for x in self.game.outcomes:
+        #     for y in [y for y in x.messages if self.game.message_dist[y] > 0]:
+        #         if not rcar_vec[x]:
+        #             rcar_vec[x] = self.game.host_reverse[x, y]
+        #         elif not math.isclose(rcar_vec[x], self.game.host_reverse[x, y], rel_tol=1e-2):
+        #             return False
+        #
+        # for y in self.game.messages:
+        #     if sum(rcar_vec[x] for x in y.outcomes) > 1:
+        #         return False
+        #
+        # return True
 
     """Returns an approximation of the distance between a potential RCAR vector and the actual vector"""
     def rcar_dist(self) -> float:
         dist = 0
         for x in self.game.outcomes:
-            mean = statistics.mean(self.game.host_reverse[x, y] for y in x.messages)
-            dist += math.sqrt(sum(math.pow(mean - self.game.host_reverse[x, y], 2) for y in x.messages))
-
+            mean = statistics.mean(self.game.host_reverse[x, y] for y in x.messages if self.game.message_dist[y] > 0)
+            dist += math.sqrt(sum((mean - self.game.host_reverse[x, y]) ** 2 for y in x.messages))
+        
+        for y in self.game.messages:
+            dist += max(0, sum(self.game.host_reverse[x, y] for x in y.outcomes) - 1)
+        
         return dist

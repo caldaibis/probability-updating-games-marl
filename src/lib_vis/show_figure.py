@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
+import src.lib_marl as marl
+
 
 def _show_figure_for(max_total_time_s, data, metric):
     plt.figure()
@@ -29,8 +31,8 @@ def show_figure(trials: List[Trial], max_total_time_s):
     for t in trials:
         data[t] = pd.read_csv(f'{t.logdir}/progress.csv')
 
-    _show_figure_for(max_total_time_s, data, 'universal_reward_mean')
-    _show_figure_for(max_total_time_s, data, 'universal_reward_eval_mean')
-    _show_figure_for(max_total_time_s, data, 'rcar_dist_eval_mean')
+    _show_figure_for(max_total_time_s, data, marl.REWARD_CONT)
+    _show_figure_for(max_total_time_s, data, marl.REWARD_CONT_EVAL)
+    _show_figure_for(max_total_time_s, data, marl.RCAR_DIST_EVAL)
 
     plt.show()
