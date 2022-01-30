@@ -95,18 +95,18 @@ loss_list = {
 
 loss_pair_list = [
     (pu.Loss.zero_one().name, pu.Loss.zero_one().name),
-    # (pu.Loss.zero_one().name, pu.Loss.zero_one_negative().name),
+    (pu.Loss.zero_one().name, pu.Loss.zero_one_negative().name),
     
     (pu.Loss.brier().name, pu.Loss.brier().name),
-    # (pu.Loss.brier().name, pu.Loss.brier_negative().name),
+    (pu.Loss.brier().name, pu.Loss.brier_negative().name),
     
     (pu.Loss.logarithmic().name, pu.Loss.logarithmic().name),
-    # (pu.Loss.logarithmic().name, pu.Loss.logarithmic_negative().name),
+    (pu.Loss.logarithmic().name, pu.Loss.logarithmic_negative().name),
 ]
 
 game_list = {
-    games.MontyHall.name(): games.MontyHall,
-    # games.FairDie.name(): games.FairDie,
+    # games.MontyHall.name(): games.MontyHall,
+    games.FairDie.name(): games.FairDie,
 }
 
 # games.ExampleC
