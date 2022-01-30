@@ -49,10 +49,10 @@ class Game(ABC):
         
         if loss_names[pu.CONT] == pu.MATRIX:
             self.loss = {agent: partial(pu.LOSS_FNS[loss_names[agent]], self.matrix[agent]) for agent in pu.AGENTS}
+            self.entropy = {agent: partial(pu.ENTROPY_FNS[loss_names[agent]], self.matrix[agent]) for agent in pu.AGENTS}
         else:
             self.loss = {agent: pu.LOSS_FNS[loss_names[agent]] for agent in pu.AGENTS}
-            
-        self.entropy = {agent: pu.ENTROPY_FNS[loss_names[agent]] for agent in pu.AGENTS}
+            self.entropy = {agent: pu.ENTROPY_FNS[loss_names[agent]] for agent in pu.AGENTS}
 
         self.action = {agent: None for agent in pu.AGENTS}
 

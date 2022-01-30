@@ -5,6 +5,7 @@ import logging
 import sys
 from typing import Dict, Optional, List, Any
 
+import numpy as np
 import ray
 
 import src.lib_pu as pu
@@ -33,18 +34,87 @@ bool_arg_keys: List[str] = [
 
 arg_keys = [*string_arg_keys, *bool_arg_keys]
 
+# def test():
+#     outcomes = {
+#         1: 1 / 3,
+#         2: 1 / 3,
+#         3: 1 / 3,
+#     }
+#     messages = {
+#         1: 1 / 2,
+#         2: 1 / 2,
+#     }
+#     cont = {
+#         1: {
+#             1: 1,
+#             2: 0,
+#             3: 0,
+#         },
+#         2: {
+#             1: 0,
+#             2: 0,
+#             3: 1,
+#         },
+#     }
+#     host = {
+#         1: {
+#             1: 1,
+#             2: 0,
+#         },
+#         2: {
+#             1: 1 / 2,
+#             2: 1 / 2,
+#         },
+#         3: {
+#             1: 0,
+#             2: 1,
+#         },
+#     }
+#     reverse_host = {
+#         1: {
+#             1: 2 / 3,
+#             2: 1 / 3,
+#             3: 0,
+#         },
+#         2: {
+#             1: 0,
+#             2: 1 / 3,
+#             3: 2 / 3,
+#         },
+#     }
+#
+#     loss_fn = pu.LOSS_FNS[pu.RANDOMISED_ZERO_ONE]
+#
+#     # calc expected loss
+#     loss = 0
+#     for x in outcomes:
+#         _l = 0
+#         for y in messages:
+#             _l = host[y][x] * loss_fn(cont, outcomes, x, y)
+#         _l *= p[x]
+#
+#
+#     # calc expected entropy
+#     entropy = 0
+#     for y in [1, 2]:
+#         e = self.message_dist[y] * self.get_entropy(agent, y)
+#         if not math.isnan(e):
+#             ent += e
+#
+#     return ent
+
 
 def run(args: Optional[Dict[str, Any]]):
     if not args:
         args = {
             'algorithm': marl.PPO,
-            'game': pu_games.FAIR_DIE,
-            pu.CONT: pu.RANDOMISED_ZERO_ONE,
-            pu.HOST: pu.RANDOMISED_ZERO_ONE_NEG,
+            'game': pu_games.MONTY_HALL,
+            pu.CONT: pu.MATRIX,
+            pu.HOST: pu.MATRIX,
             'debug_mode': False,
             'show_example': True,
             'learn': True,
-            'predict': False,
+            'predict': True,
             'show_figure': True,
             'save_progress': False,
         }
@@ -58,9 +128,18 @@ def run(args: Optional[Dict[str, Any]]):
         pu.HOST: args[pu.HOST],
     }
     
+    # def custom_matrix(outcome_count):
+    #     return np.array(
+    #         [    # x prime
+    #             [0, 1, 1],
+    #             [1, 0, 1],  # x
+    #             [1, 1, 0]
+    #         ]
+    #     )
+    
     if args[pu.CONT] == pu.MATRIX:
         matrix_gen = {
-            pu.CONT: pu.matrix_ones,
+            pu.CONT: pu.matrix_ones_pos,
             pu.HOST: pu.matrix_ones_neg,
         }
         game = pu_games.GAMES[args['game']](losses, matrix_gen)
@@ -68,12 +147,18 @@ def run(args: Optional[Dict[str, Any]]):
         game = pu_games.GAMES[args['game']](losses)
 
     if args['show_example']:
-        util.example_step(game, {pu.CONT: game.cont_optimal_zero_one(), pu.HOST: game.host_default()})
+        util.example_step(
+            game,
+            {
+                pu.CONT: game.cont_optimal_zero_one(),
+                pu.HOST: game.host_default(),
+            }
+        )
 
     # Configuration
     t = marl.ALGOS[args['algorithm']]
-    min_total_time_s = 100
-    max_total_time_s = 100
+    min_total_time_s = 80
+    max_total_time_s = 80
     model_config = algo_config.hyper_parameters[t]
     
     if args['learn']:
@@ -93,6 +178,8 @@ def run(args: Optional[Dict[str, Any]]):
 
 
 if __name__ == '__main__':
+    # test()
+    
     if len(sys.argv) == 1:
         run(None)
     else:

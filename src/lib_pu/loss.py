@@ -43,7 +43,7 @@ def safe_log(x) -> float:
     return math.log(x) if x != 0 else -math.inf
 
 
-def matrix_random_cooperative(outcome_count: int) -> np.ndarray:
+def matrix_random_pos(outcome_count: int) -> np.ndarray:
     m = np.random.random((outcome_count, outcome_count))
     for x in range(outcome_count):
         m[x, x] = 0
@@ -51,7 +51,7 @@ def matrix_random_cooperative(outcome_count: int) -> np.ndarray:
     return m
 
 
-def matrix_random_competitive(outcome_count: int) -> np.ndarray:
+def matrix_random_neg(outcome_count: int) -> np.ndarray:
     m = -1 * np.random.random((outcome_count, outcome_count))
     for x in range(outcome_count):
         m[x, x] = 0
@@ -59,7 +59,7 @@ def matrix_random_competitive(outcome_count: int) -> np.ndarray:
     return m
 
 
-def matrix_random_mixed(outcome_count: int) -> np.ndarray:
+def matrix_random_mix(outcome_count: int) -> np.ndarray:
     m = -2 * np.random.random((outcome_count, outcome_count)) + 1
     for x in range(outcome_count):
         m[x, x] = 0
@@ -67,7 +67,7 @@ def matrix_random_mixed(outcome_count: int) -> np.ndarray:
     return m
 
 
-def matrix_ones(outcome_count: int) -> np.ndarray:
+def matrix_ones_pos(outcome_count: int) -> np.ndarray:
     m = np.ones((outcome_count, outcome_count))
     for x in range(outcome_count):
         m[x, x] = 0
@@ -125,7 +125,7 @@ LOSS_NAMES = {
 }
 
 
-def proper_entropy_fn(loss_fn, host_reverse: pu.ContAction, outcomes: List[pu.Outcome], y: pu.Message) -> float:
+def _proper_entropy_fn(loss_fn, host_reverse: pu.ContAction, outcomes: List[pu.Outcome], y: pu.Message) -> float:
     _sum: float = 0
     for x in outcomes:
         e: float = host_reverse[x, y] * loss_fn(host_reverse, outcomes, x, y)
@@ -135,19 +135,31 @@ def proper_entropy_fn(loss_fn, host_reverse: pu.ContAction, outcomes: List[pu.Ou
     return _sum
 
 
-def randomised_entropy_fn(_, host_reverse: pu.ContAction, outcomes: List[pu.Outcome], y: pu.Message) -> float:
+def _randomised_entropy_fn(_, host_reverse: pu.ContAction, outcomes: List[pu.Outcome], y: pu.Message) -> float:
     return 1 - max(host_reverse[x, y] for x in outcomes)
 
 
+def _matrix_entropy_fn(m: np.ndarray, _, host_reverse: pu.ContAction, outcomes: List[pu.Outcome], y: pu.Message) -> float:
+    minimal_sum = -math.inf
+    for x in outcomes:
+        _sum = 0
+        for x_prime in outcomes:
+            if x == x_prime:
+                continue
+            _sum += host_reverse[x_prime, y] * m[x_prime.id, x.id]
+        minimal_sum = max(minimal_sum, _sum)
+    return minimal_sum
+    
+
 ENTROPY_FNS = {
-    RANDOMISED_ZERO_ONE: lambda l, p, o, y:      randomised_entropy_fn(l, p, o, y),
-    RANDOMISED_ZERO_ONE_NEG: lambda l, p, o, y: -randomised_entropy_fn(l, p, o, y),
+    RANDOMISED_ZERO_ONE: _randomised_entropy_fn,
+    RANDOMISED_ZERO_ONE_NEG: lambda l, p, o, y: -_randomised_entropy_fn(l, p, o, y),
     
-    BRIER: proper_entropy_fn,
-    BRIER_NEG: proper_entropy_fn,
+    BRIER: _proper_entropy_fn,
+    BRIER_NEG: _proper_entropy_fn,
     
-    LOGARITHMIC: proper_entropy_fn,
-    LOGARITHMIC_NEG: proper_entropy_fn,
+    LOGARITHMIC: _proper_entropy_fn,
+    LOGARITHMIC_NEG: _proper_entropy_fn,
     
-    MATRIX: randomised_entropy_fn,
+    MATRIX: _matrix_entropy_fn,
 }
