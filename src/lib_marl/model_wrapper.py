@@ -24,36 +24,34 @@ class ModelWrapper:
     game: pu.Game
     trainer_type: Type[Trainer]
     env: MultiAgentEnv
-    hyper_param: Dict
+    custom_config: Dict
     name: str
     metric: str
     reporter: CLIReporter
 
-    def __init__(self, experiment_name, game: pu.Game, losses: Dict[pu.Agent, str], trainer_type: Type[Trainer], hyper_param: Dict, min_total_time_s: int, max_total_time_s: int):
+    def __init__(self, experiment_name, game: pu.Game, losses: Dict[pu.Agent, str], trainer_type: Type[Trainer], custom_config: Dict):
         self.experiment_name = experiment_name
         self.game = game
         self.trainer_type = trainer_type
         self.env = self._create_env(game)
-        self.hyper_param = hyper_param
-        self.min_total_time_s = min_total_time_s
-        self.max_total_time_s = max_total_time_s
+        self.custom_config = custom_config
         self.reporter = CLIReporter(max_report_frequency=10)
 
         self.name = f"{game.name()}_{pu.CONT}={losses[pu.CONT]}_{pu.HOST}={losses[pu.HOST]}"
 
         register_env("pug", lambda _: self.env)
 
-        self.reporter.add_metric_column("universal_reward_mean")
-        self.reporter.add_metric_column("universal_reward_eval_mean")
+        self.reporter.add_metric_column(marl.REWARD_CONT_EVAL)
+        self.reporter.add_metric_column(marl.REWARD_HOST_EVAL)
         
-        self.reporter.add_metric_column("rcar_dist_mean")
-        self.reporter.add_metric_column("rcar_dist_eval_mean")
+        self.reporter.add_metric_column(marl.RCAR_DIST_EVAL)
+        self.reporter.add_metric_column(marl.EXP_ENTROPY_EVAL)
         
-        self.reporter.add_metric_column("reward_cont_mean")
-        self.reporter.add_metric_column("reward_cont_eval_mean")
+        self.reporter.add_metric_column(marl.REWARD_CONT)
+        self.reporter.add_metric_column(marl.REWARD_HOST)
         
-        self.reporter.add_metric_column("reward_host_mean")
-        self.reporter.add_metric_column("reward_host_eval_mean")
+        self.reporter.add_metric_column(marl.RCAR_DIST)
+        self.reporter.add_metric_column(marl.EXP_ENTROPY)
         
         self.metric = "universal_reward_mean"
 
@@ -70,7 +68,7 @@ class ModelWrapper:
             self._save_progress(analysis)
         
         if show_figure:
-            vis.show_figure(analysis.trials, self.max_total_time_s)
+            vis.show_figure(analysis.trials)
 
     def load_and_predict(self) -> None:
         """Loads the best existing checkpoint and predicts. If it fails, it will throw an exception."""
@@ -90,7 +88,7 @@ class ModelWrapper:
 
     def _create_model_config(self) -> dict:
         return {
-            **self.hyper_param,
+            **self.custom_config['model_config'],
             "env": "pug",
             "batch_mode": "truncate_episodes",
             "num_gpus": 0,
@@ -116,9 +114,10 @@ class ModelWrapper:
 
     def _create_tune_config(self) -> dict:
         return {
+            **self.custom_config['tune_config'],
             "name": self.name,
             "config": self._create_model_config(),
-            "stop": CombinedStopper(marl.ConjunctiveStopper(ExperimentPlateauStopper(self.metric, mode="max", top=10, std=0.0001), marl.TotalTimeStopper(total_time_s=self.min_total_time_s)), marl.TotalTimeStopper(total_time_s=self.max_total_time_s)),
+            "stop": CombinedStopper(marl.ConjunctiveStopper(ExperimentPlateauStopper(self.metric, mode="max", top=10, std=0.0001), marl.TotalTimeStopper(total_time_s=self.custom_config['min_total_time_s'])), marl.TotalTimeStopper(total_time_s=self.custom_config['max_total_time_s'])),
             "checkpoint_freq": 5,
             "checkpoint_at_end": True,
             "local_dir": self.get_local_dir(),
@@ -126,7 +125,6 @@ class ModelWrapper:
             "metric": self.metric,
             "mode": "max",
             "progress_reporter": self.reporter,
-            "num_samples": 1,
         }
 
     @staticmethod

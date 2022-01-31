@@ -140,14 +140,14 @@ def _randomised_entropy_fn(_, host_reverse: pu.ContAction, outcomes: List[pu.Out
 
 
 def _matrix_entropy_fn(m: np.ndarray, _, host_reverse: pu.ContAction, outcomes: List[pu.Outcome], y: pu.Message) -> float:
-    minimal_sum = -math.inf
+    minimal_sum = math.inf
     for x in outcomes:
         _sum = 0
         for x_prime in outcomes:
             if x == x_prime:
                 continue
             _sum += host_reverse[x_prime, y] * m[x_prime.id, x.id]
-        minimal_sum = max(minimal_sum, _sum)
+        minimal_sum = min(minimal_sum, _sum)
     return minimal_sum
     
 

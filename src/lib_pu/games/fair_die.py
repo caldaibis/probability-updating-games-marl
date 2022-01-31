@@ -49,5 +49,13 @@ class FairDie(pu_games.Game):
         return np.array([[1 / 2, 1 / 2, 0., 0.], [0., 0., 1 / 2, 1 / 2]])
 
     @staticmethod
+    def cont_optimal_matrix_ones_neg() -> np.ndarray:
+        return np.array([[0., 0., 1., 0.], [1., 0., 0., 0.]])
+    
+    @staticmethod
+    def cont_optimal_matrix_ones_neg2() -> np.ndarray:
+        return np.array([[0., 0., 0.5, 0.5], [0.5, 0.5, 0., 0.]])
+
+    @staticmethod
     def host_default() -> np.ndarray:
         return np.array([[1 / 2, 1 / 2], [1 / 2, 1 / 2]])

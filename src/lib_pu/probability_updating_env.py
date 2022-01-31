@@ -86,7 +86,7 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         rewards = {agent: -loss for agent, loss in losses.items()}
         dones = {agent: True for agent in self.agents}
         infos = {
-            pu.CONT: {},
+            pu.CONT: {"expected_entropy": self.game.get_expected_entropy()},
             pu.HOST: {"rcar_dist": self.game.strategy_util.rcar_dist()},
         }
 

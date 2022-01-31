@@ -25,10 +25,10 @@ class Game(ABC):
     
     loss = {}
     loss_names = {}
-    entropy = {}
+    entropy_cont = None
     matrix = {}
 
-    def __init__(self, loss_names: Dict[pu.Agent, str], matrix_gen: Optional[Dict[pu.Agent], np.ndarray] = None, random_outcome_dist: bool = False):
+    def __init__(self, loss_names: Dict[pu.Agent, str], matrix: Optional[Dict[pu.Agent], np.ndarray] = None, random_outcome_dist: bool = False):
         outcomes, messages = self.create_structure(len(self.default_outcome_dist()), self.message_structure())
 
         if random_outcome_dist:
@@ -41,20 +41,33 @@ class Game(ABC):
         self.outcomes = outcomes
         self.messages = messages
         self.outcome_dist = outcome_dist
-
-        if matrix_gen:
-            self.matrix = {agent: matrix_gen[agent](len(outcomes)) for agent in matrix_gen}
-
         self.loss_names = loss_names
         
         if loss_names[pu.CONT] == pu.MATRIX:
+            self.matrix = {agent: self.fix_matrix(matrix[agent]) for agent in matrix}
             self.loss = {agent: partial(pu.LOSS_FNS[loss_names[agent]], self.matrix[agent]) for agent in pu.AGENTS}
-            self.entropy = {agent: partial(pu.ENTROPY_FNS[loss_names[agent]], self.matrix[agent]) for agent in pu.AGENTS}
+            self.entropy_cont = partial(pu.ENTROPY_FNS[loss_names[pu.CONT]], self.matrix[pu.CONT])
         else:
             self.loss = {agent: pu.LOSS_FNS[loss_names[agent]] for agent in pu.AGENTS}
-            self.entropy = {agent: pu.ENTROPY_FNS[loss_names[agent]] for agent in pu.AGENTS}
+            self.entropy_cont = pu.ENTROPY_FNS[loss_names[pu.CONT]]
 
         self.action = {agent: None for agent in pu.AGENTS}
+
+    """Modify matrix such that no positive or negative losses are given for pairs of outcomes that are not in a message together.
+    They should not influence the expected entropy because they certainly don't affect the expected loss."""
+    def fix_matrix(self, m: np.ndarray) -> np.ndarray:
+        for x in range(len(self.outcomes)):
+            for x_prime in range(x):
+                connected = False
+                for y in self.messages:
+                    xs = [x_temp.id for x_temp in y.outcomes]
+                    if x in xs and x_prime in xs:
+                        connected = True
+                        break
+                if not connected:
+                    m[x, x_prime] = 0
+                    m[x_prime, x] = 0
+        return m
 
     def set_action(self, agent: pu.Agent, value: np.ndarray):
         try:
@@ -85,17 +98,18 @@ class Game(ABC):
     def get_loss(self, agent: pu.Agent, x: pu.Outcome, y: pu.Message):
         return self.loss[agent](self.action[pu.CONT], self.outcomes, x, y)
 
-    def get_expected_entropy(self, agent: pu.Agent) -> Optional[float]:
+    """Returns entorpy for the contestant. In theory we can also calculate this for the host, but it would have no real meaning"""
+    def get_expected_entropy(self) -> Optional[float]:
         ent: float = 0
         for y in self.messages:
-            e = self.message_dist[y] * self.get_entropy(agent, y)
+            e = self.message_dist[y] * self.get_entropy(y)
             if not math.isnan(e):
                 ent += e
                 
         return ent
 
-    def get_entropy(self, agent: pu.Agent, y: pu.Message):
-        return self.entropy[agent](self.loss[agent], self.host_reverse, self.outcomes, y)
+    def get_entropy(self, y: pu.Message):
+        return self.entropy_cont(self.loss[pu.CONT], self.host_reverse, self.outcomes, y)
 
     def get_action_shape(self, agent: pu.Agent) -> List[int]:
         shape = []
@@ -197,6 +211,14 @@ class Game(ABC):
     @abstractmethod
     def message_structure() -> List[List[int]]:
         pass
+    
+    @classmethod
+    def get_outcome_count(cls) -> int:
+        return len(cls.default_outcome_dist())
+
+    @classmethod
+    def get_message_count(cls) -> int:
+        return len(cls.message_structure())
 
     @staticmethod
     @abstractmethod
@@ -261,7 +283,7 @@ class Game(ABC):
                         table.add_row(['', f"{x}: {self.action[pu.CONT][x, y]}"])
 
             table.add_row(['Cont expected loss', self.get_expected_loss(pu.CONT)])
-            table.add_row(['Cont expected entropy', self.get_expected_entropy(pu.CONT)])
+            table.add_row(['Expected entropy', self.get_expected_entropy()])
         except Exception as e:
             table.add_row(['Cont action', 'ERROR'])
 
@@ -280,7 +302,6 @@ class Game(ABC):
             table.add_row(['RCAR?', self.strategy_util.is_rcar()])
             table.add_row(['RCAR dist: ', "{:.3f}".format(self.strategy_util.rcar_dist())])
             table.add_row(['Host expected loss', self.get_expected_loss(pu.HOST)])
-            table.add_row(['Host expected entropy', self.get_expected_entropy(pu.HOST)])
         except Exception as e:
             table.add_row(['Host action', 'ERROR'])
 

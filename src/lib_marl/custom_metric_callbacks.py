@@ -8,6 +8,7 @@ from ray.rllib.evaluation import Episode
 from ray.rllib.utils.typing import PolicyID
 
 import src.lib_pu as pu
+import src.lib_marl as marl
 
 
 class CustomMetricCallbacks(DefaultCallbacks):
@@ -33,22 +34,26 @@ class CustomMetricCallbacks(DefaultCallbacks):
         episode.custom_metrics["universal_reward"] = episode.custom_metrics["reward_cont"] + episode.custom_metrics["reward_host"] - (episode.custom_metrics["reward_max"] - episode.custom_metrics["reward_min"])
         
         episode.custom_metrics["rcar_dist"] = episode.last_info_for(pu.HOST)["rcar_dist"]
+        episode.custom_metrics["expected_entropy"] = episode.last_info_for(pu.CONT)["expected_entropy"]
         
     def on_sample_end(self, *, worker: RolloutWorker, samples: SampleBatch,
                       **kwargs):
         pass
 
     def on_train_result(self, *, trainer, result: dict, **kwargs):
-        result["reward_cont_mean"] = result["custom_metrics"]["reward_cont_mean"]
-        result["reward_cont_eval_mean"] = result["evaluation"]["custom_metrics"]["reward_cont_mean"]
-        result["reward_host_mean"] = result["custom_metrics"]["reward_host_mean"]
-        result["reward_host_eval_mean"] = result["evaluation"]["custom_metrics"]["reward_host_mean"]
+        result[marl.REWARD_CONT] = result["custom_metrics"][marl.REWARD_CONT]
+        result[marl.REWARD_CONT_EVAL] = result["evaluation"]["custom_metrics"][marl.REWARD_CONT]
+        result[marl.REWARD_HOST] = result["custom_metrics"][marl.REWARD_HOST]
+        result[marl.REWARD_HOST_EVAL] = result["evaluation"]["custom_metrics"][marl.REWARD_HOST]
         
         result["universal_reward_mean"] = result["custom_metrics"]["universal_reward_mean"]
-        result["universal_reward_eval_mean"] = result["evaluation"]["custom_metrics"]["universal_reward_mean"]
+        # result["universal_reward_eval_mean"] = result["evaluation"]["custom_metrics"]["universal_reward_mean"]
         
-        result["rcar_dist_mean"] = result["custom_metrics"]["rcar_dist_mean"]
-        result["rcar_dist_eval_mean"] = result["evaluation"]["custom_metrics"]["rcar_dist_mean"]
+        result[marl.RCAR_DIST] = result["custom_metrics"][marl.RCAR_DIST]
+        result[marl.RCAR_DIST_EVAL] = result["evaluation"]["custom_metrics"][marl.RCAR_DIST]
+        
+        result[marl.EXP_ENTROPY] = result["custom_metrics"][marl.EXP_ENTROPY]
+        result[marl.EXP_ENTROPY_EVAL] = result["evaluation"]["custom_metrics"][marl.EXP_ENTROPY]
 
     def on_learn_on_batch(self, *, policy: Policy, train_batch: SampleBatch,
                           result: dict, **kwargs) -> None:
