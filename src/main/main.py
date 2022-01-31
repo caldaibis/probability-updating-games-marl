@@ -55,7 +55,7 @@ def run(args: Optional[Dict[str, Any]]):
             'show_figure': True,
             'save_progress': False,
             'min_total_time_s': 60,
-            'max_total_time_s': 5,
+            'max_total_time_s': 60,
         }
     else:
         for k in bool_arg_keys:
@@ -71,8 +71,8 @@ def run(args: Optional[Dict[str, Any]]):
     
     if args[pu.CONT] == pu.MATRIX:
         outcomes = pu_games.GAMES[args['game']].get_outcome_count()
-        m_cont = pu.matrix_ones_pos(outcomes)
-        m_host = pu.matrix_ones_neg(outcomes)
+        m_cont = pu.matrix_random_pos(outcomes)
+        m_host = pu.matrix_random_neg(outcomes)
         m_host[1][0] *= 2
         matrix = {
             pu.CONT: m_cont,
@@ -105,9 +105,9 @@ def run(args: Optional[Dict[str, Any]]):
             ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)
             if args['expectation_run']:
                 model_config['num_workers'] = 0
-                tune_config['num_samples'] = 12
+                tune_config['num_samples'] = 10
             else:
-                model_config['num_workers'] = 11
+                model_config['num_workers'] = 10
                 tune_config['num_samples'] = 1
         
         # Run

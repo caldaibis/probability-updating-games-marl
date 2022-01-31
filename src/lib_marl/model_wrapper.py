@@ -62,7 +62,8 @@ class ModelWrapper:
         analysis = ray.tune.run(self.trainer_type, **self._create_tune_config())
 
         if predict:
-            self.predict(analysis.best_checkpoint)
+            # self.predict_best(analysis)
+            self.predict_all(analysis)
             
         if save_progress:
             self._save_progress(analysis)
@@ -72,9 +73,11 @@ class ModelWrapper:
 
     def load_and_predict(self) -> None:
         """Loads the best existing checkpoint and predicts. If it fails, it will throw an exception."""
-        self.predict(ExperimentAnalysis(f"{self.get_local_dir()}/{self.name}", default_metric=self.metric, default_mode="max").best_checkpoint)
+        self.predict_best(ExperimentAnalysis(f"{self.get_local_dir()}/{self.name}", default_metric=self.metric, default_mode="max"))
 
-    def predict(self, checkpoint: str):
+    """Predict using the best checkpoint of the experiment"""
+    def predict_best(self, analysis: ExperimentAnalysis):
+        checkpoint = analysis.best_checkpoint
         trainer = self.trainer_type(config=self._create_model_config())
         trainer.restore(checkpoint)
 
@@ -85,6 +88,23 @@ class ModelWrapper:
         }
         obs, rewards, dones, infos = self.env.step(actions)
         print(self.game)
+
+    """Predict by all trials of the experiment"""
+    def predict_all(self, analysis: ExperimentAnalysis):
+        trials = analysis.trials
+        
+        trainer = self.trainer_type(config=self._create_model_config())
+        
+        for trial in trials:
+            trainer.restore(trial.checkpoint.value)
+
+            obs = self.env.reset()
+            actions = {
+                agent: trainer.compute_single_action(obs[agent], explore=False, policy_id=agent)
+                for agent in pu.AGENTS
+            }
+            obs, rewards, dones, infos = self.env.step(actions)
+            print(self.game)
 
     def _create_model_config(self) -> dict:
         return {
