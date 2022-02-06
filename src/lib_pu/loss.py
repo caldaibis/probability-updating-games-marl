@@ -20,6 +20,11 @@ LOGARITHMIC = "logarithmic"
 LOGARITHMIC_NEG = LOGARITHMIC + "_neg"
 
 MATRIX = "matrix"
+MATRIX_ONES_POS = 'matrix_ones_pos'
+MATRIX_ONES_NEG = 'matrix_ones_neg'
+MATRIX_RAND_POS = [f"matrix_rand_pos_{i}" for i in range(10)]
+MATRIX_RAND_NEG = [f"matrix_rand_neg_{i}" for i in range(10)]
+MATRIX_RAND_MIX = [f"matrix_rand_mix_{i}" for i in range(10)]
 
 LOSSES = [
     RANDOMISED_ZERO_ONE,

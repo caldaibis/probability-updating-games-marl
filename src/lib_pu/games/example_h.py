@@ -14,7 +14,7 @@ class ExampleH(pu_games.Game):
     
     @staticmethod
     def pretty_name() -> str:
-        return "Example H"
+        return pu_games.GAME_PRETTY_NAMES[pu_games.EXAMPLE_H]
 
     @staticmethod
     def default_outcome_dist() -> List[float]:
@@ -41,7 +41,7 @@ class ExampleH(pu_games.Game):
     # y3 < x1, x3
 
     @staticmethod
-    def cont_optimal_zero_one() -> np.ndarray:
+    def cont_default() -> np.ndarray:
         return np.array([[0., 1.], [1., 0.], [1 / 2, 1 / 2]])
 
     @staticmethod

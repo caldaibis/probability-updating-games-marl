@@ -7,21 +7,22 @@ import numpy as np
 import src.lib_pu.games as pu_games
 
 
-class ExampleF(pu_games.Game):
+class Square(pu_games.Game):
     @staticmethod
     def name() -> str:
-        return pu_games.EXAMPLE_F
+        return pu_games.SQUARE
     
     @staticmethod
     def pretty_name() -> str:
-        return pu_games.GAME_PRETTY_NAMES[pu_games.EXAMPLE_F]
+        return pu_games.GAME_PRETTY_NAMES[pu_games.SQUARE]
 
     @staticmethod
     def default_outcome_dist() -> List[float]:
         return [
-            1 / 3,
-            1 / 3,
-            1 / 3
+            1 / 4,
+            1 / 4,
+            1 / 4,
+            1 / 4,
         ]
 
     @staticmethod
@@ -29,21 +30,24 @@ class ExampleF(pu_games.Game):
         return [
             [0, 1],
             [1, 2],
-            [0, 2]
+            [2, 3],
+            [0, 3],
         ]
 
-    # x1 < y1, y3
+    # x1 < y1, y4
     # x2 < y1, y2
     # x3 < y2, y3
+    # x4 < y3, y4
 
     # y1 < x1, x2
     # y2 < x2, x3
-    # y3 < x1, x3
+    # y3 < x3, x4
+    # y4 < x1, x4
 
     @staticmethod
     def cont_default() -> np.ndarray:
-        return np.array([[1 / 2, 1 / 2], [1 / 2, 1 / 2], [1 / 2, 1 / 2]])
+        return np.array([[1 / 2, 1 / 2], [1 / 2, 1 / 2], [1 / 2, 1 / 2], [1 / 2, 1 / 2]])
 
     @staticmethod
     def host_default() -> np.ndarray:
-        return np.array([[1 / 2, 1 / 2], [1 / 2, 1 / 2], [1 / 2, 1 / 2]])
+        return np.array([[1 / 2, 1 / 2], [1 / 2, 1 / 2], [1 / 2, 1 / 2], [1 / 2, 1 / 2]])

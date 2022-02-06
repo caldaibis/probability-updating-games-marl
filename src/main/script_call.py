@@ -10,25 +10,79 @@ import main
 def output_args(_args: Dict[str, Any]) -> List[str]:
     return [str(_args[key]) for key in main.arg_keys]
 
+    # args = {
+    #     'debug_mode': False,
+    #     'show_example': False,
+    #     'ray': True,
+    #     'learn': True,
+    #     'expectation_run': True,
+    #     'predict': False,
+    #     'show_figure': False,
+    #     'save_progress': False,
+    #     'min_total_time_s': 5,
+    #     'max_total_time_s': 5,
+    # }
+    #
+    # for algo in [marl.PPO]:
+    #     args['algorithm'] = algo
+    #     for game in [pu_games.MONTY_HALL]:
+    #         args['game'] = game
+    #         for (cont, host) in [(pu.MATRIX_RAND_POS[0], pu.MATRIX_RAND_NEG[0])]:
+    #             args[pu.CONT] = cont
+    #             args[pu.HOST] = host
+    #
+    #             output = output_args(args)
+    #             print(output)
+    #             subprocess.call(["../../venv/Scripts/python", 'main.py', *output])
+    #             subprocess.call(["../../venv/Scripts/python", 'main.py', *output])
+    #             subprocess.call(["../../venv/Scripts/python", 'main.py', *output])
+    #             subprocess.call(["../../venv/Scripts/python", 'main.py', *output])
 
-if __name__ == '__main__':
-    args = {
+
+def run_n_times_and_load(n, game, losses):
+    run_args = {
+        'algorithm': marl.PPO,
+        'game': game,
+        pu.CONT: losses[pu.CONT],
+        pu.HOST: losses[pu.HOST],
         'debug_mode': False,
-        'show_example': True,
-        'learn': False,
+        'show_example': False,
+        'ray': True,
+        'learn': True,
+        'expectation_run': True,
         'predict': False,
         'show_figure': False,
         'save_progress': False,
+        'min_total_time_s': 30,
+        'max_total_time_s': 30,
     }
     
-    for algo in [marl.PPO]:  # marl.ALGOS:
-        args['algorithm'] = algo
-        for game in [pu_games.MONTY_HALL]:  # pu_games.GAMES:
-            args['game'] = game
-            for (cont, host) in [(pu.MATRIX, pu.MATRIX)]:  # pu.LOSS_ALL_PAIRS:
-                args[pu.CONT] = cont
-                args[pu.HOST] = host
-                
-                output = output_args(args)
-                print(output)
-                subprocess.call(["../../venv/Scripts/python", 'main.py', *output])
+    for _ in range(n):
+        subprocess.call(["../../venv/Scripts/python", 'main.py', *output_args(run_args)])
+    
+    load_args = {
+        'algorithm': marl.PPO,
+        'game': game,
+        pu.CONT: losses[pu.CONT],
+        pu.HOST: losses[pu.HOST],
+        'debug_mode': False,
+        'show_example': True,
+        'ray': True,
+        'learn': False,
+        'expectation_run': True,
+        'predict': True,
+        'show_figure': True,
+        'save_progress': False,
+        'min_total_time_s': 30,
+        'max_total_time_s': 30,
+    }
+    
+    subprocess.call(["../../venv/Scripts/python", 'main.py', *output_args(load_args)])
+
+
+if __name__ == '__main__':
+    losses = {
+        pu.CONT: pu.MATRIX_RAND_POS[0],
+        pu.HOST: pu.MATRIX_RAND_NEG[0],
+    }
+    run_n_times_and_load(2, pu_games.MONTY_HALL, losses)

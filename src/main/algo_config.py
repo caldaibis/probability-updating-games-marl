@@ -60,8 +60,8 @@ hyper_parameters = {
         "rollout_fragment_length": 64,
         "timesteps_per_iteration": 16,
         "prioritized_replay_beta_annealing_timesteps": 16,
-        "learning_starts": 1,
-        "min_iter_time_s": 0,
+        "learning_starts": 500,
+        "min_iter_time_s": 1,
     },
     ImpalaTrainer: {
         "batch_mode": "complete_episodes",

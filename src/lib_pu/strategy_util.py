@@ -66,7 +66,7 @@ class StrategyUtil:
         dist = 0
         for x in self.game.outcomes:
             mean = statistics.mean(self.game.host_reverse[x, y] for y in x.messages if self.game.message_dist[y] > 0)
-            dist += math.sqrt(sum((mean - self.game.host_reverse[x, y]) ** 2 for y in x.messages))
+            dist += math.sqrt(sum((mean - self.game.host_reverse[x, y]) ** 2 for y in x.messages if self.game.message_dist[y] > 0))
         
         for y in self.game.messages:
             dist += max(0, sum(self.game.host_reverse[x, y] for x in y.outcomes) - 1)

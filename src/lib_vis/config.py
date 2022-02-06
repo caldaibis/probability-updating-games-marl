@@ -32,19 +32,19 @@ RUN_INFO = {
         'losses': [pu.RANDOMISED_ZERO_ONE, pu.BRIER, pu.LOGARITHMIC],
         'interactions': [pu.COOPERATIVE, pu.ZERO_SUM],
     },
-    'gaussian_softmax': {
+    'independent_softmax': {
         'algos': [marl.PPO, marl.A2C, marl.TD3, marl.SAC],
         'games': [pu_games.MONTY_HALL, pu_games.FAIR_DIE],
         'losses': [pu.RANDOMISED_ZERO_ONE, pu.BRIER, pu.LOGARITHMIC],
         'interactions': [pu.COOPERATIVE, pu.ZERO_SUM],
     },
-    'gaussian_box_rcar_dist': {
+    'independent_punish_rcar_dist': {
         'algos': [marl.PPO, marl.A2C],
         'games': [pu_games.MONTY_HALL, pu_games.FAIR_DIE],
         'losses': [pu.RANDOMISED_ZERO_ONE, pu.BRIER, pu.LOGARITHMIC],
         'interactions': [pu.ZERO_SUM],
     },
-    'gaussian_box': {
+    'independent_punish': {
         'algos': [marl.PPO, marl.A2C, marl.DDPG, marl.TD3, marl.SAC],
         'games': [pu_games.MONTY_HALL, pu_games.FAIR_DIE],
         'losses': [pu.RANDOMISED_ZERO_ONE, pu.BRIER, pu.LOGARITHMIC],
@@ -57,6 +57,8 @@ GRAPH_BASE = {
     'metric': marl.REWARD_CONT,
     'show_figures': True,
     'save_figures': False,
+    'legend-lower-anchor': 0.0,
+    'title': True,
 }
 
 GRAPH_DIRICHLET = {
@@ -87,4 +89,14 @@ GRAPH_DIRICHLET_VS_GAUSSIAN_SOFTMAX_GAUSSIAN_BOX = {
     'games': [pu_games.MONTY_HALL, pu_games.FAIR_DIE],
     'losses': [pu.RANDOMISED_ZERO_ONE, pu.BRIER, pu.LOGARITHMIC],
     'interactions': [pu.COOPERATIVE, pu.ZERO_SUM],
+}
+
+GRAPH_INDEPENDENT_PUNISH = {
+    **GRAPH_BASE,
+    'metric': marl.REWARD_CONT,
+    'name': 'independent_punish',
+    'experiments': ['gaussian_box'],
+    **RUN_INFO['independent_punish'],
+    'legend-lower-anchor': 0.77,
+    'title': False,
 }

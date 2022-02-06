@@ -14,7 +14,7 @@ class FairDie(pu_games.Game):
     
     @staticmethod
     def pretty_name() -> str:
-        return "Fair Die"
+        return pu_games.GAME_PRETTY_NAMES[pu_games.FAIR_DIE]
 
     @staticmethod
     def default_outcome_dist() -> List[float]:
@@ -45,7 +45,7 @@ class FairDie(pu_games.Game):
     # y2 < x3, x4, x5, x5
 
     @staticmethod
-    def cont_optimal_zero_one() -> np.ndarray:
+    def cont_default() -> np.ndarray:
         return np.array([[1 / 2, 1 / 2, 0., 0.], [0., 0., 1 / 2, 1 / 2]])
 
     @staticmethod

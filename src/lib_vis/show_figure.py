@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, Dict
 
 from ray.tune.trial import Trial
 
@@ -12,10 +12,9 @@ import src.lib_pu as pu
 import src.lib_marl as marl
 
 
-def _show_expectation_figure(trials: List[Trial]):
-    sns.set()
-
-    metrics = [marl.REWARD_CONT, marl.REWARD_HOST, marl.EXP_ENTROPY]
+def show_performance_figure_expectation(title: str, trials: List[Trial], metrics: List[str]):
+    sns.set_theme(color_codes=True)
+    plt.figure()
 
     dfs = []
     for t in trials:
@@ -66,20 +65,18 @@ def _show_expectation_figure(trials: List[Trial]):
         
     plt.legend(frameon=False, loc='lower right', ncol=1)
 
-    plt.xlim(0, max(60, x_max))
+    plt.xlim(0, max(30, x_max))
     plt.xlabel("Total time in seconds")
     plt.ylabel("Loss")
+    plt.title(title)
 
-    plt.show()
-    
 
-def _show_single_run_figure(trials: List[Trial]):
+def show_performance_figure(title: str, trials: List[Trial], metrics: List[str]):
+    sns.set_theme(color_codes=True)
     for t in trials:
         plt.figure()
         
         df = pd.read_csv(f'{t.logdir}/progress.csv')
-        
-        metrics = [marl.REWARD_CONT, marl.REWARD_HOST, marl.EXP_ENTROPY]
         
         x_max = 0
         for metric in metrics:
@@ -93,25 +90,54 @@ def _show_single_run_figure(trials: List[Trial]):
     
         plt.legend(frameon=False, loc='lower right', ncol=1)
     
-        plt.xlim(0, x_max)
+        plt.xlim(0, max(30, x_max))
         plt.xlabel("Total time in seconds")
         plt.ylabel("Loss")
-        
-    plt.show()
+        plt.title(title)
 
 
-def _show_strategy_figure(action: pu.ContAction, outcomes: List[pu.Outcome], messages: List[pu.Message]):
-    for y in messages:
-        plt.figure()
-        action[x, y]
-        
-        plt.xlim(0, 60)
-        plt.xlabel("Total time in seconds")
-        plt.ylabel("Loss")
+def show_strategy_figures(actions: Dict[pu.Agent, List[pu.Action]], outcomes: List[pu.Outcome], messages: List[pu.Message]):
+    sns.set_theme(color_codes=True)
+    _show_cont_figure(actions[pu.CONT], messages)
+    _show_host_figure(actions[pu.HOST], outcomes)
     
-    plt.show()
+
+def _show_cont_figure(actions: List[pu.Action], messages: List[pu.Message]):
+    for y in messages:
+        if len(y.outcomes) < 2:
+            continue
+            
+        ds = []
+        plt.figure()
+        
+        for action in actions:
+            ds.append({str(x): action[x, y] for x in y.outcomes})
+        
+        df = pd.DataFrame(ds)
+        sns.boxplot(data=df, color='tab:blue', width=0.5)
+        
+        plt.ylim(-0.1, 1.1)
+        plt.xlabel(r"$x \in \mathcal{X}$")
+        plt.ylabel(r"$Q(x \mid " + f"{y})$")
+        plt.title(r"$Q(x \mid " + f"{y})$")
 
 
-def show_figure(trials: List[Trial]):
-    sns.set()
-    _show_expectation_figure(trials)
+def _show_host_figure(actions: List[pu.Action], outcomes: List[pu.Outcome]):
+    for x in outcomes:
+        if len(x.messages) < 2:
+            continue
+            
+        ds = []
+        plt.figure()
+        
+        for action in actions:
+            ds.append({str(y): action[x, y] for y in x.messages})
+        
+        df = pd.DataFrame(ds)
+        sns.boxplot(data=df, color='tab:orange', width=0.5)
+        
+        plt.ylim(-0.1, 1.1)
+        plt.xlabel(r"$y \in \mathcal{Y}$")
+        plt.ylabel(r"$P(y \mid " + f"{x})$")
+        plt.title(r"$P(y \mid " + f"{x})$")
+

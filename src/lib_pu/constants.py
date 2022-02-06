@@ -15,4 +15,4 @@ INTERACTIONS = {
     ZERO_SUM: 'zero-sum',
 }
 
-RCAR_EPSILON = 0.08
+RCAR_EPSILON = 0.06

@@ -3,9 +3,27 @@ from __future__ import annotations
 from typing import Dict
 
 import numpy as np
+import pickle
 
 import src.lib_pu as pu
 from pettingzoo.test import parallel_api_test
+
+
+def generate_random_matrices(outcome_count: int):
+    pos_matrices = [pu.matrix_random_pos(outcome_count) for _ in range(10)]
+    neg_matrices = [pu.matrix_random_neg(outcome_count) for _ in range(10)]
+    mix_matrices = [pu.matrix_random_mix(outcome_count) for _ in range(10)]
+    matrices = {'pos': pos_matrices, 'neg': neg_matrices, 'mix': mix_matrices}
+    
+    file = open(f'saved_matrices/x={outcome_count}.txt', 'wb')
+    pickle.dump(matrices, file)
+    file.close()
+    
+    
+def read_random_matrix(outcome_count: int, sign: str, idx: int):
+    with open(f'saved_matrices/x={outcome_count}.txt', 'rb') as f:
+        matrices = pickle.load(f)
+        return matrices[sign][idx]
 
 
 def example_step(game: pu.Game, actions: Dict[pu.Agent, np.ndarray]):

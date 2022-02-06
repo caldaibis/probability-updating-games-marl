@@ -33,24 +33,31 @@ RCAR_DIST_EVAL = 'rcar_dist_eval_mean'
 EXP_ENTROPY = 'expected_entropy_mean'
 EXP_ENTROPY_EVAL = 'expected_entropy_eval_mean'
 
-OLD_REWARD_CONT = 'policy_reward_mean_cont'
-OLD_REWARD_HOST = 'policy_reward_mean_host'
+OLD_REWARD_CONT = 'policy_reward_mean/cont'
+OLD_REWARD_HOST = 'policy_reward_mean/host'
+
+PRETTY_NAMES = {
+    REWARD_CONT: 'Contestant expected loss',  # r'$\mathrm{\mathbb{E}}[\mathrm{L}_C(x, Q)]$',
+    REWARD_HOST: 'Host expected loss',  # r'$\mathrm{\mathbb{E}}[\mathrm{L}_H(x, Q)]$',
+    RCAR_DIST: 'RCAR distance',
+    EXP_ENTROPY: 'Expected generalised entropy'  # r'$\mathrm{\mathbb{E}}[\mathrm{H}_L_C (P)]$',
+}
 
 POSITIVE_METRICS = {
-    RCAR_DIST: 'RCAR distance',
-    RCAR_DIST_EVAL: 'RCAR distance',
-    EXP_ENTROPY: r'$\mathrm{\mathbb{E}}[\mathrm{H}_L(P)]$',
-    EXP_ENTROPY_EVAL: r'$\mathrm{\mathbb{E}}[\mathrm{H}_L(P)]$',
+    RCAR_DIST: PRETTY_NAMES[RCAR_DIST],
+    RCAR_DIST_EVAL: PRETTY_NAMES[RCAR_DIST],
+    EXP_ENTROPY: PRETTY_NAMES[EXP_ENTROPY],
+    EXP_ENTROPY_EVAL: PRETTY_NAMES[EXP_ENTROPY],
 }
 
 NEGATIVE_METRICS = {
-    REWARD_CONT:        r'$\mathrm{\mathbb{E}}[\mathrm{L}_Q(x, Q)]$',
-    REWARD_CONT_EVAL:   r'$\mathrm{\mathbb{E}}[\mathrm{L}_Q(x, Q)]$',
-    REWARD_HOST:        r'$\mathrm{\mathbb{E}}[\mathrm{L}_P(x, Q)]$',
-    REWARD_HOST_EVAL:   r'$\mathrm{\mathbb{E}}[\mathrm{L}_P(x, Q)]$',
+    REWARD_CONT: PRETTY_NAMES[REWARD_CONT],
+    REWARD_CONT_EVAL: PRETTY_NAMES[REWARD_CONT],
+    REWARD_HOST: PRETTY_NAMES[REWARD_HOST],
+    REWARD_HOST_EVAL: PRETTY_NAMES[REWARD_HOST],
     
-    OLD_REWARD_CONT:    r'$\mathrm{\mathbb{E}}[\mathrm{L}_Q(x, Q)]$',
-    OLD_REWARD_HOST:    r'$\mathrm{\mathbb{E}}[\mathrm{L}_P(x, Q)]$',
+    OLD_REWARD_CONT: PRETTY_NAMES[REWARD_CONT],
+    OLD_REWARD_HOST: PRETTY_NAMES[REWARD_HOST],
 }
 
 OLD_METRICS = {

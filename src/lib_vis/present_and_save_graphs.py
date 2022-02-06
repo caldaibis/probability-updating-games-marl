@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import pandas as pd
 import seaborn as sns
+from matplotlib.ticker import StrMethodFormatter
 
 import src.lib_marl as marl
 import src.lib_pu as pu
@@ -168,16 +169,17 @@ def run(config: Dict):
                     lines.insert(0, plt.plot([0, 1000], [n, n], label='[NE]', color="black")[0])
                 
                 # build legend
-                lower_anchor = 0.0
-                ncol = min(round(max(len(config['experiments']), len(config['algos'])) / 3), 1)
-                plt.legend(frameon=False, handles=lines, loc='lower right', ncol=ncol, bbox_to_anchor=(1.0, lower_anchor))
+                ncol = max(round(max(len(config['experiments']), len(config['algos'])) / 2.0 + 0.5), 1)
+                plt.legend(frameon=False, handles=lines, loc='lower right', ncol=ncol, bbox_to_anchor=(1.0, config['legend-lower-anchor']))
 
                 # plot config
+                plt.gca().yaxis.set_major_formatter(StrMethodFormatter('{x:,.2f}'))
                 plt.xlim(0, x_max)
                 # plt.ylim(top=0.0)
-                # plt.ylim(0.0 if rcar else bottom, 0.5 if rcar else None)
+                # plt.ylim(0.0)
                 
-                plt.title(f"{pu.INTERACTIONS[interaction].capitalize()} {pu_games.GAME_NAMES[game]} with {pu.LOSS_NAMES[loss]} loss")
+                if config['title']:
+                    plt.title(f"{pu.INTERACTIONS[interaction].capitalize()} {pu_games.GAME_PRETTY_NAMES[game]} with {pu.LOSS_NAMES[loss]} loss")
                 plt.xlabel("Total time in seconds")
                 plt.ylabel(marl.ALL_METRICS[config['metric']])
 
@@ -191,11 +193,10 @@ def run(config: Dict):
         
         
 if __name__ == '__main__':
-    # set style
-    sns.set()
+    sns.set_theme(color_codes=True)
     
     configuration = {
-        **vis.GRAPH_DIRICHLET_VS_GAUSSIAN_SOFTMAX_GAUSSIAN_BOX,
+        **vis.GRAPH_INDEPENDENT_PUNISH,
         'show_figures': True,
         'save_figures': True,
     }

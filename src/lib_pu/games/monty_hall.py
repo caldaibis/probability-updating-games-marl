@@ -14,7 +14,7 @@ class MontyHall(pu_games.Game):
     
     @staticmethod
     def pretty_name() -> str:
-        return "Monty Hall"
+        return pu_games.GAME_PRETTY_NAMES[pu_games.MONTY_HALL]
 
     @staticmethod
     def default_outcome_dist() -> List[float]:
@@ -39,7 +39,7 @@ class MontyHall(pu_games.Game):
     # y2 < x2, x3
 
     @staticmethod
-    def cont_optimal_zero_one() -> np.ndarray:
+    def cont_default() -> np.ndarray:
         return np.array([[1., 0.], [0., 1.]])
 
     @staticmethod

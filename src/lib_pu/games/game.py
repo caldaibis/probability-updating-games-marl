@@ -43,14 +43,14 @@ class Game(ABC):
         self.outcome_dist = outcome_dist
         self.loss_names = loss_names
         
-        if loss_names[pu.CONT] == pu.MATRIX:
-            self.matrix = {agent: self.fix_matrix(matrix[agent]) for agent in matrix}
-            self.loss = {agent: partial(pu.LOSS_FNS[loss_names[agent]], self.matrix[agent]) for agent in pu.AGENTS}
-            self.entropy_cont = partial(pu.ENTROPY_FNS[loss_names[pu.CONT]], self.matrix[pu.CONT])
+        if loss_names[pu.CONT].startswith(pu.MATRIX):
+            self.matrix = {agent: self.fix_matrix(matrix[agent]) for agent in pu.AGENTS}
+            self.loss = {agent: partial(pu.LOSS_FNS[pu.MATRIX], self.matrix[agent]) for agent in pu.AGENTS}
+            self.entropy_cont = partial(pu.ENTROPY_FNS[pu.MATRIX], self.matrix[pu.CONT])
         else:
             self.loss = {agent: pu.LOSS_FNS[loss_names[agent]] for agent in pu.AGENTS}
             self.entropy_cont = pu.ENTROPY_FNS[loss_names[pu.CONT]]
-
+        
         self.action = {agent: None for agent in pu.AGENTS}
 
     """Modify matrix such that no positive or negative losses are given for pairs of outcomes that are not in a message together.
@@ -222,7 +222,7 @@ class Game(ABC):
 
     @staticmethod
     @abstractmethod
-    def cont_optimal_zero_one() -> np.ndarray:
+    def cont_default() -> np.ndarray:
         pass
 
     @staticmethod
@@ -253,7 +253,7 @@ class Game(ABC):
 
         table.add_row(['', ''])
         table.add_row(['Cont loss', self.loss_names[pu.CONT]])
-        if self.loss_names[pu.CONT] == pu.MATRIX:
+        if self.loss_names[pu.CONT].startswith(pu.MATRIX):
             col_maxes = max([max([len("{:g}".format(x)) for x in col]) for col in self.matrix[pu.CONT].T], [max([len("{:g}".format(x)) for x in col]) for col in self.matrix[pu.HOST].T])
             for x in self.matrix[pu.CONT]:
                 _row = ''
@@ -262,7 +262,7 @@ class Game(ABC):
                 table.add_row(['', _row])
                 
         table.add_row(['Host loss', self.loss_names[pu.HOST]])
-        if self.loss_names[pu.HOST] == pu.MATRIX:
+        if self.loss_names[pu.HOST].startswith(pu.MATRIX):
             col_maxes = max([max([len("{:g}".format(x)) for x in col]) for col in self.matrix[pu.CONT].T], [max([len("{:g}".format(x)) for x in col]) for col in self.matrix[pu.HOST].T])
             for x in self.matrix[pu.HOST]:
                 _row = ''
