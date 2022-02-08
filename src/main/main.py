@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import distutils.util
 import logging
-import os
 import sys
 from typing import Dict, Optional, List, Any
 
@@ -31,6 +30,7 @@ bool_arg_keys: List[str] = [
     'expectation_run',
     'predict',
     'show_figure',
+    'show_eval',
     'save_progress',
 ]
 
@@ -45,20 +45,21 @@ arg_keys = [*string_arg_keys, *bool_arg_keys, *int_arg_keys]
 def run(args: Optional[Dict[str, Any]]):
     if not args:
         args = {
-            'algorithm': marl.SAC,
+            'algorithm': marl.PPO,
             'game': pu_games.MONTY_HALL,
-            pu.CONT: pu.MATRIX_RAND_POS[0],
-            pu.HOST: pu.MATRIX_RAND_NEG[0],
+            pu.CONT: pu.MATRIX_PREDEFINED_POS[1],
+            pu.HOST: pu.MATRIX_PREDEFINED_NEG[0],
             'debug_mode': False,
             'show_example': True,
             'ray': True,
-            'learn': True,
+            'learn': False,
             'expectation_run': True,
             'predict': True,
             'show_figure': True,
+            'show_eval': True,
             'save_progress': False,
-            'min_total_time_s': 30,
-            'max_total_time_s': 30,
+            'min_total_time_s': 50,
+            'max_total_time_s': 50,
         }
     else:
         for k in bool_arg_keys:
@@ -73,19 +74,9 @@ def run(args: Optional[Dict[str, Any]]):
     }
     
     matrix = {}
-    outcomes = pu_games.GAMES[args['game']].get_outcome_count()
     for agent in pu.AGENTS:
         if args[agent].startswith(pu.MATRIX):
-            if args[agent] == pu.MATRIX_ONES_POS:
-                matrix[agent] = pu.matrix_ones_pos(outcomes)
-            elif args[agent] == pu.MATRIX_ONES_NEG:
-                matrix[agent] = pu.matrix_ones_neg(outcomes)
-            elif args[agent] in pu.MATRIX_RAND_POS:
-                matrix[agent] = util.read_random_matrix(outcomes, 'pos', int(args[agent][-1]))
-            elif args[agent] in pu.MATRIX_RAND_NEG:
-                matrix[agent] = util.read_random_matrix(outcomes, 'neg', int(args[agent][-1]))
-            elif args[agent] in pu.MATRIX_RAND_MIX:
-                matrix[agent] = util.read_random_matrix(outcomes, 'mix', int(args[agent][-1]))
+            matrix[agent] = util.select_matrix(args['game'], args[agent])
     
     game = pu_games.GAMES[args['game']](losses, matrix)
 
@@ -113,8 +104,8 @@ def run(args: Optional[Dict[str, Any]]):
             ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)
             tune_config["verbose"] = 1
             if args['expectation_run']:
-                model_config['num_workers'] = 0
-                tune_config['num_samples'] = 11
+                model_config['num_workers'] = 1
+                tune_config['num_samples'] = 6
             else:
                 model_config['num_workers'] = 10
                 tune_config['num_samples'] = 1
@@ -128,7 +119,7 @@ def run(args: Optional[Dict[str, Any]]):
         }
         
         model = marl.ModelWrapper('experimental_dirichlet', game, losses, algo, config)
-        model(learn=args['learn'], predict=args['predict'], expectation_run=args['expectation_run'], show_figure=args['show_figure'], save_progress=args['save_progress'])
+        model(learn=args['learn'], predict=args['predict'], expectation_run=args['expectation_run'], show_figure=args['show_figure'], show_eval=args['show_eval'], save_progress=args['save_progress'])
         
         ray.shutdown()
 
@@ -138,4 +129,3 @@ if __name__ == '__main__':
         run(None)
     else:
         run(dict(zip(arg_keys, sys.argv[1:])))
-

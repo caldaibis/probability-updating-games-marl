@@ -169,8 +169,11 @@ def run(config: Dict):
                     lines.insert(0, plt.plot([0, 1000], [n, n], label='[NE]', color="black")[0])
                 
                 # build legend
-                ncol = max(round(max(len(config['experiments']), len(config['algos'])) / 2.0 + 0.5), 1)
-                plt.legend(frameon=False, handles=lines, loc='lower right', ncol=ncol, bbox_to_anchor=(1.0, config['legend-lower-anchor']))
+                ncol = max(round(max(len(config['experiments']), len(config['algos'])) / 2.0 + 0.0), 1)
+                if isinstance(config['legend-lower-anchor'], dict):
+                    plt.legend(frameon=False, handles=lines, loc='lower right', ncol=ncol, bbox_to_anchor=(1.0, config['legend-lower-anchor'][(game, loss, interaction)]))
+                else:
+                    plt.legend(frameon=False, handles=lines, loc='lower right', ncol=ncol, bbox_to_anchor=(1.0, config['legend-lower-anchor']))
 
                 # plot config
                 plt.gca().yaxis.set_major_formatter(StrMethodFormatter('{x:,.2f}'))
@@ -196,9 +199,7 @@ if __name__ == '__main__':
     sns.set_theme(color_codes=True)
     
     configuration = {
-        **vis.GRAPH_INDEPENDENT_PUNISH,
-        'show_figures': True,
-        'save_figures': True,
+        **vis.GRAPH_DIRICHLET_VS_INDEPENDENT_SOFTMAX_INDEPENDENT_PUNISH,
     }
     
     run(configuration)

@@ -13,7 +13,7 @@ class StrategyUtil:
     def __init__(self, game: games.Game):
         self.game = game
 
-    def update_strategy_host_reverse(self) -> pu.ContAction:
+    def get_host_reverse(self) -> pu.ContAction:
         reverse = {}
         for y in self.game.messages:
             reverse[y] = {}
@@ -25,7 +25,7 @@ class StrategyUtil:
 
         return pu.ContAction(reverse)
 
-    def update_message_dist(self) -> Dict[pu.Message, float]:
+    def get_message_dist(self) -> Dict[pu.Message, float]:
         probs = {}
         for y in self.game.messages:
             probs[y] = 0

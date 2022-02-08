@@ -20,11 +20,22 @@ LOGARITHMIC = "logarithmic"
 LOGARITHMIC_NEG = LOGARITHMIC + "_neg"
 
 MATRIX = "matrix"
+MATRIX_CUSTOM_3 = "matrix_custom_3"
+MATRIX_CUSTOM_3_NEG = "matrix_custom_3_neg"
+
+MATRIX_CUSTOM_6 = "matrix_custom_6"
+MATRIX_CUSTOM_6_NEG = "matrix_custom_6_neg"
+
+MATRIX_PREDEFINED_POS = [f"matrix_predefined_pos_{i}" for i in range(15)]
+MATRIX_PREDEFINED_NEG = [f"matrix_predefined_neg_{i}" for i in range(15)]
+MATRIX_PREDEFINED = [*MATRIX_PREDEFINED_POS, *MATRIX_PREDEFINED_NEG]
+
 MATRIX_ONES_POS = 'matrix_ones_pos'
 MATRIX_ONES_NEG = 'matrix_ones_neg'
 MATRIX_RAND_POS = [f"matrix_rand_pos_{i}" for i in range(10)]
 MATRIX_RAND_NEG = [f"matrix_rand_neg_{i}" for i in range(10)]
 MATRIX_RAND_MIX = [f"matrix_rand_mix_{i}" for i in range(10)]
+MATRIX_RAND = [*MATRIX_RAND_POS, *MATRIX_RAND_NEG, *MATRIX_RAND_MIX]
 
 LOSSES = [
     RANDOMISED_ZERO_ONE,
@@ -88,6 +99,42 @@ def matrix_ones_neg(outcome_count: int) -> np.ndarray:
     return m
 
 
+def matrix_custom_3() -> np.ndarray:
+    return np.array(
+        [
+            [0, 1, 500],
+            [1, 0, 1],
+            [500, 1, 0],
+        ])
+
+
+def matrix_custom_3_neg() -> np.ndarray:
+    return -1 * matrix_custom_3()
+
+
+def matrix_custom_6() -> np.ndarray:
+    return np.array(
+        [
+            [0, 1, 1, 1, -500, -500],
+            [1, 0, 1, 1, -500, -500],
+            [1, 1, 0, 1, 1, 1],
+            [1, 1, 1, 0, 1, 1],
+            [-500, -500, 1, 1, 0, 1],
+            [-500, -500, 1, 1, 1, 0],
+        ])
+
+def matrix_custom_3() -> np.ndarray:
+    return np.array(
+        [
+            [0, 1, 500],
+            [1, 0, 1],
+            [500, 1, 0],
+        ])
+
+def matrix_custom_6_neg() -> np.ndarray:
+    return -1 * matrix_custom_6()
+
+
 def _zero_one_fn(cont: pu.ContAction, _: List[pu.Outcome], x: pu.Outcome, y: pu.Message) -> float:
     return 1 - cont[x, y]
 
@@ -149,8 +196,6 @@ def _matrix_entropy_fn(m: np.ndarray, _, host_reverse: pu.ContAction, outcomes: 
     for x in outcomes:
         _sum = 0
         for x_prime in outcomes:
-            if x == x_prime:
-                continue
             _sum += host_reverse[x_prime, y] * m[x_prime.id, x.id]
         minimal_sum = min(minimal_sum, _sum)
     return minimal_sum

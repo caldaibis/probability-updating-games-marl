@@ -10,7 +10,7 @@ import src.lib_marl as marl
 
 
 def fix_underscores():
-    root = Path("../lib_vis/data/gaussian_softmax")
+    root = Path("../lib_vis/data/independent_softmax")
     parts = {
         'algos': [marl.PPO, marl.A2C, marl.TD3, marl.SAC],
         'games': [pu_games.MONTY_HALL, pu_games.FAIR_DIE],

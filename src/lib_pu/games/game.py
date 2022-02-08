@@ -76,8 +76,8 @@ class Game(ABC):
             raise pu.InvalidStrategyError(value, self.get_action_shape(agent))
 
         if agent == pu.HOST:
-            self.message_dist = self.strategy_util.update_message_dist()
-            self.host_reverse = self.strategy_util.update_strategy_host_reverse()
+            self.message_dist = self.strategy_util.get_message_dist()
+            self.host_reverse = self.strategy_util.get_host_reverse()
 
     def step(self, actions: Dict[str, np.ndarray]) -> Dict[pu.Agent, float]:
         for agent in pu.AGENTS:
@@ -273,7 +273,6 @@ class Game(ABC):
         table.add_row(['', ''])
         table.add_row(['Cont action', ''])
         table.add_row(['Action space', self.get_action_shape(pu.CONT)])
-
         try:
             for y in self.messages:
                 for x in self.outcomes:
@@ -286,6 +285,18 @@ class Game(ABC):
             table.add_row(['Expected entropy', self.get_expected_entropy()])
         except Exception as e:
             table.add_row(['Cont action', 'ERROR'])
+            
+        table.add_row(['', ''])
+        table.add_row(['Host reverse action', ''])
+        try:
+            for y in self.messages:
+                for x in self.outcomes:
+                    if x == self.outcomes[0]:
+                        table.add_row([y, f"{x}: {self.host_reverse[x, y]}"])
+                    else:
+                        table.add_row(['', f"{x}: {self.host_reverse[x, y]}"])
+        except Exception as e:
+            table.add_row(['Host reverse action', 'ERROR'])
 
         table.add_row(['', ''])
         table.add_row(['Host action', ''])

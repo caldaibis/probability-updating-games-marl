@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import json
 from typing import Dict
 
 import numpy as np
 import pickle
 
 import src.lib_pu as pu
+import src.lib_pu.games as pu_games
 from pettingzoo.test import parallel_api_test
 
 
@@ -19,11 +21,41 @@ def generate_random_matrices(outcome_count: int):
     pickle.dump(matrices, file)
     file.close()
     
-    
-def read_random_matrix(outcome_count: int, sign: str, idx: int):
-    with open(f'saved_matrices/x={outcome_count}.txt', 'rb') as f:
+
+def select_matrix(game: str, loss: str):
+    if loss in pu.MATRIX_PREDEFINED:
+        return read_predefined_matrix(game, loss)
+    if loss == pu.MATRIX_CUSTOM_3:
+        return pu.matrix_custom_3()
+    elif loss == pu.MATRIX_CUSTOM_3_NEG:
+        return pu.matrix_custom_3_neg()
+    elif loss == pu.MATRIX_CUSTOM_6:
+        return pu.matrix_custom_6()
+    elif loss == pu.MATRIX_CUSTOM_6_NEG:
+        return pu.matrix_custom_6_neg()
+    elif loss == pu.MATRIX_ONES_POS:
+        return pu.matrix_ones_pos(pu_games.GAMES[game].get_outcome_count())
+    elif loss == pu.MATRIX_ONES_NEG:
+        return pu.matrix_ones_neg(pu_games.GAMES[game].get_outcome_count())
+    elif loss in pu.MATRIX_RAND:
+        return read_random_matrix(game, loss)
+
+
+def read_random_matrix(game: str, loss: str):
+    loss = loss.split('_')
+    with open(f'saved_matrices/x={pu_games.GAMES[game].get_outcome_count()}.txt', 'rb') as f:
         matrices = pickle.load(f)
-        return matrices[sign][idx]
+        return matrices[loss[-2]][int(loss[-1])]
+
+
+def read_predefined_matrix(game: str, loss: str):
+    loss = loss.split('_')
+    with open(f'saved_matrices/{game}.json', 'r') as f:
+        matrices = json.load(f)
+        if loss[-2] == 'neg':
+            return -1 * np.array(matrices[int(loss[-1])]['matrix'])
+        else:
+            return np.array(matrices[int(loss[-1])]['matrix'])
 
 
 def example_step(game: pu.Game, actions: Dict[pu.Agent, np.ndarray]):

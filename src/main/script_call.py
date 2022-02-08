@@ -18,6 +18,7 @@ def output_args(_args: Dict[str, Any]) -> List[str]:
     #     'expectation_run': True,
     #     'predict': False,
     #     'show_figure': False,
+    #     'show_eval': True,
     #     'save_progress': False,
     #     'min_total_time_s': 5,
     #     'max_total_time_s': 5,
@@ -46,12 +47,13 @@ def run_n_times_and_load(n, game, losses):
         pu.CONT: losses[pu.CONT],
         pu.HOST: losses[pu.HOST],
         'debug_mode': False,
-        'show_example': False,
+        'show_example': True,
         'ray': True,
         'learn': True,
         'expectation_run': True,
         'predict': False,
         'show_figure': False,
+        'show_eval': False,
         'save_progress': False,
         'min_total_time_s': 30,
         'max_total_time_s': 30,
@@ -66,12 +68,13 @@ def run_n_times_and_load(n, game, losses):
         pu.CONT: losses[pu.CONT],
         pu.HOST: losses[pu.HOST],
         'debug_mode': False,
-        'show_example': True,
+        'show_example': False,
         'ray': True,
         'learn': False,
         'expectation_run': True,
         'predict': True,
         'show_figure': True,
+        'show_eval': True,
         'save_progress': False,
         'min_total_time_s': 30,
         'max_total_time_s': 30,
@@ -81,8 +84,9 @@ def run_n_times_and_load(n, game, losses):
 
 
 if __name__ == '__main__':
-    losses = {
-        pu.CONT: pu.MATRIX_RAND_POS[0],
-        pu.HOST: pu.MATRIX_RAND_NEG[0],
-    }
-    run_n_times_and_load(2, pu_games.MONTY_HALL, losses)
+    for m in pu.MATRIX_PREDEFINED:
+        losses = {
+            pu.CONT: pu.MATRIX_PREDEFINED[0],
+            pu.HOST: m,
+        }
+        run_n_times_and_load(0, pu_games.MONTY_HALL, losses)

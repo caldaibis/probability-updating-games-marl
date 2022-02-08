@@ -96,13 +96,14 @@ def show_performance_figure(title: str, trials: List[Trial], metrics: List[str])
         plt.title(title)
 
 
-def show_strategy_figures(actions: Dict[pu.Agent, List[pu.Action]], outcomes: List[pu.Outcome], messages: List[pu.Message]):
+def show_strategy_figures(actions: Dict[str, List[pu.Action]], outcomes: List[pu.Outcome], messages: List[pu.Message]):
     sns.set_theme(color_codes=True)
-    _show_cont_figure(actions[pu.CONT], messages)
+    _show_cont_figure(actions[pu.CONT], messages, False)
     _show_host_figure(actions[pu.HOST], outcomes)
+    _show_cont_figure(actions['host_reverse'], messages, True)
     
 
-def _show_cont_figure(actions: List[pu.Action], messages: List[pu.Message]):
+def _show_cont_figure(actions: List[pu.Action], messages: List[pu.Message], is_host_reverse: bool):
     for y in messages:
         if len(y.outcomes) < 2:
             continue
@@ -114,12 +115,19 @@ def _show_cont_figure(actions: List[pu.Action], messages: List[pu.Message]):
             ds.append({str(x): action[x, y] for x in y.outcomes})
         
         df = pd.DataFrame(ds)
-        sns.boxplot(data=df, color='tab:blue', width=0.5)
+        if is_host_reverse:
+            sns.boxplot(data=df, color='tab:red', width=0.5)
+        else:
+            sns.boxplot(data=df, color='tab:blue', width=0.5)
         
         plt.ylim(-0.1, 1.1)
         plt.xlabel(r"$x \in \mathcal{X}$")
-        plt.ylabel(r"$Q(x \mid " + f"{y})$")
-        plt.title(r"$Q(x \mid " + f"{y})$")
+        if is_host_reverse:
+            plt.ylabel(r"$P(x \mid " + f"{y})$")
+            plt.title(r"Host reverse: $P(x \mid " + f"{y})$")
+        else:
+            plt.ylabel(r"$Q(x \mid " + f"{y})$")
+            plt.title(r"Cont: $Q(x \mid " + f"{y})$")
 
 
 def _show_host_figure(actions: List[pu.Action], outcomes: List[pu.Outcome]):
@@ -139,5 +147,5 @@ def _show_host_figure(actions: List[pu.Action], outcomes: List[pu.Outcome]):
         plt.ylim(-0.1, 1.1)
         plt.xlabel(r"$y \in \mathcal{Y}$")
         plt.ylabel(r"$P(y \mid " + f"{x})$")
-        plt.title(r"$P(y \mid " + f"{x})$")
+        plt.title(r"Host: $P(y \mid " + f"{x})$")
 
