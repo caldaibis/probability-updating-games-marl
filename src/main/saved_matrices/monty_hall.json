@@ -1,0 +1,122 @@
+[
+    {
+        "description": "Reduces to randomised 0-1 loss. Correct predictions give zero loss, while incorrect predictions give one loss.",
+        "matrix": [
+            [0, 1, 0],
+            [1, 0, 1],
+            [0, 1, 0]
+        ]
+    },
+    {
+        "description": "Choosing x_1 when the true outcome is x_2 is worse than picking any other outcome wrong",
+        "matrix": [
+            [0, 1, 0],
+            [2, 0, 1],
+            [0, 1, 0]
+        ]
+    },
+    {
+        "description": "Choosing x_3 when the true outcome is x_2 is worse than picking any other outcome wrong",
+        "matrix": [
+            [0, 1, 0],
+            [1, 0, 2],
+            [0, 1, 0]
+        ]
+    },
+    {
+        "description": "Choosing a wrong outcome when x_2 is the true outcome is worse than choosing a wrong outcome when x_2 is NOT the true outcome",
+        "matrix": [
+            [0, 1, 0],
+            [2, 0, 2],
+            [0, 1, 0]
+        ]
+    },
+    {
+        "description": "Choosing x_2 when the true outcome is x_1 is worse than picking any other outcome wrong",
+        "matrix": [
+            [0, 2, 0],
+            [1, 0, 1],
+            [0, 1, 0]
+        ]
+    },
+    {
+        "description": "Choosing x_2 when the true outcome is x_3 is worse than picking any other outcome wrong",
+        "matrix": [
+            [0, 1, 0],
+            [1, 0, 1],
+            [0, 2, 0]
+        ]
+    },
+    {
+        "description": "Choosing x_2 when the true outcome is another outcome is worse than choosing a wrong outcome when x_2 IS the true outcome",
+        "matrix": [
+            [0, 2, 0],
+            [1, 0, 1],
+            [0, 2, 0]
+        ]
+    },
+    {
+        "description": "Choosing x_1 when the true outcome is x_2, and vice versa is worse than picking any other wrong outcome when the true outcome is another outcome",
+        "matrix": [
+            [0, 2, 0],
+            [2, 0, 1],
+            [0, 1, 0]
+        ]
+    },
+    {
+        "description": "Choosing x_3 when the true outcome is x_2, and vice versa is worse than picking any other wrong outcome when the true outcome is another outcome",
+        "matrix": [
+            [0, 1, 0],
+            [1, 0, 2],
+            [0, 2, 0]
+        ]
+    },
+    {
+        "description": "Choosing x_2 when the true outcome is x_1, and choosing x_3 when the true outcome is x_2 is worse than picking any other wrong outcome when the true outcome is another outcome",
+        "matrix": [
+            [0, 2, 0],
+            [1, 0, 2],
+            [0, 1, 0]
+        ]
+    },
+    {
+        "description": "Choosing x_1 when the true outcome is x_2, and choosing x_2 when the true outcome is x_3 is worse than picking any other wrong outcome when the true outcome is another outcome",
+        "matrix": [
+            [0, 1, 0],
+            [2, 0, 1],
+            [0, 2, 0]
+        ]
+    },
+    {
+        "description": "Choosing x_1 when the true outcome is x_2 is better than choosing any other outcome wrong, for any true outcome",
+        "matrix": [
+            [0, 2, 0],
+            [1, 0, 2],
+            [0, 2, 0]
+        ]
+    },
+    {
+        "description": "Choosing x_3 when the true outcome is x_2 is better than choosing any other outcome wrong, for any true outcome",
+        "matrix": [
+            [0, 2, 0],
+            [2, 0, 1],
+            [0, 2, 0]
+        ]
+    },
+    {
+        "description": "Choosing x_2 when the true outcome is x_1 is better than choosing any other outcome wrong, for any true outcome",
+        "matrix": [
+            [0, 1, 0],
+            [2, 0, 2],
+            [0, 2, 0]
+        ]
+    },
+    {
+        "description": "Choosing x_2 when the true outcome is x_3 is better than choosing any other outcome wrong, for any true outcome",
+        "matrix": [
+            [0, 2, 0],
+            [2, 0, 2],
+            [0, 1, 0]
+        ]
+    }
+]
