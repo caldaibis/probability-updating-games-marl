@@ -28,6 +28,7 @@ class ModelWrapper:
     env: MultiAgentEnv
     custom_config: Dict
     name: str
+    exp_config: dict
     metric: str
     reporter: CLIReporter
 
@@ -40,7 +41,13 @@ class ModelWrapper:
         self.reporter = CLIReporter(max_report_frequency=10)
 
         self.name = f"{pu.CONT}={losses[pu.CONT]}_{pu.HOST}={losses[pu.HOST]}_t={custom_config['max_total_time_s']}"
-
+        self.exp_config = {
+            'game': self.game.name(),
+            pu.CONT: losses[pu.CONT],
+            pu.HOST: losses[pu.HOST],
+            't': custom_config['max_total_time_s']
+        }
+        
         register_env("pug", lambda _: self.env)
 
         self.reporter.add_metric_column(marl.REWARD_CONT_EVAL)
@@ -60,7 +67,7 @@ class ModelWrapper:
     def get_local_dir(self) -> str:
         return f"output_ray/{self.trainer_type.__name__}/{self.game.name()}/"
 
-    def __call__(self, learn: bool, predict: bool, expectation_run: bool, show_figure: bool, show_eval: bool, save_progress: bool) -> None:
+    def __call__(self, learn: bool, predict: bool, expectation_run: bool, show_figure: bool, show_eval: bool, save_figures: bool, save_progress: bool) -> None:
         if learn:
             analysis = ray.tune.run(self.trainer_type, **self._create_tune_config())
             if save_progress:
@@ -76,26 +83,27 @@ class ModelWrapper:
             else:
                 actions_all = self.predict_single_trial(analysis)
             
-            if show_figure:
-                vis.show_strategy_figures(actions_all, self.game.outcomes, self.game.messages)
+            if show_figure or save_figures:
+                vis.show_strategy_figures(self.exp_config, actions_all, self.game.outcomes, self.game.messages, save_figures=save_figures)
         
-        if show_figure:
+        if show_figure or save_figures:
             if expectation_run:
                 if show_eval:
-                    vis.show_performance_figure_expectation("Loss", trials, [marl.REWARD_CONT_EVAL, marl.REWARD_HOST_EVAL, marl.EXP_ENTROPY_EVAL])
-                    vis.show_performance_figure_expectation("RCAR distance", trials, [marl.RCAR_DIST_EVAL])
+                    vis.show_performance_figure_expectation(self.exp_config, "Loss", trials, [marl.REWARD_CONT_EVAL, marl.REWARD_HOST_EVAL, marl.EXP_ENTROPY_EVAL], save_figures=save_figures)
+                    vis.show_performance_figure_expectation(self.exp_config, "RCAR distance", trials, [marl.RCAR_DIST_EVAL], save_figures=save_figures)
                 else:
-                    vis.show_performance_figure_expectation("Loss", trials, [marl.REWARD_CONT, marl.REWARD_HOST, marl.EXP_ENTROPY])
-                    vis.show_performance_figure_expectation("RCAR distance", trials, [marl.RCAR_DIST])
+                    vis.show_performance_figure_expectation(self.exp_config, "Loss", trials, [marl.REWARD_CONT, marl.REWARD_HOST, marl.EXP_ENTROPY], save_figures=save_figures)
+                    vis.show_performance_figure_expectation(self.exp_config, "RCAR distance", trials, [marl.RCAR_DIST], save_figures=save_figures)
             else:
                 if show_eval:
-                    vis.show_performance_figure("Loss", trials, [marl.REWARD_CONT_EVAL, marl.REWARD_HOST_EVAL, marl.EXP_ENTROPY_EVAL])
-                    vis.show_performance_figure("RCAR distance", trials, [marl.RCAR_DIST_EVAL])
+                    vis.show_performance_figure(self.exp_config, "Loss", trials, [marl.REWARD_CONT_EVAL, marl.REWARD_HOST_EVAL, marl.EXP_ENTROPY_EVAL], save_figures=save_figures)
+                    vis.show_performance_figure(self.exp_config, "RCAR distance", trials, [marl.RCAR_DIST_EVAL], save_figures=save_figures)
                 else:
-                    vis.show_performance_figure("Loss", trials, [marl.REWARD_CONT, marl.REWARD_HOST, marl.EXP_ENTROPY])
-                    vis.show_performance_figure("RCAR distance", trials, [marl.RCAR_DIST])
-            
-        plt.show()
+                    vis.show_performance_figure(self.exp_config, "Loss", trials, [marl.REWARD_CONT, marl.REWARD_HOST, marl.EXP_ENTROPY], save_figures=save_figures)
+                    vis.show_performance_figure(self.exp_config, "RCAR distance", trials, [marl.RCAR_DIST], save_figures=save_figures)
+        
+        if show_figure:
+            plt.show()
 
     def _get_experiment_paths(self) -> List[str]:
         return [f'{self.get_local_dir()}/{self.name}/{f}' for f in os.listdir(f'{self.get_local_dir()}/{self.name}/') if f.startswith("experiment_state")]

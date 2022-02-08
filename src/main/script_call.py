@@ -54,6 +54,7 @@ def run_n_times_and_load(n, game, losses):
         'predict': False,
         'show_figure': False,
         'show_eval': False,
+        'save_figures': False,
         'save_progress': False,
         'min_total_time_s': 30,
         'max_total_time_s': 30,
@@ -73,8 +74,9 @@ def run_n_times_and_load(n, game, losses):
         'learn': False,
         'expectation_run': True,
         'predict': True,
-        'show_figure': True,
+        'show_figure': False,
         'show_eval': True,
+        'save_figures': True,
         'save_progress': False,
         'min_total_time_s': 30,
         'max_total_time_s': 30,
@@ -84,9 +86,9 @@ def run_n_times_and_load(n, game, losses):
 
 
 if __name__ == '__main__':
-    for m in pu.MATRIX_PREDEFINED:
+    for m in pu.MATRIX_PREDEFINED_POS:
         losses = {
-            pu.CONT: pu.MATRIX_PREDEFINED[0],
+            pu.CONT: pu.MATRIX_PREDEFINED_POS[0],
             pu.HOST: m,
         }
         run_n_times_and_load(0, pu_games.MONTY_HALL, losses)

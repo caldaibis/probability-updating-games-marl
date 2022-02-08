@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import List, Dict
 
 from ray.tune.trial import Trial
@@ -12,7 +13,7 @@ import src.lib_pu as pu
 import src.lib_marl as marl
 
 
-def show_performance_figure_expectation(title: str, trials: List[Trial], metrics: List[str]):
+def show_performance_figure_expectation(config, title: str, trials: List[Trial], metrics: List[str], save_figures: bool):
     sns.set_theme(color_codes=True)
     plt.figure()
 
@@ -69,9 +70,15 @@ def show_performance_figure_expectation(title: str, trials: List[Trial], metrics
     plt.xlabel("Total time in seconds")
     plt.ylabel("Loss")
     plt.title(title)
+    
+    if save_figures:
+        d = f'figures/{config["game"]}/{config["t"]}_{config[pu.CONT]}_{config[pu.HOST]}/'
+        if not os.path.isdir(d):
+            os.makedirs(d)
+        plt.savefig(f'{d}/expectation_{"_".join(metrics)}.png', transparent=False, bbox_inches='tight', pad_inches=0.02)
 
 
-def show_performance_figure(title: str, trials: List[Trial], metrics: List[str]):
+def show_performance_figure(config, title: str, trials: List[Trial], metrics: List[str], save_figures: bool):
     sns.set_theme(color_codes=True)
     for t in trials:
         plt.figure()
@@ -94,16 +101,22 @@ def show_performance_figure(title: str, trials: List[Trial], metrics: List[str])
         plt.xlabel("Total time in seconds")
         plt.ylabel("Loss")
         plt.title(title)
+        
+        if save_figures:
+            d = f'figures/{config["game"]}/{config["t"]}_{config[pu.CONT]}_{config[pu.HOST]}/'
+            if not os.path.isdir(d):
+                os.makedirs(d)
+            plt.savefig(f'{d}/performance_{"_".join(metrics)}.png', transparent=False, bbox_inches='tight', pad_inches=0.02)
 
 
-def show_strategy_figures(actions: Dict[str, List[pu.Action]], outcomes: List[pu.Outcome], messages: List[pu.Message]):
+def show_strategy_figures(config, actions: Dict[str, List[pu.Action]], outcomes: List[pu.Outcome], messages: List[pu.Message], save_figures: bool):
     sns.set_theme(color_codes=True)
-    _show_cont_figure(actions[pu.CONT], messages, False)
-    _show_host_figure(actions[pu.HOST], outcomes)
-    _show_cont_figure(actions['host_reverse'], messages, True)
+    _show_cont_figure(config, actions[pu.CONT], messages, save_figures, False)
+    _show_host_figure(config, actions[pu.HOST], outcomes, save_figures)
+    _show_cont_figure(config, actions['host_reverse'], messages, save_figures, True)
     
 
-def _show_cont_figure(actions: List[pu.Action], messages: List[pu.Message], is_host_reverse: bool):
+def _show_cont_figure(config, actions: List[pu.Action], messages: List[pu.Message], save_figures: bool, is_host_reverse: bool):
     for y in messages:
         if len(y.outcomes) < 2:
             continue
@@ -125,12 +138,22 @@ def _show_cont_figure(actions: List[pu.Action], messages: List[pu.Message], is_h
         if is_host_reverse:
             plt.ylabel(r"$P(x \mid " + f"{y})$")
             plt.title(r"Host reverse: $P(x \mid " + f"{y})$")
+            if save_figures:
+                d = f'figures/{config["game"]}/{config["t"]}_{config[pu.CONT]}_{config[pu.HOST]}/'
+                if not os.path.isdir(d):
+                    os.makedirs(d)
+                plt.savefig(f'{d}/host_reverse_{y}.png', transparent=False, bbox_inches='tight', pad_inches=0.02)
         else:
             plt.ylabel(r"$Q(x \mid " + f"{y})$")
             plt.title(r"Cont: $Q(x \mid " + f"{y})$")
+            if save_figures:
+                d = f'figures/{config["game"]}/{config["t"]}_{config[pu.CONT]}_{config[pu.HOST]}/'
+                if not os.path.isdir(d):
+                    os.makedirs(d)
+                plt.savefig(f'{d}/cont_{y}.png', transparent=False, bbox_inches='tight', pad_inches=0.02)
 
 
-def _show_host_figure(actions: List[pu.Action], outcomes: List[pu.Outcome]):
+def _show_host_figure(config, actions: List[pu.Action], outcomes: List[pu.Outcome], save_figures: bool):
     for x in outcomes:
         if len(x.messages) < 2:
             continue
@@ -149,3 +172,8 @@ def _show_host_figure(actions: List[pu.Action], outcomes: List[pu.Outcome]):
         plt.ylabel(r"$P(y \mid " + f"{x})$")
         plt.title(r"Host: $P(y \mid " + f"{x})$")
 
+        if save_figures:
+            d = f'figures/{config["game"]}/{config["t"]}_{config[pu.CONT]}_{config[pu.HOST]}/'
+            if not os.path.isdir(d):
+                os.makedirs(d)
+            plt.savefig(f'{d}/host_{x}.png', transparent=False, bbox_inches='tight', pad_inches=0.02)

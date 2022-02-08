@@ -31,6 +31,7 @@ bool_arg_keys: List[str] = [
     'predict',
     'show_figure',
     'show_eval',
+    'save_figures',
     'save_progress',
 ]
 
@@ -57,6 +58,7 @@ def run(args: Optional[Dict[str, Any]]):
             'predict': True,
             'show_figure': True,
             'show_eval': True,
+            'save_figures': True,
             'save_progress': False,
             'min_total_time_s': 50,
             'max_total_time_s': 50,
@@ -119,7 +121,7 @@ def run(args: Optional[Dict[str, Any]]):
         }
         
         model = marl.ModelWrapper('experimental_dirichlet', game, losses, algo, config)
-        model(learn=args['learn'], predict=args['predict'], expectation_run=args['expectation_run'], show_figure=args['show_figure'], show_eval=args['show_eval'], save_progress=args['save_progress'])
+        model(learn=args['learn'], predict=args['predict'], expectation_run=args['expectation_run'], show_figure=args['show_figure'], show_eval=args['show_eval'], save_figures=args['save_figures'], save_progress=args['save_progress'])
         
         ray.shutdown()
 
