@@ -38,7 +38,7 @@ class ModelWrapper:
         self.trainer_type = trainer_type
         self.env = self._create_env(game)
         self.custom_config = custom_config
-        self.reporter = CLIReporter(max_report_frequency=10)
+        self.reporter = CLIReporter(max_report_frequency=20)
 
         self.name = f"{pu.CONT}={losses[pu.CONT]}_{pu.HOST}={losses[pu.HOST]}_t={custom_config['max_total_time_s']}"
         self.exp_config = {

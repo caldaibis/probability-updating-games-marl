@@ -48,7 +48,7 @@ def run(args: Optional[Dict[str, Any]]):
         args = {
             'algorithm': marl.PPO,
             'game': pu_games.MONTY_HALL,
-            pu.CONT: pu.MATRIX_PREDEFINED_POS[1],
+            pu.CONT: pu.MATRIX_PREDEFINED_POS[0],
             pu.HOST: pu.MATRIX_PREDEFINED_NEG[0],
             'debug_mode': False,
             'show_example': True,
@@ -58,10 +58,10 @@ def run(args: Optional[Dict[str, Any]]):
             'predict': True,
             'show_figure': True,
             'show_eval': True,
-            'save_figures': True,
+            'save_figures': False,
             'save_progress': False,
-            'min_total_time_s': 50,
-            'max_total_time_s': 50,
+            'min_total_time_s': 40,
+            'max_total_time_s': 40,
         }
     else:
         for k in bool_arg_keys:
@@ -107,7 +107,7 @@ def run(args: Optional[Dict[str, Any]]):
             tune_config["verbose"] = 1
             if args['expectation_run']:
                 model_config['num_workers'] = 1
-                tune_config['num_samples'] = 6
+                tune_config['num_samples'] = 5
             else:
                 model_config['num_workers'] = 10
                 tune_config['num_samples'] = 1

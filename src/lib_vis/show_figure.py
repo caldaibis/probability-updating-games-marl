@@ -23,7 +23,10 @@ def show_performance_figure_expectation(config, title: str, trials: List[Trial],
     
     # update max coordinate of the x axis
     x_max = max(df.iloc[-1]['time_total_s'] for df in dfs)
-
+    y_max = 0.0
+    if metrics[0] in [marl.RCAR_DIST, marl.RCAR_DIST_EVAL]:
+        y_max = max(df[metrics[0]].max() for df in dfs)
+    
     for metric in metrics:
         interpolated_dfs = []
         for orig_df in dfs:
@@ -67,8 +70,10 @@ def show_performance_figure_expectation(config, title: str, trials: List[Trial],
     plt.legend(frameon=False, loc='lower right', ncol=1)
 
     plt.xlim(0, max(30, x_max))
+    if metrics[0] in [marl.RCAR_DIST, marl.RCAR_DIST_EVAL]:
+        plt.ylim(top=max(0.36, y_max + 0.05))
     plt.xlabel("Total time in seconds")
-    plt.ylabel("Loss")
+    plt.ylabel(title)
     plt.title(title)
     
     if save_figures:
