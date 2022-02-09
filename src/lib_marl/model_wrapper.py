@@ -191,7 +191,6 @@ class ModelWrapper:
             "name": self.name,
             "config": self._create_model_config(),
             "stop": CombinedStopper(marl.ConjunctiveStopper(ExperimentPlateauStopper(self.metric, mode="max", top=10, std=0.0001), marl.TotalTimeStopper(total_time_s=self.custom_config['min_total_time_s'])), marl.TotalTimeStopper(total_time_s=self.custom_config['max_total_time_s'])),
-            "checkpoint_freq": 5,
             "checkpoint_at_end": True,
             "local_dir": self.get_local_dir(),
             "verbose": 1,
