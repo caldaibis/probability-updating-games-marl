@@ -8,6 +8,7 @@ from ray.tune.trial import Trial
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from scipy.stats import norm
 
 import src.lib_pu as pu
 import src.lib_marl as marl
@@ -56,13 +57,12 @@ def show_performance_figure_expectation(config, title: str, trials: List[Trial],
         # create aggregate df containing all other columns -> to easily aggregate the metric values
         aggregate_df = pd.concat([df.head(min_row_cnt)[metric] for df in interpolated_dfs], axis=1)
         aggregate_df['mean'] = aggregate_df.mean(axis=1)
-        aggregate_df['min'] = aggregate_df.min(axis=1)
-        aggregate_df['max'] = aggregate_df.max(axis=1)
+        aggregate_df['std'] = aggregate_df.std(axis=1)
         
         plt.fill_between(
             x=aggregate_df.index.to_series().dt.total_seconds(),
-            y1=aggregate_df['min'],
-            y2=aggregate_df['max'],
+            y1=aggregate_df['mean'] - aggregate_df['std'],
+            y2=aggregate_df['mean'] + aggregate_df['std'],
             alpha=0.3
         )
         plt.plot(aggregate_df.index.to_series().dt.total_seconds(), aggregate_df['mean'], label=marl.ALL_METRICS[metric])  # label=key.experiment_tag

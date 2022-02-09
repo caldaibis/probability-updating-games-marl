@@ -72,10 +72,9 @@ class ModelWrapper:
             analysis = ray.tune.run(self.trainer_type, **self._create_tune_config())
             if save_progress:
                 self._save_progress(analysis)
-            trials = analysis.trials
-        else:
-            analysis = ExperimentAnalysis(self._get_experiment_paths(), default_metric=self.metric, default_mode="max")
-            trials = [trial for trial in analysis.trials if trial.checkpoint.value]
+        
+        analysis = ExperimentAnalysis(self._get_experiment_paths(), default_metric=self.metric, default_mode="max")
+        trials = [trial for trial in analysis.trials if trial.checkpoint.value]
         
         if predict:
             if expectation_run:

@@ -58,23 +58,30 @@ def run_n_times(n, game, losses, loading_run: bool):
 
 
 if __name__ == '__main__':
+    for m in pu.MATRIX_PREDEFINED_POS:
+        losses = {
+            pu.CONT: pu.MATRIX_PREDEFINED_POS[0],
+            pu.HOST: m,
+        }
+        run_n_times(0, pu_games.MONTY_HALL, losses, loading_run=True)
+        
     for m in pu.MATRIX_PREDEFINED_NEG:
         losses = {
             pu.CONT: pu.MATRIX_PREDEFINED_POS[0],
             pu.HOST: m,
         }
-        run_n_times(1, pu_games.MONTY_HALL, losses, loading_run=False)
+        run_n_times(0, pu_games.MONTY_HALL, losses, loading_run=True)
         
-    for m in pu.MATRIX_PREDEFINED_POS:
-        losses = {
-            pu.CONT: m,
-            pu.HOST: m,
-        }
-        run_n_times(1, pu_games.MONTY_HALL, losses, loading_run=False)
-        
-    for m in pu.MATRIX_PREDEFINED_NEG:
-        losses = {
-            pu.CONT: m,
-            pu.HOST: m,
-        }
-        run_n_times(1, pu_games.MONTY_HALL, losses, loading_run=False)
+    # for m in pu.MATRIX_PREDEFINED_POS:
+    #     losses = {
+    #         pu.CONT: m,
+    #         pu.HOST: m,
+    #     }
+    #     run_n_times(0, pu_games.MONTY_HALL, losses, loading_run=True)
+    #
+    # for m in pu.MATRIX_PREDEFINED_NEG:
+    #     losses = {
+    #         pu.CONT: m,
+    #         pu.HOST: m,
+    #     }
+    #     run_n_times(0, pu_games.MONTY_HALL, losses, loading_run=True)
