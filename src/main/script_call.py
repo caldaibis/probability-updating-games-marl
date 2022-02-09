@@ -61,16 +61,16 @@ if __name__ == '__main__':
     for m in pu.MATRIX_PREDEFINED_POS:
         losses = {
             pu.CONT: m,
-            pu.HOST: pu.MATRIX_PREDEFINED_POS[0],
+            pu.HOST: pu.MATRIX_PREDEFINED_NEG[0],
         }
         run_n_times(1, pu_games.MONTY_HALL, losses, loading_run=False)
         
-    for m in pu.MATRIX_PREDEFINED_NEG:
-        losses = {
-            pu.CONT: m,
-            pu.HOST: pu.MATRIX_PREDEFINED_POS[0],
-        }
-        run_n_times(1, pu_games.MONTY_HALL, losses, loading_run=False)
+    # for m in pu.MATRIX_PREDEFINED_NEG:
+    #     losses = {
+    #         pu.CONT: m,
+    #         pu.HOST: pu.MATRIX_PREDEFINED_POS[0],
+    #     }
+    #     run_n_times(1, pu_games.MONTY_HALL, losses, loading_run=False)
         
     # for m in pu.MATRIX_PREDEFINED_POS:
     #     losses = {
