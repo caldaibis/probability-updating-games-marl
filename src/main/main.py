@@ -27,7 +27,6 @@ bool_arg_keys: List[str] = [
     'debug_mode',
     'ray',
     'learn',
-    'expectation_run',
     'predict',
     'show_figure',
     'show_eval',
@@ -48,20 +47,19 @@ def run(args: Optional[Dict[str, Any]]):
         args = {
             'algorithm': marl.PPO,
             'game': pu_games.MONTY_HALL,
-            pu.CONT: pu.MATRIX_PREDEFINED_POS[2],
-            pu.HOST: pu.MATRIX_PREDEFINED_POS[2],
+            pu.CONT: pu.MATRIX_PREDEFINED_POS[3],
+            pu.HOST: pu.MATRIX_PREDEFINED_NEG[0],
             'debug_mode': False,
             'show_example': True,
             'ray': True,
-            'learn': False,
-            'expectation_run': True,
+            'learn': True,
             'predict': True,
             'show_figure': False,
             'show_eval': True,
             'save_figures': True,
             'save_progress': False,
-            'min_total_time_s': 40,
-            'max_total_time_s': 40,
+            'min_total_time_s': 100,
+            'max_total_time_s': 100,
         }
     else:
         for k in bool_arg_keys:
@@ -86,8 +84,8 @@ def run(args: Optional[Dict[str, Any]]):
         util.example_step(
             game,
             {
-                pu.CONT: game.cont_default(),
-                pu.HOST: game.host_default(),
+                pu.CONT: game.cont_x2_x1_x0(),
+                pu.HOST: game.host_always_y2(),
             }
         )
 
@@ -105,12 +103,8 @@ def run(args: Optional[Dict[str, Any]]):
         else:
             ray.init(local_mode=False, logging_level=logging.INFO, log_to_driver=False)
             tune_config["verbose"] = 1
-            if args['expectation_run']:
-                model_config['num_workers'] = 1
-                tune_config['num_samples'] = 5
-            else:
-                model_config['num_workers'] = 10
-                tune_config['num_samples'] = 1
+            model_config['num_workers'] = 1
+            tune_config['num_samples'] = 5
         
         # Run
         config = {
@@ -118,10 +112,11 @@ def run(args: Optional[Dict[str, Any]]):
             'model_config': model_config,
             'min_total_time_s': args['min_total_time_s'],
             'max_total_time_s': args['max_total_time_s'],
+            'save_figures': args['save_figures'],
         }
         
         model = marl.ModelWrapper('experimental_dirichlet', game, losses, algo, config)
-        model(learn=args['learn'], predict=args['predict'], expectation_run=args['expectation_run'], show_figure=args['show_figure'], show_eval=args['show_eval'], save_figures=args['save_figures'], save_progress=args['save_progress'])
+        model(learn=args['learn'], predict=args['predict'], show_figure=args['show_figure'], show_eval=args['show_eval'], save_progress=args['save_progress'])
         
         ray.shutdown()
 

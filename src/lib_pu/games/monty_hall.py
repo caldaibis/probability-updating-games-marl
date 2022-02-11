@@ -49,6 +49,14 @@ class MontyHall(pu_games.Game):
     @staticmethod
     def cont_always_stay() -> np.ndarray:
         return np.array([[0., 1.], [1., 0.]])
+    
+    @staticmethod
+    def cont_x0_x1_x2() -> np.ndarray:
+        return np.array([[1., 0.], [1., 0.]])
+    
+    @staticmethod
+    def cont_x2_x1_x0() -> np.ndarray:
+        return np.array([[0., 1.], [0., 1.]])
 
     @staticmethod
     def cont_min_loss_logarithmic() -> np.ndarray:

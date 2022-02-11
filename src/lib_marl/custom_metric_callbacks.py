@@ -33,8 +33,16 @@ class CustomMetricCallbacks(DefaultCallbacks):
         
         episode.custom_metrics["universal_reward"] = episode.custom_metrics["reward_cont"] + episode.custom_metrics["reward_host"] - (episode.custom_metrics["reward_max"] - episode.custom_metrics["reward_min"])
         
-        episode.custom_metrics["rcar_dist"] = episode.last_info_for(pu.HOST)["rcar_dist"]
+        for y in episode.last_info_for(pu.CONT)["action"]:
+            for x in y.outcomes:
+                episode.custom_metrics[f'{pu.CONT}_{y}_{x}'] = episode.last_info_for(pu.CONT)["action"][y][x]
+        
+        for x in episode.last_info_for(pu.HOST)["action"]:
+            for y in x.messages:
+                episode.custom_metrics[f'{pu.HOST}_{x}_{y}'] = episode.last_info_for(pu.HOST)["action"][x][y]
+        
         episode.custom_metrics["expected_entropy"] = episode.last_info_for(pu.CONT)["expected_entropy"]
+        episode.custom_metrics["rcar_dist"] = episode.last_info_for(pu.HOST)["rcar_dist"]
         
     def on_sample_end(self, *, worker: RolloutWorker, samples: SampleBatch,
                       **kwargs):
@@ -47,7 +55,6 @@ class CustomMetricCallbacks(DefaultCallbacks):
         result[marl.REWARD_HOST_EVAL] = result["evaluation"]["custom_metrics"][marl.REWARD_HOST]
         
         result["universal_reward_mean"] = result["custom_metrics"]["universal_reward_mean"]
-        # result["universal_reward_eval_mean"] = result["evaluation"]["custom_metrics"]["universal_reward_mean"]
         
         result[marl.RCAR_DIST] = result["custom_metrics"][marl.RCAR_DIST]
         result[marl.RCAR_DIST_EVAL] = result["evaluation"]["custom_metrics"][marl.RCAR_DIST]

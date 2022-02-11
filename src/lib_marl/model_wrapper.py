@@ -45,7 +45,8 @@ class ModelWrapper:
             'game': self.game.name(),
             pu.CONT: losses[pu.CONT],
             pu.HOST: losses[pu.HOST],
-            't': custom_config['max_total_time_s']
+            't': custom_config['max_total_time_s'],
+            'save_figures': custom_config['save_figures'],
         }
         
         register_env("pug", lambda _: self.env)
@@ -67,7 +68,7 @@ class ModelWrapper:
     def get_local_dir(self) -> str:
         return f"output_ray/{self.trainer_type.__name__}/{self.game.name()}/"
 
-    def __call__(self, learn: bool, predict: bool, expectation_run: bool, show_figure: bool, show_eval: bool, save_figures: bool, save_progress: bool) -> None:
+    def __call__(self, learn: bool, predict: bool, show_figure: bool, show_eval: bool, save_progress: bool) -> None:
         if learn:
             analysis = ray.tune.run(self.trainer_type, **self._create_tune_config())
             if save_progress:
@@ -76,30 +77,26 @@ class ModelWrapper:
         analysis = ExperimentAnalysis(self._get_experiment_paths(), default_metric=self.metric, default_mode="max")
         trials = [trial for trial in analysis.trials if trial.checkpoint.value]
         
-        if predict:
-            if expectation_run:
-                actions_all = self.predict_all_trials(trials)
-            else:
-                actions_all = self.predict_single_trial(analysis)
+        if show_figure or self.exp_config['save_figures']:
+            vis.init()
+            trial_action_data = self.predict_all_trials(trials)
+            vis.show_strategy_figures(self.exp_config, trial_action_data, self.game.outcomes, self.game.messages)
             
-            if show_figure or save_figures:
-                vis.show_strategy_figures(self.exp_config, actions_all, self.game.outcomes, self.game.messages, save_figures=save_figures)
-        
-        if show_figure or save_figures:
-            if expectation_run:
-                if show_eval:
-                    vis.show_performance_figure_expectation(self.exp_config, "Loss", trials, [marl.REWARD_CONT_EVAL, marl.REWARD_HOST_EVAL, marl.EXP_ENTROPY_EVAL], save_figures=save_figures)
-                    vis.show_performance_figure_expectation(self.exp_config, "RCAR distance", trials, [marl.RCAR_DIST_EVAL], save_figures=save_figures)
-                else:
-                    vis.show_performance_figure_expectation(self.exp_config, "Loss", trials, [marl.REWARD_CONT, marl.REWARD_HOST, marl.EXP_ENTROPY], save_figures=save_figures)
-                    vis.show_performance_figure_expectation(self.exp_config, "RCAR distance", trials, [marl.RCAR_DIST], save_figures=save_figures)
+            if show_eval:
+                metrics = {
+                    'performance': [marl.REWARD_CONT_EVAL, marl.REWARD_HOST_EVAL, marl.EXP_ENTROPY_EVAL],
+                    'rcar':  [marl.RCAR_DIST_EVAL],
+                }
             else:
-                if show_eval:
-                    vis.show_performance_figure(self.exp_config, "Loss", trials, [marl.REWARD_CONT_EVAL, marl.REWARD_HOST_EVAL, marl.EXP_ENTROPY_EVAL], save_figures=save_figures)
-                    vis.show_performance_figure(self.exp_config, "RCAR distance", trials, [marl.RCAR_DIST_EVAL], save_figures=save_figures)
-                else:
-                    vis.show_performance_figure(self.exp_config, "Loss", trials, [marl.REWARD_CONT, marl.REWARD_HOST, marl.EXP_ENTROPY], save_figures=save_figures)
-                    vis.show_performance_figure(self.exp_config, "RCAR distance", trials, [marl.RCAR_DIST], save_figures=save_figures)
+                metrics = {
+                    'performance': [marl.REWARD_CONT, marl.REWARD_HOST, marl.EXP_ENTROPY],
+                    'rcar':  [marl.RCAR_DIST],
+                }
+            vis.show_aggregated_metric(self.exp_config, trials, marl.RCAR_DIST_EVAL)
+            vis.show_multiple_aggregated_metrics(self.exp_config, trials, metrics['performance'], y_label='Expected loss')
+            
+            for trial in trials:
+                vis.show_trial_data(trial, self.game.outcomes, self.game.messages, self.exp_config)
         
         if show_figure:
             plt.show()
@@ -107,33 +104,11 @@ class ModelWrapper:
     def _get_experiment_paths(self) -> List[str]:
         return [f'{self.get_local_dir()}/{self.name}/{f}' for f in os.listdir(f'{self.get_local_dir()}/{self.name}/') if f.startswith("experiment_state")]
 
-    """Predict using the best checkpoint of the experiment"""
-    def predict_single_trial(self, analysis: ExperimentAnalysis) -> Dict[pu.Agent, List[pu.Action]]:
-        trainer = self.trainer_type(config=self._create_model_config())
-        
-        trainer.restore(analysis.best_checkpoint)
-
-        obs = self.env.reset()
-        actions = {
-            agent: trainer.compute_single_action(obs[agent], explore=False, policy_id=agent)
-            for agent in pu.AGENTS
-        }
-        obs, rewards, dones, infos = self.env.step(actions)
-        
-        print(self.game)
-        
-        # Only one action to return, so wrap it in the expected type
-        return {
-            pu.CONT: [self.game.action[pu.CONT]],
-            pu.HOST: [self.game.action[pu.HOST]],
-            'host_reverse': [self.game.host_reverse],
-        }
-
     """Predict by all trials of the experiment"""
-    def predict_all_trials(self, trials: List[Trial]) -> Dict[pu.Agent, List[pu.Action]]:
+    def predict_all_trials(self, trials: List[Trial]) -> Dict[str, List]:
         trainer = self.trainer_type(config=self._create_model_config())
         
-        actions_all = {pu.CONT: [], pu.HOST: [], 'host_reverse': []}
+        actions_all = {'trial_ids': [], pu.CONT: [], pu.HOST: [], 'host_reverse': []}
         for trial in trials:
             trainer.restore(trial.checkpoint.value)
 
@@ -145,8 +120,9 @@ class ModelWrapper:
             obs, rewards, dones, infos = self.env.step(actions)
             
             print(self.game)
-            for agent in pu.AGENTS:
-                actions_all[agent].append(self.game.action[agent])
+            actions_all['trial_ids'].append(trial.trial_id)
+            actions_all[pu.CONT].append(self.game.action[pu.CONT])
+            actions_all[pu.HOST].append(self.game.action[pu.HOST])
             actions_all['host_reverse'].append(self.game.host_reverse)
         
         return actions_all

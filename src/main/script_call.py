@@ -21,7 +21,6 @@ def run_n_times(n, game, losses, loading_run: bool):
         'show_example': False,
         'ray': True,
         'learn': True,
-        'expectation_run': True,
         'predict': True,
         'show_figure': False,
         'show_eval': True,
@@ -44,7 +43,6 @@ def run_n_times(n, game, losses, loading_run: bool):
             'show_example': False,
             'ray': True,
             'learn': False,
-            'expectation_run': True,
             'predict': True,
             'show_figure': False,
             'show_eval': True,
@@ -58,10 +56,10 @@ def run_n_times(n, game, losses, loading_run: bool):
 
 
 if __name__ == '__main__':
-    for m in pu.MATRIX_PREDEFINED_POS:
+    for i in range(len(pu.MATRIX_PREDEFINED_POS)):
         losses = {
-            pu.CONT: m,
-            pu.HOST: pu.MATRIX_PREDEFINED_NEG[0],
+            pu.CONT: pu.MATRIX_PREDEFINED_POS[i],
+            pu.HOST: pu.MATRIX_PREDEFINED_NEG[i],
         }
         run_n_times(1, pu_games.MONTY_HALL, losses, loading_run=False)
         

@@ -154,6 +154,26 @@ class Game(ABC):
 
         return True
 
+    def get_filtered_action(self, agent: pu.Agent):
+        action = {}
+        if agent == pu.CONT:
+            for y in self.messages:
+                if len(y.outcomes) < 2:
+                    continue
+                if y not in action:
+                    action[y] = {}
+                for x in y.outcomes:
+                    action[y][x] = self.action[agent][x, y]
+        elif agent == pu.HOST:
+            for x in self.outcomes:
+                if len(x.messages) < 2:
+                    continue
+                if x not in action:
+                    action[x] = {}
+                for y in x.messages:
+                    action[x][y] = self.action[agent][x, y]
+        return action
+
     @staticmethod
     def create_structure(outcome_count: int, messages: List[List[int]]) -> (List[pu.Outcome], List[pu.Message]):
         # create messages
