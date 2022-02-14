@@ -4,6 +4,8 @@
 /src/lib_pu/games/__pycache__/
 /src/main/output_ray/
 /src/main/figures/
+/src/lib_vis/data/
+/src/lib_vis/figures/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
