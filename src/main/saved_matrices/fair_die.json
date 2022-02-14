@@ -1,13 +1,12 @@
 [
     {
-        "description": "Reduces to randomised 0-1 loss. Correct predictions give zero loss, while incorrect predictions give one loss.",
         "matrix": [
-            [0, 1, 1, 1, 0, 0],
-            [1, 0, 1, 1, 0, 0],
+            [0, 1, 1, 1, 1, 1],
+            [1, 0, 1, 1, 1, 1],
             [1, 1, 0, 1, 1, 1],
             [1, 1, 0, 0, 1, 1],
-            [0, 0, 1, 1, 0, 1],
-            [0, 0, 1, 1, 1, 0]
+            [1, 1, 1, 1, 0, 1],
+            [1, 1, 1, 1, 1, 0]
         ]
     }
 ]
