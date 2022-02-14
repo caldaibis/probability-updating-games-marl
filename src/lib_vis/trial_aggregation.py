@@ -40,8 +40,6 @@ def _aggregate_dfs(dfs: List[pd.DataFrame], metric) -> pd.DataFrame:
 
 
 def show_aggregated_metric(config, trials: List[Trial], metric: str):
-    plt.figure()
-    
     dfs = []
     for t in trials:
         df = pd.read_csv(f'{t.logdir}/progress.csv')[['time_total_s', metric]]
@@ -72,8 +70,6 @@ def show_aggregated_metric(config, trials: List[Trial], metric: str):
 
 
 def show_multiple_aggregated_metrics(config, trials: List[Trial], metrics: List[str], y_label: str):
-    plt.figure()
-    
     df_metric_list = []
     for metric in metrics:
         dfs = []

@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import List, Dict
 
-
-import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 
@@ -15,23 +14,27 @@ def _show_cont_figure(config, trial_action_data: Dict[str, List], messages: List
     for y in messages:
         if len(y.outcomes) < 2:
             continue
-            
-        plt.figure()
+        
         ds = {}
         for i in range(len(trial_action_data['trial_ids'])):
-            ds[trial_action_data['trial_ids'][i]] = {str(x): trial_action_data[pu.CONT][i][x, y] for x in y.outcomes}
+            if is_host_reverse:
+                ds[trial_action_data['trial_ids'][i]] = {str(x): trial_action_data['host_reverse'][i][x, y] for x in y.outcomes}
+            else:
+                ds[trial_action_data['trial_ids'][i]] = {str(x): trial_action_data[pu.CONT][i][x, y] for x in y.outcomes}
         
         df = pd.DataFrame(ds)
         df = pd.melt(df.reset_index(), id_vars='index', value_vars=trial_action_data['trial_ids'])
         
-        sns.stripplot(data=df, x='index', y='value', size=7, hue='variable', dodge=True)
+        # sns.stripplot(data=df, x='index', y='value', size=7, hue='variable', dodge=True)
+        sns.stripplot(data=df, x='index', y='value', size=7, hue='variable')
         
         base_plot_config = {
             'directory': '',
             'x_label': r'$x \in \mathcal{X}$',
             'legend': True,
-            'y_lim': (-0.1, 1.1),
-            'y_ticks': None,
+            'y_lim': None,
+            'y_ticks': np.arange(0, 1.1, 0.1),
+            
         }
         
         if is_host_reverse:
@@ -56,8 +59,7 @@ def _show_host_figure(config, trial_action_data: Dict[str, List], outcomes: List
     for x in outcomes:
         if len(x.messages) < 2:
             continue
-            
-        plt.figure()
+        
         ds = {}
         for i in range(len(trial_action_data['trial_ids'])):
             ds[trial_action_data['trial_ids'][i]] = {str(y): trial_action_data[pu.HOST][i][x, y] for y in x.messages}
@@ -65,7 +67,8 @@ def _show_host_figure(config, trial_action_data: Dict[str, List], outcomes: List
         df = pd.DataFrame(ds)
         df = pd.melt(df.reset_index(), id_vars='index', value_vars=trial_action_data['trial_ids'])
         
-        sns.stripplot(data=df, x='index', y='value', size=7, hue='variable', dodge=True)
+        # sns.stripplot(data=df, x='index', y='value', size=7, hue='variable', dodge=True)
+        sns.stripplot(data=df, x='index', y='value', size=7, hue='variable')
         
         plot_config = {
             'directory': '',
@@ -74,8 +77,8 @@ def _show_host_figure(config, trial_action_data: Dict[str, List], outcomes: List
             'x_label': r'$y \in \mathcal{Y}$',
             'y_label': r'$P(y \mid ' + f'{x})$',
             'legend': True,
-            'y_lim': (-0.1, 1.1),
-            'y_ticks': None,
+            'y_lim': None,
+            'y_ticks': np.arange(0, 1.1, 0.1),
         }
         vis.set_figure(config, plot_config)
 

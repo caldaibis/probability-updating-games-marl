@@ -26,9 +26,9 @@
     {
         "description": "Choosing a wrong outcome when x_1 is the true outcome is worse than choosing a wrong outcome when x_1 is NOT the true outcome",
         "matrix": [
-            [0, 1, 0],
+            [0, 1, 1],
             [2, 0, 2],
-            [0, 1, 0]
+            [1, 1, 0]
         ]
     },
     {

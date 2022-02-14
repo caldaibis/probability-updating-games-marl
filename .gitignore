@@ -1,9 +1,9 @@
 # custom folders
 /.idea/
-src/lib_pu/__pycache__/
-src/lib_pu/games/__pycache__/
-src/main/output_ray
-src/main/output_ray
+/src/lib_pu/__pycache__/
+/src/lib_pu/games/__pycache__/
+/src/main/output_ray/
+/src/main/figures/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

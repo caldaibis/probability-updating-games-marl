@@ -68,7 +68,7 @@ class ModelWrapper:
     def get_local_dir(self) -> str:
         return f"output_ray/{self.trainer_type.__name__}/{self.game.name()}/"
 
-    def __call__(self, learn: bool, predict: bool, show_figure: bool, show_eval: bool, save_progress: bool) -> None:
+    def __call__(self, learn: bool, show_figure: bool, show_eval: bool, save_progress: bool) -> None:
         if learn:
             analysis = ray.tune.run(self.trainer_type, **self._create_tune_config())
             if save_progress:

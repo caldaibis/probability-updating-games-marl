@@ -27,7 +27,6 @@ bool_arg_keys: List[str] = [
     'debug_mode',
     'ray',
     'learn',
-    'predict',
     'show_figure',
     'show_eval',
     'save_figures',
@@ -46,20 +45,19 @@ def run(args: Optional[Dict[str, Any]]):
     if not args:
         args = {
             'algorithm': marl.PPO,
-            'game': pu_games.MONTY_HALL,
-            pu.CONT: pu.MATRIX_PREDEFINED_POS[3],
-            pu.HOST: pu.MATRIX_PREDEFINED_NEG[0],
+            'game': pu_games.EXAMPLE_F,
+            pu.CONT: pu.RANDOMISED_ZERO_ONE,
+            pu.HOST: pu.RANDOMISED_ZERO_ONE_NEG,
             'debug_mode': False,
             'show_example': True,
             'ray': True,
             'learn': True,
-            'predict': True,
             'show_figure': False,
             'show_eval': True,
             'save_figures': True,
             'save_progress': False,
-            'min_total_time_s': 100,
-            'max_total_time_s': 100,
+            'min_total_time_s': 80,
+            'max_total_time_s': 80,
         }
     else:
         for k in bool_arg_keys:
@@ -84,8 +82,8 @@ def run(args: Optional[Dict[str, Any]]):
         util.example_step(
             game,
             {
-                pu.CONT: game.cont_x2_x1_x0(),
-                pu.HOST: game.host_always_y2(),
+                pu.CONT: game.cont_default(),
+                pu.HOST: game.host_default(),
             }
         )
 
@@ -116,7 +114,12 @@ def run(args: Optional[Dict[str, Any]]):
         }
         
         model = marl.ModelWrapper('experimental_dirichlet', game, losses, algo, config)
-        model(learn=args['learn'], predict=args['predict'], show_figure=args['show_figure'], show_eval=args['show_eval'], save_progress=args['save_progress'])
+        model(
+            learn=args['learn'],
+            show_figure=args['show_figure'],
+            show_eval=args['show_eval'],
+            save_progress=args['save_progress']
+        )
         
         ray.shutdown()
 

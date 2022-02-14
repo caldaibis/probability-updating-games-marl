@@ -56,17 +56,17 @@ class Game(ABC):
     """Modify matrix such that no positive or negative losses are given for pairs of outcomes that are not in a message together.
     They should not influence the expected entropy because they certainly don't affect the expected loss."""
     def fix_matrix(self, m: np.ndarray) -> np.ndarray:
-        for x in range(len(self.outcomes)):
-            for x_prime in range(x):
-                connected = False
-                for y in self.messages:
-                    xs = [x_temp.id for x_temp in y.outcomes]
-                    if x in xs and x_prime in xs:
-                        connected = True
-                        break
-                if not connected:
-                    m[x, x_prime] = 0
-                    m[x_prime, x] = 0
+        # for x in range(len(self.outcomes)):
+        #     for x_prime in range(x):
+        #         connected = False
+        #         for y in self.messages:
+        #             xs = [x_temp.id for x_temp in y.outcomes]
+        #             if x in xs and x_prime in xs:
+        #                 connected = True
+        #                 break
+        #         if not connected:
+        #             m[x, x_prime] = 0
+        #             m[x_prime, x] = 0
         return m
 
     def set_action(self, agent: pu.Agent, value: np.ndarray):
@@ -152,6 +152,23 @@ class Game(ABC):
                     if not true_for_some:
                         return False
 
+        return True
+
+    def is_matrix_symmetric(self, agent) -> bool:
+        m = self.matrix[agent]
+        for x1 in range(len(self.outcomes)):
+            for x2 in range(x1 + 1, len(self.outcomes)):
+                if m[x1, x1] != m[x2, x2]:
+                    return False
+                if m[x1, x2] != m[x2, x1]:
+                    return False
+                for x_prime in range(len(self.outcomes)):
+                    if x_prime == x1 or x_prime == x2:
+                        continue
+                    if m[x_prime, x1] != m[x_prime, x2]:
+                        return False
+                    if m[x1, x_prime] != m[x2, x_prime]:
+                        return False
         return True
 
     def get_filtered_action(self, agent: pu.Agent):
@@ -280,6 +297,7 @@ class Game(ABC):
                 for i, y in enumerate(x):
                     _row += ("{:"+str(col_maxes[i])+"g} ").format(y)
                 table.add_row(['', _row])
+            table.add_row(['Symmetric?', self.is_matrix_symmetric(pu.CONT)])
                 
         table.add_row(['Host loss', self.loss_names[pu.HOST]])
         if self.loss_names[pu.HOST].startswith(pu.MATRIX):
@@ -289,6 +307,7 @@ class Game(ABC):
                 for i, y in enumerate(x):
                     _row += ("{:"+str(col_maxes[i])+"g} ").format(y)
                 table.add_row(['', _row])
+            table.add_row(['Symmetric?', self.is_matrix_symmetric(pu.HOST)])
 
         table.add_row(['', ''])
         table.add_row(['Cont action', ''])

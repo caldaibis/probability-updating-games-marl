@@ -123,13 +123,6 @@ def matrix_custom_6() -> np.ndarray:
             [-500, -500, 1, 1, 1, 0],
         ])
 
-def matrix_custom_3() -> np.ndarray:
-    return np.array(
-        [
-            [0, 1, 500],
-            [1, 0, 1],
-            [500, 1, 0],
-        ])
 
 def matrix_custom_6_neg() -> np.ndarray:
     return -1 * matrix_custom_6()
@@ -193,13 +186,13 @@ def _randomised_entropy_fn(_, host_reverse: pu.ContAction, outcomes: List[pu.Out
 
 def _matrix_entropy_fn(m: np.ndarray, _, host_reverse: pu.ContAction, outcomes: List[pu.Outcome], y: pu.Message) -> float:
     minimal_sum = math.inf
-    for x in outcomes:
+    for x in y.outcomes:
         _sum = 0
         for x_prime in outcomes:
             _sum += host_reverse[x_prime, y] * m[x_prime.id, x.id]
         minimal_sum = min(minimal_sum, _sum)
     return minimal_sum
-    
+
 
 ENTROPY_FNS = {
     RANDOMISED_ZERO_ONE: _randomised_entropy_fn,
