@@ -125,18 +125,62 @@ def learn_predefined_matrices(game, t):
         learn(1, game, losses, t)
         
 
-def learn_custom_matrix(game):
-    t = 180
+def learn_predefined_matrix(game, t, i):
+    # Cont: Pos 0, Host: Pos n
     losses = {
-        pu.CONT: pu.MATRIX_PREDEFINED_POS[6],
-        pu.HOST: pu.MATRIX_PREDEFINED_NEG[6],
+        pu.CONT: pu.MATRIX_PREDEFINED_POS[0],
+        pu.HOST: pu.MATRIX_PREDEFINED_POS[i],
     }
-    learn(2, game, losses, t)
-    # load(game, losses, t)
+    learn(1, game, losses, t)
+
+    # Cont: Pos 0, Host: Neg n
+    losses = {
+        pu.CONT: pu.MATRIX_PREDEFINED_POS[0],
+        pu.HOST: pu.MATRIX_PREDEFINED_NEG[i],
+    }
+    learn(1, game, losses, t)
+
+    if i != 0:
+        # Cont: Pos n, Host: Pos 0
+        losses = {
+            pu.CONT: pu.MATRIX_PREDEFINED_POS[i],
+            pu.HOST: pu.MATRIX_PREDEFINED_POS[0],
+        }
+        learn(1, game, losses, t)
+    
+        # Cont: Pos n, Host: Neg 0
+        losses = {
+            pu.CONT: pu.MATRIX_PREDEFINED_POS[i],
+            pu.HOST: pu.MATRIX_PREDEFINED_NEG[0],
+        }
+        learn(1, game, losses, t)
+    
+        # Cont: Pos n, Host: Pos n
+        losses = {
+            pu.CONT: pu.MATRIX_PREDEFINED_POS[i],
+            pu.HOST: pu.MATRIX_PREDEFINED_POS[i],
+        }
+        learn(1, game, losses, t)
+    
+        # Cont: Pos n, Host: Neg n
+        losses = {
+            pu.CONT: pu.MATRIX_PREDEFINED_POS[i],
+            pu.HOST: pu.MATRIX_PREDEFINED_NEG[i],
+        }
+        learn(1, game, losses, t)
 
 
 if __name__ == '__main__':
-    # learn_custom_matrix(pu_games.MONTY_HALL)
+    # Example H - 0,4,7,10,13
+    # for i in [0, 4, 7, 10, 13]:
+    #     learn_predefined_matrix(pu_games.EXAMPLE_H, 80, i)
     
-    for g in [pu_games.EXAMPLE_F, pu_games.EXAMPLE_H]:
-        learn_predefined_matrices(g, 80)
+    # Example C & Example G - 0 t/m 7
+    for g in [pu_games.EXAMPLE_C, pu_games.EXAMPLE_G]:
+        for i in range(8):
+            learn_predefined_matrix(g, 5, i)
+    
+    # Example D & Example E - 0 t/m 7
+    for g in [pu_games.EXAMPLE_D, pu_games.EXAMPLE_E]:
+        for i in range(8):
+            learn_predefined_matrix(g, 80, i)

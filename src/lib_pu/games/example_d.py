@@ -11,10 +11,6 @@ class ExampleD(pu_games.Game):
     @staticmethod
     def name() -> str:
         return pu_games.EXAMPLE_D
-    
-    @staticmethod
-    def pretty_name() -> str:
-        return pu_games.GAME_PRETTY_NAMES[pu_games.EXAMPLE_D]
 
     @staticmethod
     def default_outcome_dist() -> List[float]:

@@ -77,9 +77,9 @@ class ModelWrapper:
         analysis = ExperimentAnalysis(self._get_experiment_paths(), default_metric=self.metric, default_mode="max")
         trials = [trial for trial in analysis.trials if trial.checkpoint.value]
         
+        trial_action_data = self.predict_all_trials(trials)
         if show_figure or self.exp_config['save_figures']:
             vis.init()
-            trial_action_data = self.predict_all_trials(trials)
             vis.show_strategy_figures(self.exp_config, trial_action_data, self.game.outcomes, self.game.messages)
             
             if show_eval:

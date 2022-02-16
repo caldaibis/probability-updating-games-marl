@@ -7,14 +7,10 @@ import numpy as np
 import src.lib_pu.games as pu_games
 
 
-class Square(pu_games.Game):
+class ExampleG(pu_games.Game):
     @staticmethod
     def name() -> str:
-        return pu_games.SQUARE
-    
-    @staticmethod
-    def pretty_name() -> str:
-        return pu_games.GAME_PRETTY_NAMES[pu_games.SQUARE]
+        return pu_games.EXAMPLE_G
 
     @staticmethod
     def default_outcome_dist() -> List[float]:

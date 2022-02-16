@@ -26,8 +26,8 @@ MATRIX_CUSTOM_3_NEG = "matrix_custom_3_neg"
 MATRIX_CUSTOM_6 = "matrix_custom_6"
 MATRIX_CUSTOM_6_NEG = "matrix_custom_6_neg"
 
-MATRIX_PREDEFINED_POS = [f"matrix_predefined_pos_{i}" for i in range(15)]
-MATRIX_PREDEFINED_NEG = [f"matrix_predefined_neg_{i}" for i in range(15)]
+MATRIX_PREDEFINED_POS = [f"matrix_predefined_pos_{i}" for i in range(30)]
+MATRIX_PREDEFINED_NEG = [f"matrix_predefined_neg_{i}" for i in range(30)]
 MATRIX_PREDEFINED = [*MATRIX_PREDEFINED_POS, *MATRIX_PREDEFINED_NEG]
 
 MATRIX_ONES_POS = 'matrix_ones_pos'

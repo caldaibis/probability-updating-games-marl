@@ -11,10 +11,6 @@ class FairDie(pu_games.Game):
     @staticmethod
     def name() -> str:
         return pu_games.FAIR_DIE
-    
-    @staticmethod
-    def pretty_name() -> str:
-        return pu_games.GAME_PRETTY_NAMES[pu_games.FAIR_DIE]
 
     @staticmethod
     def default_outcome_dist() -> List[float]:

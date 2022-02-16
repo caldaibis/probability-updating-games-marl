@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 
 import numpy as np
 
@@ -10,6 +10,8 @@ import src.lib_pu as pu
 
 from prettytable import PrettyTable
 from functools import partial
+
+import src.lib_pu.games as pu_games
 
 
 class Game(ABC):
@@ -44,7 +46,7 @@ class Game(ABC):
         self.loss_names = loss_names
         
         if loss_names[pu.CONT].startswith(pu.MATRIX):
-            self.matrix = {agent: self.fix_matrix(matrix[agent]) for agent in pu.AGENTS}
+            self.matrix = matrix
             self.loss = {agent: partial(pu.LOSS_FNS[pu.MATRIX], self.matrix[agent]) for agent in pu.AGENTS}
             self.entropy_cont = partial(pu.ENTROPY_FNS[pu.MATRIX], self.matrix[pu.CONT])
         else:
@@ -52,22 +54,6 @@ class Game(ABC):
             self.entropy_cont = pu.ENTROPY_FNS[loss_names[pu.CONT]]
         
         self.action = {agent: None for agent in pu.AGENTS}
-
-    """Modify matrix such that no positive or negative losses are given for pairs of outcomes that are not in a message together.
-    They should not influence the expected entropy because they certainly don't affect the expected loss."""
-    def fix_matrix(self, m: np.ndarray) -> np.ndarray:
-        # for x in range(len(self.outcomes)):
-        #     for x_prime in range(x):
-        #         connected = False
-        #         for y in self.messages:
-        #             xs = [x_temp.id for x_temp in y.outcomes]
-        #             if x in xs and x_prime in xs:
-        #                 connected = True
-        #                 break
-        #         if not connected:
-        #             m[x, x_prime] = 0
-        #             m[x_prime, x] = 0
-        return m
 
     def set_action(self, agent: pu.Agent, value: np.ndarray):
         try:
@@ -89,6 +75,9 @@ class Game(ABC):
         loss: float = 0
         for x in self.outcomes:
             for y in self.messages:
+                l = self.get_loss(agent, x, y)
+                P_y_x = self.action[pu.HOST][x, y]
+                p_x = self.outcome_dist[x]
                 _l = self.outcome_dist[x] * self.action[pu.HOST][x, y] * self.get_loss(agent, x, y)
                 if not math.isnan(_l):
                     loss += _l
@@ -153,8 +142,82 @@ class Game(ABC):
                         return False
 
         return True
-
-    def is_matrix_symmetric(self, agent) -> bool:
+    
+    """Determines the lambda_x vector, given the loss and strategy for the contestant"""
+    def get_lambda_x_vector(self) -> Dict[pu.Outcome, float]:
+        vec = {}
+        for x in self.outcomes:
+            vec[x] = max(self.get_loss(pu.CONT, x, y) for y in x.messages)
+        return vec
+    
+    """Checks whether the lambda_x vector determined from contestant's loss and strategy is a KT (Kuhn Tucker) vector"""
+    def is_lambda_x_vector_kt(self, vec: Dict[pu.Outcome, float]) -> bool:
+        for y in self.messages:
+            _sum = sum(self.host_reverse[x, y] * vec[x] for x in y.outcomes)
+            ent = self.get_entropy(y)
+            if math.isclose(self.message_dist[y], 0, rel_tol=1e-2) and (ent < _sum or math.isclose(ent, _sum, rel_tol=1e-2)):
+                continue
+            if self.message_dist[y] > 0 and math.isclose(ent, _sum, rel_tol=1e-2):
+                continue
+            else:
+                return False
+        return True
+    
+    """Checks whether the contestant (Q) plays an equalizer strategy, i.e. the expected loss of Q does not depend on P"""
+    def cont_is_equalizer_strategy(self):
+        for x in self.outcomes:
+            losses = [self.get_loss(pu.CONT, x, y) for y in x.messages]
+            
+            for loss in losses:
+                if not math.isclose(loss, losses[0], rel_tol=1e-2):
+                    return False
+        return True
+    
+    """Checks, for both agents, whether they play a worst-case optimal strategy, according to the lambda_x vector. If the vector is a KT-vector, they play worst-case optimally."""
+    def is_worst_case_optimal(self) -> bool:
+        return self.is_lambda_x_vector_kt(self.get_lambda_x_vector())
+    
+    def get_outcome_diffs(self) -> Dict[Tuple[pu.Message, pu.Message], pu.Outcome]:
+        diffs = {}
+        for y1 in range(len(self.messages)):
+            for y2 in range(y1 + 1, len(self.messages)):
+                # Determine the difference between message y1 and y2
+                diff1 = list(set(self.messages[y1].outcomes) - set(self.messages[y2].outcomes))
+                diff2 = list(set(self.messages[y2].outcomes) - set(self.messages[y1].outcomes))
+                
+                # If y1 and y2 differ by the exchange of one outcome:
+                if len(diff1) == 1 and len(diff2) == 1 and diff1[0] != diff2[0]:
+                    diffs[(self.messages[y1], self.messages[y2])] = diff1[0]
+                    diffs[(self.messages[y2], self.messages[y1])] = diff2[0]
+        return diffs
+    
+    """Check whether a matrix is symmetric w.r.t. exchanges in message set Y. The loss function does not need to be fully symmetric in order for the theorems of (van Ommen et. al. 2015) to hold."""
+    def is_matrix_symmetric_with_respect_to_exchanges(self, agent) -> bool:
+        m = self.matrix[agent]
+        for y1 in range(len(self.messages)):
+            for y2 in range(y1 + 1, len(self.messages)):
+                # Determine the difference between message y1 and y2
+                diff1 = list(set(self.messages[y1].outcomes) - set(self.messages[y2].outcomes))
+                diff2 = list(set(self.messages[y2].outcomes) - set(self.messages[y1].outcomes))
+                
+                # If y1 and y2 differ by the exchange of one outcome:
+                if len(diff1) == 1 and len(diff2) == 1 and diff1[0] != diff2[0]:
+                    x1 = diff1[0].id
+                    x2 = diff2[0].id
+                    if m[x1, x1] != m[x2, x2]:
+                        return False
+                    if m[x1, x2] != m[x2, x1]:
+                        return False
+                    for x_prime in range(len(self.outcomes)):
+                        if x_prime == x1 or x_prime == x2:
+                            continue
+                        if m[x_prime, x1] != m[x_prime, x2]:
+                            return False
+                        if m[x1, x_prime] != m[x2, x_prime]:
+                            return False
+        return True
+    
+    def is_matrix_fully_symmetric(self, agent) -> bool:
         m = self.matrix[agent]
         for x1 in range(len(self.outcomes)):
             for x2 in range(x1 + 1, len(self.outcomes)):
@@ -234,10 +297,9 @@ class Game(ABC):
     def name() -> str:
         pass
     
-    @staticmethod
-    @abstractmethod
-    def pretty_name() -> str:
-        pass
+    @classmethod
+    def pretty_name(cls) -> str:
+        return pu_games.GAME_PRETTY_NAMES[cls.name()]
 
     @staticmethod
     @abstractmethod
@@ -283,10 +345,13 @@ class Game(ABC):
 
         table.add_row(['', ''])
         for y in self.messages:
-            try:
-                table.add_row([y, "p=" + '{:.3f}'.format(self.message_dist[y]) + " | " + str([str(x) for x in y.outcomes]).translate({39: None}).strip('[]')])
-            except AttributeError:
-                table.add_row([y, "p=?     | " + str([str(x) for x in y.outcomes]).translate({39: None}).strip('[]')])
+            table.add_row([y, "p=" + '{:.3f}'.format(self.message_dist[y]) + " | " + str([str(x) for x in y.outcomes]).translate({39: None}).strip('[]')])
+        
+        table.add_row(['', ''])
+        table.add_row(['Message differences', ''])
+        diffs = self.get_outcome_diffs()
+        for y1, y2 in diffs:
+            table.add_row([str((y1, y2)), diffs[(y1, y2)]])
 
         table.add_row(['', ''])
         table.add_row(['Cont loss', self.loss_names[pu.CONT]])
@@ -297,7 +362,7 @@ class Game(ABC):
                 for i, y in enumerate(x):
                     _row += ("{:"+str(col_maxes[i])+"g} ").format(y)
                 table.add_row(['', _row])
-            table.add_row(['Symmetric?', self.is_matrix_symmetric(pu.CONT)])
+            table.add_row(['Symmetric w.r.t. exchanges?', self.is_matrix_symmetric_with_respect_to_exchanges(pu.CONT)])
                 
         table.add_row(['Host loss', self.loss_names[pu.HOST]])
         if self.loss_names[pu.HOST].startswith(pu.MATRIX):
@@ -307,7 +372,7 @@ class Game(ABC):
                 for i, y in enumerate(x):
                     _row += ("{:"+str(col_maxes[i])+"g} ").format(y)
                 table.add_row(['', _row])
-            table.add_row(['Symmetric?', self.is_matrix_symmetric(pu.HOST)])
+            table.add_row(['Symmetric w.r.t. exchanges?', self.is_matrix_symmetric_with_respect_to_exchanges(pu.HOST)])
 
         table.add_row(['', ''])
         table.add_row(['Cont action', ''])
@@ -327,32 +392,36 @@ class Game(ABC):
             
         table.add_row(['', ''])
         table.add_row(['Host reverse action', ''])
-        try:
-            for y in self.messages:
-                for x in self.outcomes:
-                    if x == self.outcomes[0]:
-                        table.add_row([y, f"{x}: {self.host_reverse[x, y]}"])
-                    else:
-                        table.add_row(['', f"{x}: {self.host_reverse[x, y]}"])
-        except Exception as e:
-            table.add_row(['Host reverse action', 'ERROR'])
+
+        for y in self.messages:
+            for x in self.outcomes:
+                if x == self.outcomes[0]:
+                    table.add_row([y, f"{x}: {self.host_reverse[x, y]}"])
+                else:
+                    table.add_row(['', f"{x}: {self.host_reverse[x, y]}"])
 
         table.add_row(['', ''])
         table.add_row(['Host action', ''])
         table.add_row(['Action space', self.get_action_shape(pu.HOST)])
-        try:
-            for x in self.outcomes:
-                for y in self.messages:
-                    if y == self.messages[0]:
-                        table.add_row([x, f"{y}: {self.action[pu.HOST][x, y]}"])
-                    else:
-                        table.add_row(['', f"{y}: {self.action[pu.HOST][x, y]}"])
-    
-            table.add_row(['CAR?', self.strategy_util.is_car()])
-            table.add_row(['RCAR?', self.strategy_util.is_rcar()])
-            table.add_row(['RCAR dist: ', "{:.3f}".format(self.strategy_util.rcar_dist())])
-            table.add_row(['Host expected loss', self.get_expected_loss(pu.HOST)])
-        except Exception as e:
-            table.add_row(['Host action', 'ERROR'])
+        
+        for x in self.outcomes:
+            for y in self.messages:
+                if y == self.messages[0]:
+                    table.add_row([x, f"{y}: {self.action[pu.HOST][x, y]}"])
+                else:
+                    table.add_row(['', f"{y}: {self.action[pu.HOST][x, y]}"])
 
+        table.add_row(['Host expected loss', self.get_expected_loss(pu.HOST)])
+        
+        table.add_row(['', ''])
+        table.add_row(['RCAR dist: ', "{:.3f}".format(self.strategy_util.rcar_dist())])
+        table.add_row(['Is P RCAR?', self.strategy_util.is_rcar()])
+        
+        lambda_x = self.get_lambda_x_vector()
+        table.add_row(['', ''])
+        table.add_row(['Lambda_x vector:', self.get_lambda_x_vector()])
+        table.add_row(['Is KT-vector?', self.is_lambda_x_vector_kt(lambda_x)])
+        table.add_row(['Cont equalizer?', self.cont_is_equalizer_strategy()])
+        table.add_row(['Worst-case optimal?', self.is_worst_case_optimal()])
+        
         return str(table)

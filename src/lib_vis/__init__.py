@@ -14,24 +14,26 @@ import src.lib_pu.games as pu_games
 
 GAME_LOSS_Y_STEP = {
     pu_games.MONTY_HALL: 1/9,
-    pu_games.FAIR_DIE: 1/9,
-    pu_games.EXAMPLE_C: 1/9,
-    pu_games.EXAMPLE_D: 1/9,
-    pu_games.EXAMPLE_E: 1/9,
-    pu_games.EXAMPLE_F: 1/9,
-    pu_games.SQUARE: 1/9,
-    pu_games.EXAMPLE_H: 1/9,
+    pu_games.FAIR_DIE  : 1/9,
+    pu_games.EXAMPLE_C : 1/9,
+    pu_games.EXAMPLE_D : 1/9,
+    pu_games.EXAMPLE_E : 1/9,
+    pu_games.EXAMPLE_F : 1/9,
+    pu_games.EXAMPLE_G : 1 / 9,
+    pu_games.EXAMPLE_H : 1/9,
+    pu_games.COLOSSAL : 1/9,
 }
 
 GAME_RCAR_Y_MAX = {
     pu_games.MONTY_HALL: 0.36,
-    pu_games.FAIR_DIE: 0.36,
-    pu_games.EXAMPLE_C: 0.36,
-    pu_games.EXAMPLE_D: 0.36,
-    pu_games.EXAMPLE_E: 0.36,
-    pu_games.EXAMPLE_F: 0.36,
-    pu_games.SQUARE: 0.36,
-    pu_games.EXAMPLE_H: 0.36,
+    pu_games.FAIR_DIE  : 0.36,
+    pu_games.EXAMPLE_C : 0.36,
+    pu_games.EXAMPLE_D : 0.36,
+    pu_games.EXAMPLE_E : 0.36,
+    pu_games.EXAMPLE_F : 0.36,
+    pu_games.EXAMPLE_G : 0.36,
+    pu_games.EXAMPLE_H : 0.36,
+    pu_games.COLOSSAL : 0.36,
 }
 
 

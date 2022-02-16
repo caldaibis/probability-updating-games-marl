@@ -45,9 +45,9 @@ def run(args: Optional[Dict[str, Any]]):
     if not args:
         args = {
             'algorithm': marl.PPO,
-            'game': pu_games.EXAMPLE_F,
-            pu.CONT: pu.RANDOMISED_ZERO_ONE,
-            pu.HOST: pu.RANDOMISED_ZERO_ONE_NEG,
+            'game': pu_games.MONTY_HALL,
+            pu.CONT: pu.MATRIX_PREDEFINED_POS[1],
+            pu.HOST: pu.MATRIX_PREDEFINED_NEG[0],
             'debug_mode': False,
             'show_example': True,
             'ray': True,
@@ -56,8 +56,8 @@ def run(args: Optional[Dict[str, Any]]):
             'show_eval': True,
             'save_figures': True,
             'save_progress': False,
-            'min_total_time_s': 80,
-            'max_total_time_s': 80,
+            'min_total_time_s': 200,
+            'max_total_time_s': 200,
         }
     else:
         for k in bool_arg_keys:

@@ -11,10 +11,6 @@ class ExampleF(pu_games.Game):
     @staticmethod
     def name() -> str:
         return pu_games.EXAMPLE_F
-    
-    @staticmethod
-    def pretty_name() -> str:
-        return pu_games.GAME_PRETTY_NAMES[pu_games.EXAMPLE_F]
 
     @staticmethod
     def default_outcome_dist() -> List[float]:
@@ -43,7 +39,19 @@ class ExampleF(pu_games.Game):
     @staticmethod
     def cont_default() -> np.ndarray:
         return np.array([[1 / 2, 1 / 2], [1 / 2, 1 / 2], [1 / 2, 1 / 2]])
+    
+    @staticmethod
+    def cont_custom_3() -> np.ndarray:
+        return np.array([[0, 1], [1, 0], [0, 1]])
 
     @staticmethod
     def host_default() -> np.ndarray:
         return np.array([[1 / 2, 1 / 2], [1 / 2, 1 / 2], [1 / 2, 1 / 2]])
+    
+    @staticmethod
+    def host_custom_1() -> np.ndarray:
+        return np.array([[1 / 2, 1 / 2], [1, 0], [0, 1]])
+    
+    @staticmethod
+    def host_custom_2() -> np.ndarray:
+        return np.array([[1, 0], [0, 1], [0, 1]])

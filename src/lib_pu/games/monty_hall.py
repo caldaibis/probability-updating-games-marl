@@ -11,10 +11,6 @@ class MontyHall(pu_games.Game):
     @staticmethod
     def name() -> str:
         return pu_games.MONTY_HALL
-    
-    @staticmethod
-    def pretty_name() -> str:
-        return pu_games.GAME_PRETTY_NAMES[pu_games.MONTY_HALL]
 
     @staticmethod
     def default_outcome_dist() -> List[float]:
