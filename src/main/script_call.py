@@ -147,21 +147,21 @@ def learn_predefined_matrix(game, t, i):
             pu.HOST: pu.MATRIX_PREDEFINED_POS[0],
         }
         learn(1, game, losses, t)
-    
+
         # Cont: Pos n, Host: Neg 0
         losses = {
             pu.CONT: pu.MATRIX_PREDEFINED_POS[i],
             pu.HOST: pu.MATRIX_PREDEFINED_NEG[0],
         }
         learn(1, game, losses, t)
-    
+
         # Cont: Pos n, Host: Pos n
         losses = {
             pu.CONT: pu.MATRIX_PREDEFINED_POS[i],
             pu.HOST: pu.MATRIX_PREDEFINED_POS[i],
         }
         learn(1, game, losses, t)
-    
+
         # Cont: Pos n, Host: Neg n
         losses = {
             pu.CONT: pu.MATRIX_PREDEFINED_POS[i],
@@ -171,15 +171,11 @@ def learn_predefined_matrix(game, t, i):
 
 
 if __name__ == '__main__':
-    # Example H - 0,4,7,10,13
-    # for i in [0, 4, 7, 10, 13]:
-    #     learn_predefined_matrix(pu_games.EXAMPLE_H, 80, i)
-    
-    # Example C & Example G - 0 t/m 7
-    for g in [pu_games.EXAMPLE_C, pu_games.EXAMPLE_G]:
+    # Example G - 0 t/m 7
+    for g in [pu_games.EXAMPLE_G]:
         for i in range(8):
-            learn_predefined_matrix(g, 5, i)
-    
+            learn_predefined_matrix(g, 80, i)
+
     # Example D & Example E - 0 t/m 7
     for g in [pu_games.EXAMPLE_D, pu_games.EXAMPLE_E]:
         for i in range(8):
