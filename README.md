@@ -1,6 +1,6 @@
 # Multi-agent reinforcement learning for relaxed probability updating games
 
-This is the repository corresponding to the Master Thesis "Investigating relaxed probability updating games" by Collin Aldaibis. It contains the code for the mechanics behind general-sum probability updating games and provides a wrapper to port such games to OpenAI Gym-like environments. Using Ray Tune and Ray RLlib, it implements PPO and other policy gradient learning methods to learn optimal strategies, converging to Nash equilibria.
+Welcome to the repository corresponding to the master thesis project "Investigating relaxed probability updating games" by Collin Aldaibis. This repository is built and utilised to investigate Nash equilibria for general-sum probability updating games. It implements all of the mechanics in such games and provides a wrapper to port them to OpenAI Gym-like environments. Using Ray Tune and Ray RLlib, it applies the state-of-the-art Proximal Policy Optimisation (PPO) and other policy gradient learning methods to learn optimal strategies for both the host and the contestant. This implementation empirically shows to converge to Nash equilibria for many general-sum games.
 
 ## Requirements and notes
 
