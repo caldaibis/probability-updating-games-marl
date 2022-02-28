@@ -30,13 +30,13 @@ This should install all the dependencies within the virtual environment to run t
 
 ## Run
 
-The main file is src/main/main.py. This file is run with the certain parameters set in a specific order. The ordered list of parameters, including description and example values is given below:
+The main module is src.main.main. From here, any general-sum game can be trained with any of the implemented algorithms. Note that this file is run with a certain set of parameters, in a specific order. The ordered list of parameters, including description and example values, is as follows: 
 ```
 {
   'algorithm': 'ppo', # or 'a2c', 'ddpg', 'td3' and 'sac'
   'game': 'monty_hall', # or 'fair_die' and 'example_c' through 'example_h'
   'cont': 'logarithmic', # or 'brier', 'randomised_0_1', 'matrix_predefined_pos_0' through 'matrix_predefined_pos_14', 'matrix_predefined_neg_0' through 'matrix_predefined_neg_14'
-  'host': 'logarithmic_neg', # you can also use 'brier_neg', 'randomised_0_1_neg' and all loss functions
+  'host': 'logarithmic_neg', # you can also use 'brier_neg', 'randomised_0_1_neg' and all other loss functions
   'show_example': 1, # Shows an example with default strategies
   'debug_mode': 0, # Enables debug mode
   'ray': 0, # Enables the Ray framework to learn or load
