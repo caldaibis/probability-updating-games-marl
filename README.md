@@ -52,4 +52,4 @@ With the above settings, we get the following command:
 ```
 py -m src.main.main ppo monty_hall logarithmic logarithmic_neg 1 0 0 1 0 1 1 0 80
 ```
-Accordingly, a PPO model will be trained for exactly 80 seconds on **Monty Hall** with $$L_C$$ logarithmic loss for the contestant and negative logarithmic loss for the host. Subsequently, the resulting training progression data, performance and strategy graphs will automatically be saved to the file system for investigation.
+Accordingly, a PPO model will be trained for exactly 80 seconds on **Monty Hall** with logarithmic loss for the contestant and negative logarithmic loss for the host. Subsequently, the resulting training progression data, performance and strategy graphs will automatically be saved to the file system for investigation.
