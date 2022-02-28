@@ -8,7 +8,6 @@ from ray.rllib import MultiAgentEnv
 from ray.rllib.agents import Trainer
 from ray.rllib.policy.policy import PolicySpec
 from ray.tune import Trainable, register_env, ExperimentAnalysis
-from ray.tune.stopper import CombinedStopper, ExperimentPlateauStopper
 from ray.tune.progress_reporter import CLIReporter
 from ray.tune.trial import Trial
 
@@ -132,9 +131,6 @@ class ModelWrapper:
             **self.custom_config['model_config'],
             "env": "pug",
             "batch_mode": "truncate_episodes",
-            # "num_gpus": 0,
-            # "num_cpus_for_driver": 1,
-            # "num_cpus_per_worker": 1,
             "framework": "torch",
             "evaluation_interval": 1,
             "evaluation_num_episodes": 1,
@@ -166,7 +162,7 @@ class ModelWrapper:
             **self.custom_config['tune_config'],
             "name": self.name,
             "config": self._create_model_config(),
-            "stop": CombinedStopper(marl.ConjunctiveStopper(ExperimentPlateauStopper(self.metric, mode="max", top=10, std=0.0001), marl.TotalTimeStopper(total_time_s=self.custom_config['min_total_time_s'])), marl.TotalTimeStopper(total_time_s=self.custom_config['max_total_time_s'])),
+            "stop": marl.TotalTimeStopper(total_time_s=self.custom_config['max_total_time_s']),
             "checkpoint_at_end": True,
             "local_dir": self.get_local_dir(),
             "verbose": 1,
@@ -187,8 +183,8 @@ class ModelWrapper:
 
         algo = self.trainer_type.__name__
 
-        original = Path(f'{analysis.best_logdir}/progress.csv')
-        destination_dir = Path(f'../lib_vis/data/{self.experiment_name}/{self.game.name()}_{loss}_{interaction_type}_{algo.lower()}')
+        original = Path(f'src/main/{analysis.best_logdir}/progress.csv')
+        destination_dir = Path(f'data/{self.experiment_name}/{self.game.name()}_{loss}_{interaction_type}_{algo.lower()}')
 
         destination = Path(f'{destination_dir}.csv')
         if os.path.isfile(destination):

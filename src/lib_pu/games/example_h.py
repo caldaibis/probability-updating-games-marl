@@ -38,8 +38,24 @@ class ExampleH(pu_games.Game):
 
     @staticmethod
     def cont_default() -> np.ndarray:
-        return np.array([[0., 1.], [1., 0.], [1 / 2, 1 / 2]])
-
+        return np.array([[0., 1.], [1., 0.], [1, 0]])
+    
     @staticmethod
     def host_default() -> np.ndarray:
-        return np.array([[.1, 0.], [1 / 2, 1 / 2], [1., 0.]])
+        return np.array([[1., 0.], [1/2, 1/2], [1.0, 0.0]])
+    
+    @staticmethod
+    def cont_1() -> np.ndarray:
+        return np.array([[1/2, 1/2], [1/2, 1/2], [1/2, 1/2]])
+
+    @staticmethod
+    def host_1() -> np.ndarray:
+        return np.array([[1.0, 0.0], [1/2, 1/2], [1.0, 0.0]])
+    
+    @staticmethod
+    def cont_2() -> np.ndarray:
+        return np.array([[0., 1.], [1.0, 0.0], [1/2, 1/2]])
+    
+    @staticmethod
+    def host_2() -> np.ndarray:
+        return np.array([[1.0, 0.0], [0.4, 0.6], [1.0, 0.0]])

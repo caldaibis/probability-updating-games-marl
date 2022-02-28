@@ -152,6 +152,7 @@ class Game(ABC):
     
     """Checks whether the lambda_x vector determined from contestant's loss and strategy is a KT (Kuhn Tucker) vector"""
     def is_lambda_x_vector_kt(self, vec: Dict[pu.Outcome, float]) -> bool:
+        ent_dict = {y: self.get_entropy(y) for y in self.messages}
         for y in self.messages:
             _sum = sum(self.host_reverse[x, y] * vec[x] for x in y.outcomes)
             ent = self.get_entropy(y)
@@ -417,10 +418,8 @@ class Game(ABC):
         table.add_row(['RCAR dist: ', "{:.3f}".format(self.strategy_util.rcar_dist())])
         table.add_row(['Is P RCAR?', self.strategy_util.is_rcar()])
         
-        lambda_x = self.get_lambda_x_vector()
         table.add_row(['', ''])
         table.add_row(['Lambda_x vector:', self.get_lambda_x_vector()])
-        table.add_row(['Is KT-vector?', self.is_lambda_x_vector_kt(lambda_x)])
         table.add_row(['Cont equalizer?', self.cont_is_equalizer_strategy()])
         table.add_row(['Worst-case optimal?', self.is_worst_case_optimal()])
         

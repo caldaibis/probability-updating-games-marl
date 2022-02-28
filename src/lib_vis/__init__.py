@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import Tuple
 
-import numpy as np
-
 from src.lib_vis.config import *
 from src.lib_vis.present_and_save_graphs import *
 from src.lib_vis.per_trial import *
@@ -12,32 +10,54 @@ from src.lib_vis.strategy_scatterplots import *
 
 import src.lib_pu.games as pu_games
 
-GAME_LOSS_Y_STEP = {
-    pu_games.MONTY_HALL: 1/9,
-    pu_games.FAIR_DIE  : 1/9,
-    pu_games.EXAMPLE_C : 1/9,
-    pu_games.EXAMPLE_D : 1/9,
-    pu_games.EXAMPLE_E : 1/9,
-    pu_games.EXAMPLE_F : 1/9,
-    pu_games.EXAMPLE_G : 1 / 9,
-    pu_games.EXAMPLE_H : 1/9,
-    pu_games.COLOSSAL : 1/9,
-}
 
-GAME_RCAR_Y_MAX = {
-    pu_games.MONTY_HALL: 0.36,
-    pu_games.FAIR_DIE  : 0.36,
-    pu_games.EXAMPLE_C : 0.36,
-    pu_games.EXAMPLE_D : 0.36,
-    pu_games.EXAMPLE_E : 0.36,
-    pu_games.EXAMPLE_F : 0.36,
-    pu_games.EXAMPLE_G : 0.36,
-    pu_games.EXAMPLE_H : 0.36,
-    pu_games.COLOSSAL : 0.36,
-}
+def get_y_step(game, metric) -> float:
+    d = {
+        pu_games.MONTY_HALL: {
+            marl.REWARD_CONT: 1/9,
+        },
+        pu_games.FAIR_DIE: {
+            marl.REWARD_CONT: 1/9,
+        },
+    }
+    val = d.get(game)
+    if val:
+        val = val.get(metric)
+    return val or 0.1
 
 
-def get_y_min_max(df_metric_list: List[Tuple[str, List[pd.DataFrame]]], config: Dict) -> Tuple:
+def get_y_lim(game, metric, loss=None) -> Optional[Tuple[float, float]]:
+    d = {
+        pu_games.MONTY_HALL: {
+            marl.RCAR_DIST: {
+                None: (-0.03, 0.36)
+            },
+        },
+        pu_games.EXAMPLE_F: {
+            marl.REWARD_CONT: {
+                None: (-0.8, 0.8),
+                pu.LOGARITHMIC: (0.6, 0.8),
+                pu.LOGARITHMIC_NEG: (-0.8, -0.6),
+            },
+        },
+    }
+    val = d.get(game)
+    if val:
+        val = val.get(metric)
+    if val:
+        val = val.get(loss)
+    return val
+
+
+def get_main_metric(metrics: List[str]):
+    if any(m in [marl.RCAR_DIST, marl.RCAR_DIST_EVAL] for m in metrics):
+        return marl.RCAR_DIST
+    if any(m in [marl.REWARD_CONT, marl.REWARD_CONT_EVAL, marl.REWARD_HOST, marl.REWARD_HOST_EVAL] for m in metrics):
+        return marl.REWARD_CONT
+    return metrics[0]
+
+
+def get_y_min_max(df_metric_list: List[Tuple[str, List[pd.DataFrame]]], config: Dict, agent=None) -> Tuple:
     y_min = min(df[metric].min() for (metric, dfs) in df_metric_list for df in dfs)
     y_max = max(df[metric].max() for (metric, dfs) in df_metric_list for df in dfs)
     
@@ -45,15 +65,20 @@ def get_y_min_max(df_metric_list: List[Tuple[str, List[pd.DataFrame]]], config: 
     y_min -= diff * 0.05
     y_max += diff * 0.05
     
-    if any(metric in [marl.RCAR_DIST, marl.RCAR_DIST_EVAL] for (metric, _) in df_metric_list):
-        y_max = max(y_max, vis.GAME_RCAR_Y_MAX[config['game']])
+    main_metric = get_main_metric([m for (m, _) in df_metric_list])
+    predefined_y_lim = get_y_lim(config['game'], main_metric, config.get(agent))
     
+    if predefined_y_lim is not None:
+        y_min = min(y_min, predefined_y_lim[0])
+        y_max = max(y_max, predefined_y_lim[1])
+        
     return y_min, y_max
 
 
 def get_y_ticks(config: Dict, metrics: List[str]) -> Optional[np.ndarray]:
-    if any(m in marl.NEGATIVE_METRICS for m in metrics):
-        return np.arange(-6, 6, vis.GAME_LOSS_Y_STEP[config['game']])
+    predefined_y_step = get_y_step(config['game'], get_main_metric(metrics))
+    if predefined_y_step is not None:
+        return np.arange(-6, 6, predefined_y_step)
     return None
 
 

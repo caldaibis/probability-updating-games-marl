@@ -70,26 +70,6 @@ GRAPH_DIRICHLET = {
     'legend-lower-anchor': 0.75,
     'show_figures': True,
     'save_figures': True,
-    
-    # 'legend-lower-anchor': {
-    #     (pu_games.MONTY_HALL, pu.RANDOMISED_ZERO_ONE, pu.ZERO_SUM): 0.65,
-    #     (pu_games.MONTY_HALL, pu.RANDOMISED_ZERO_ONE, pu.COOPERATIVE): 0.65,
-    #
-    #     (pu_games.MONTY_HALL, pu.BRIER, pu.ZERO_SUM): 0.65,
-    #     (pu_games.MONTY_HALL, pu.BRIER, pu.COOPERATIVE): 0.65,
-    #
-    #     (pu_games.MONTY_HALL, pu.LOGARITHMIC, pu.ZERO_SUM): 0.30,
-    #     (pu_games.MONTY_HALL, pu.LOGARITHMIC, pu.COOPERATIVE): 0.30,
-    #
-    #     (pu_games.FAIR_DIE, pu.RANDOMISED_ZERO_ONE, pu.ZERO_SUM): 0.50,
-    #     (pu_games.FAIR_DIE, pu.RANDOMISED_ZERO_ONE, pu.COOPERATIVE): 0.62,
-    #
-    #     (pu_games.FAIR_DIE, pu.BRIER, pu.ZERO_SUM): 0.58,
-    #     (pu_games.FAIR_DIE, pu.BRIER, pu.COOPERATIVE): 0.65,
-    #
-    #     (pu_games.FAIR_DIE, pu.LOGARITHMIC, pu.ZERO_SUM): 0.68,
-    #     (pu_games.FAIR_DIE, pu.LOGARITHMIC, pu.COOPERATIVE): 0.70,
-    # }
 }
 
 GRAPH_DIRICHLET_VS_GAUSSIAN_SOFTMAX = {
@@ -112,25 +92,6 @@ GRAPH_DIRICHLET_VS_INDEPENDENT_SOFTMAX_INDEPENDENT_PUNISH = {
     'interactions': [pu.COOPERATIVE, pu.ZERO_SUM],
     'title': False,
     'legend-lower-anchor': 0.83,
-    # 'legend-lower-anchor': {
-    #     (pu_games.MONTY_HALL, pu.RANDOMISED_ZERO_ONE, pu.ZERO_SUM): 0.65,
-    #     (pu_games.MONTY_HALL, pu.RANDOMISED_ZERO_ONE, pu.COOPERATIVE): 0.65,
-    #
-    #     (pu_games.MONTY_HALL, pu.BRIER, pu.ZERO_SUM): 0.65,
-    #     (pu_games.MONTY_HALL, pu.BRIER, pu.COOPERATIVE): 0.65,
-    #
-    #     (pu_games.MONTY_HALL, pu.LOGARITHMIC, pu.ZERO_SUM): 0.30,
-    #     (pu_games.MONTY_HALL, pu.LOGARITHMIC, pu.COOPERATIVE): 0.30,
-    #
-    #     (pu_games.FAIR_DIE, pu.RANDOMISED_ZERO_ONE, pu.ZERO_SUM): 0.50,
-    #     (pu_games.FAIR_DIE, pu.RANDOMISED_ZERO_ONE, pu.COOPERATIVE): 0.62,
-    #
-    #     (pu_games.FAIR_DIE, pu.BRIER, pu.ZERO_SUM): 0.58,
-    #     (pu_games.FAIR_DIE, pu.BRIER, pu.COOPERATIVE): 0.65,
-    #
-    #     (pu_games.FAIR_DIE, pu.LOGARITHMIC, pu.ZERO_SUM): 0.68,
-    #     (pu_games.FAIR_DIE, pu.LOGARITHMIC, pu.COOPERATIVE): 0.70,
-    # },
     'show_figures': True,
     'save_figures': True,
 }

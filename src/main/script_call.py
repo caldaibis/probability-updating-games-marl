@@ -25,11 +25,10 @@ def load(game, losses, t):
         'show_eval': True,
         'save_figures': True,
         'save_progress': False,
-        'min_total_time_s': t,
         'max_total_time_s': t,
     }
     
-    subprocess.call(["../../venv/Scripts/python", 'main.py', *output_args(run_args)])
+    subprocess.call(["venv/Scripts/python", 'src/main/main.py', *output_args(run_args)])
 
 
 def learn(n, game, losses, t):
@@ -46,16 +45,15 @@ def learn(n, game, losses, t):
         'show_eval': True,
         'save_figures': True,
         'save_progress': False,
-        'min_total_time_s': t,
         'max_total_time_s': t,
     }
     
     for _ in range(n):
-        subprocess.call(["../../venv/Scripts/python", 'main.py', *output_args(run_args)])
+        subprocess.call(["venv/Scripts/python", 'src/main/main.py', *output_args(run_args)])
 
 
 def show_matrices(game):
-    for m in pu.MATRIX_PREDEFINED_POS:
+    for m in pu.MATRIX_POS:
         run_args = {
             'algorithm': marl.PPO,
             'game': game,
@@ -69,47 +67,46 @@ def show_matrices(game):
             'show_eval': True,
             'save_figures': True,
             'save_progress': False,
-            'min_total_time_s': 10,
             'max_total_time_s': 10,
         }
-        subprocess.call(["../../venv/Scripts/python", 'main.py', *output_args(run_args)])
+        subprocess.call(["venv/Scripts/python", 'src/main/main.py', *output_args(run_args)])
 
 
 def learn_predefined_matrices(game, t):
     # Cont: Pos 0, Host: Pos n
-    for m in pu.MATRIX_PREDEFINED_POS:
+    for m in pu.MATRIX_POS:
         losses = {
-            pu.CONT: pu.MATRIX_PREDEFINED_POS[0],
+            pu.CONT: pu.MATRIX_POS[0],
             pu.HOST: m,
         }
         learn(1, game, losses, t)
 
     # Cont: Pos 0, Host: Neg n
-    for m in pu.MATRIX_PREDEFINED_NEG:
+    for m in pu.MATRIX_NEG:
         losses = {
-            pu.CONT: pu.MATRIX_PREDEFINED_POS[0],
+            pu.CONT: pu.MATRIX_POS[0],
             pu.HOST: m,
         }
         learn(1, game, losses, t)
 
     # Cont: Pos n, Host: Pos 0
-    for m in pu.MATRIX_PREDEFINED_POS:
+    for m in pu.MATRIX_POS:
         losses = {
             pu.CONT: m,
-            pu.HOST: pu.MATRIX_PREDEFINED_POS[0],
+            pu.HOST: pu.MATRIX_POS[0],
         }
         learn(1, game, losses, t)
 
     # Cont: Pos n, Host: Neg 0
-    for m in pu.MATRIX_PREDEFINED_POS:
+    for m in pu.MATRIX_POS:
         losses = {
             pu.CONT: m,
-            pu.HOST: pu.MATRIX_PREDEFINED_NEG[0],
+            pu.HOST: pu.MATRIX_NEG[0],
         }
         learn(1, game, losses, t)
 
     # Cont: Pos n, Host: Pos n
-    for m in pu.MATRIX_PREDEFINED_POS:
+    for m in pu.MATRIX_POS:
         losses = {
             pu.CONT: m,
             pu.HOST: m,
@@ -117,7 +114,7 @@ def learn_predefined_matrices(game, t):
         learn(1, game, losses, t)
 
     # Cont: Pos n, Host: Neg n
-    for (pos_m, neg_m) in zip(pu.MATRIX_PREDEFINED_POS, pu.MATRIX_PREDEFINED_NEG):
+    for (pos_m, neg_m) in zip(pu.MATRIX_POS, pu.MATRIX_NEG):
         losses = {
             pu.CONT: pos_m,
             pu.HOST: neg_m,
@@ -128,44 +125,44 @@ def learn_predefined_matrices(game, t):
 def learn_predefined_matrix(game, t, i):
     # Cont: Pos 0, Host: Pos n
     losses = {
-        pu.CONT: pu.MATRIX_PREDEFINED_POS[0],
-        pu.HOST: pu.MATRIX_PREDEFINED_POS[i],
+        pu.CONT: pu.MATRIX_POS[0],
+        pu.HOST: pu.MATRIX_POS[i],
     }
     learn(1, game, losses, t)
 
     # Cont: Pos 0, Host: Neg n
     losses = {
-        pu.CONT: pu.MATRIX_PREDEFINED_POS[0],
-        pu.HOST: pu.MATRIX_PREDEFINED_NEG[i],
+        pu.CONT: pu.MATRIX_POS[0],
+        pu.HOST: pu.MATRIX_NEG[i],
     }
     learn(1, game, losses, t)
 
     if i != 0:
         # Cont: Pos n, Host: Pos 0
         losses = {
-            pu.CONT: pu.MATRIX_PREDEFINED_POS[i],
-            pu.HOST: pu.MATRIX_PREDEFINED_POS[0],
+            pu.CONT: pu.MATRIX_POS[i],
+            pu.HOST: pu.MATRIX_POS[0],
         }
         learn(1, game, losses, t)
 
         # Cont: Pos n, Host: Neg 0
         losses = {
-            pu.CONT: pu.MATRIX_PREDEFINED_POS[i],
-            pu.HOST: pu.MATRIX_PREDEFINED_NEG[0],
+            pu.CONT: pu.MATRIX_POS[i],
+            pu.HOST: pu.MATRIX_NEG[0],
         }
         learn(1, game, losses, t)
 
         # Cont: Pos n, Host: Pos n
         losses = {
-            pu.CONT: pu.MATRIX_PREDEFINED_POS[i],
-            pu.HOST: pu.MATRIX_PREDEFINED_POS[i],
+            pu.CONT: pu.MATRIX_POS[i],
+            pu.HOST: pu.MATRIX_POS[i],
         }
         learn(1, game, losses, t)
 
         # Cont: Pos n, Host: Neg n
         losses = {
-            pu.CONT: pu.MATRIX_PREDEFINED_POS[i],
-            pu.HOST: pu.MATRIX_PREDEFINED_NEG[i],
+            pu.CONT: pu.MATRIX_POS[i],
+            pu.HOST: pu.MATRIX_NEG[i],
         }
         learn(1, game, losses, t)
 

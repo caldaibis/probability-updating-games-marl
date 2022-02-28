@@ -43,3 +43,11 @@ class ExampleE(pu_games.Game):
     @staticmethod
     def host_default() -> np.ndarray:
         return np.array([[1., 0.]])
+    
+    @staticmethod
+    def cont_1() -> np.ndarray:
+        return np.array([[1., 0.], [0., 0.4, 0.6]])
+
+    @staticmethod
+    def host_1() -> np.ndarray:
+        return np.array([[0., 1.]])

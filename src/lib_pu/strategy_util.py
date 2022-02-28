@@ -47,19 +47,6 @@ class StrategyUtil:
     
     def is_rcar(self) -> bool:
         return self.rcar_dist() < pu.RCAR_EPSILON
-        # rcar_vec = {x: None for x in self.game.outcomes}
-        # for x in self.game.outcomes:
-        #     for y in [y for y in x.messages if self.game.message_dist[y] > 0]:
-        #         if not rcar_vec[x]:
-        #             rcar_vec[x] = self.game.host_reverse[x, y]
-        #         elif not math.isclose(rcar_vec[x], self.game.host_reverse[x, y], rel_tol=1e-2):
-        #             return False
-        #
-        # for y in self.game.messages:
-        #     if sum(rcar_vec[x] for x in y.outcomes) > 1:
-        #         return False
-        #
-        # return True
 
     """Returns an approximation of the distance between a potential RCAR vector and the actual vector"""
     def rcar_dist(self) -> float:

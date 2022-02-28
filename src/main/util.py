@@ -17,7 +17,7 @@ def generate_random_matrices(outcome_count: int):
     mix_matrices = [pu.matrix_random_mix(outcome_count) for _ in range(10)]
     matrices = {'pos': pos_matrices, 'neg': neg_matrices, 'mix': mix_matrices}
     
-    file = open(f'saved_matrices/x={outcome_count}.txt', 'wb')
+    file = open(f'src/main/saved_matrices/x={outcome_count}.txt', 'wb')
     pickle.dump(matrices, file)
     file.close()
     
@@ -43,14 +43,14 @@ def select_matrix(game: str, loss: str):
 
 def read_random_matrix(game: str, loss: str):
     loss = loss.split('_')
-    with open(f'saved_matrices/x={pu_games.GAMES[game].get_outcome_count()}.txt', 'rb') as f:
+    with open(f'src/main/saved_matrices/x={pu_games.GAMES[game].get_outcome_count()}.txt', 'rb') as f:
         matrices = pickle.load(f)
         return matrices[loss[-2]][int(loss[-1])]
 
 
 def read_predefined_matrix(game: str, loss: str):
     loss = loss.split('_')
-    with open(f'saved_matrices/{game}.json', 'r') as f:
+    with open(f'src/main/saved_matrices/{game}.json', 'r') as f:
         matrices = json.load(f)
         if loss[-2] == 'neg':
             return -1 * np.array(matrices[int(loss[-1])]['matrix'])

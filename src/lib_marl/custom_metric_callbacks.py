@@ -35,11 +35,11 @@ class CustomMetricCallbacks(DefaultCallbacks):
         
         for y in episode.last_info_for(pu.CONT)["action"]:
             for x in y.outcomes:
-                episode.custom_metrics[f'{pu.CONT}_{y}_{x}'] = episode.last_info_for(pu.CONT)["action"][y][x]
+                episode.custom_metrics[f'{pu.CONT}_{y.old_str()}_{x.old_str()}'] = episode.last_info_for(pu.CONT)["action"][y][x]
         
         for x in episode.last_info_for(pu.HOST)["action"]:
             for y in x.messages:
-                episode.custom_metrics[f'{pu.HOST}_{x}_{y}'] = episode.last_info_for(pu.HOST)["action"][x][y]
+                episode.custom_metrics[f'{pu.HOST}_{x.old_str()}_{y.old_str()}'] = episode.last_info_for(pu.HOST)["action"][x][y]
         
         episode.custom_metrics["expected_entropy"] = episode.last_info_for(pu.CONT)["expected_entropy"]
         episode.custom_metrics["rcar_dist"] = episode.last_info_for(pu.HOST)["rcar_dist"]

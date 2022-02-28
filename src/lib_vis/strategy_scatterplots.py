@@ -18,14 +18,13 @@ def _show_cont_figure(config, trial_action_data: Dict[str, List], messages: List
         ds = {}
         for i in range(len(trial_action_data['trial_ids'])):
             if is_host_reverse:
-                ds[trial_action_data['trial_ids'][i]] = {str(x): trial_action_data['host_reverse'][i][x, y] for x in y.outcomes}
+                ds[trial_action_data['trial_ids'][i]] = {x.pretty(): trial_action_data['host_reverse'][i][x, y] for x in y.outcomes}
             else:
-                ds[trial_action_data['trial_ids'][i]] = {str(x): trial_action_data[pu.CONT][i][x, y] for x in y.outcomes}
+                ds[trial_action_data['trial_ids'][i]] = {x.pretty(): trial_action_data[pu.CONT][i][x, y] for x in y.outcomes}
         
         df = pd.DataFrame(ds)
         df = pd.melt(df.reset_index(), id_vars='index', value_vars=trial_action_data['trial_ids'])
         
-        # sns.stripplot(data=df, x='index', y='value', size=7, hue='variable', dodge=True)
         sns.stripplot(data=df, x='index', y='value', size=7, hue='variable')
         
         base_plot_config = {
@@ -41,15 +40,15 @@ def _show_cont_figure(config, trial_action_data: Dict[str, List], messages: List
             plot_config = {
                 **base_plot_config,
                 'filename': f'host_reverse_{y}.png',
-                'title': r'Host reverse: $P(x \mid ' + f'{y})$',
-                'y_label': r'$P(x \mid ' + f'{y})$',
+                'title': r'Host reverse: $P(x \mid ' + f'{y.pretty()})$',
+                'y_label': r'$P(x \mid ' + f'{y.pretty()})$',
             }
         else:
             plot_config = {
                 **base_plot_config,
                 'filename': f'cont_{y}.png',
-                'title': r'Cont: $Q(x \mid ' + f'{y})$',
-                'y_label': r'$Q(x \mid ' + f'{y})$',
+                'title': r'Cont: $Q(x \mid ' + f'{y.pretty()})$',
+                'y_label': r'$Q(x \mid ' + f'{y.pretty()})$',
             }
         
         vis.set_figure(config, plot_config)
@@ -62,7 +61,7 @@ def _show_host_figure(config, trial_action_data: Dict[str, List], outcomes: List
         
         ds = {}
         for i in range(len(trial_action_data['trial_ids'])):
-            ds[trial_action_data['trial_ids'][i]] = {str(y): trial_action_data[pu.HOST][i][x, y] for y in x.messages}
+            ds[trial_action_data['trial_ids'][i]] = {y.pretty(): trial_action_data[pu.HOST][i][x, y] for y in x.messages}
         
         df = pd.DataFrame(ds)
         df = pd.melt(df.reset_index(), id_vars='index', value_vars=trial_action_data['trial_ids'])
@@ -73,9 +72,9 @@ def _show_host_figure(config, trial_action_data: Dict[str, List], outcomes: List
         plot_config = {
             'directory': '',
             'filename': f'host_{x}.png',
-            'title': r'Host: $P(y \mid ' + f'{x})$',
+            'title': r'Host: $P(y \mid ' + f'{x.pretty()})$',
             'x_label': r'$y \in \mathcal{Y}$',
-            'y_label': r'$P(y \mid ' + f'{x})$',
+            'y_label': r'$P(y \mid ' + f'{x.pretty()})$',
             'legend': True,
             'y_lim': None,
             'y_ticks': np.arange(0, 1.1, 0.1),

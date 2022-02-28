@@ -26,9 +26,9 @@ MATRIX_CUSTOM_3_NEG = "matrix_custom_3_neg"
 MATRIX_CUSTOM_6 = "matrix_custom_6"
 MATRIX_CUSTOM_6_NEG = "matrix_custom_6_neg"
 
-MATRIX_PREDEFINED_POS = [f"matrix_predefined_pos_{i}" for i in range(30)]
-MATRIX_PREDEFINED_NEG = [f"matrix_predefined_neg_{i}" for i in range(30)]
-MATRIX_PREDEFINED = [*MATRIX_PREDEFINED_POS, *MATRIX_PREDEFINED_NEG]
+MATRIX_POS = [f"matrix_predefined_pos_{i}" for i in range(30)]
+MATRIX_NEG = [f"matrix_predefined_neg_{i}" for i in range(30)]
+MATRIX_PREDEFINED = [*MATRIX_POS, *MATRIX_NEG]
 
 MATRIX_ONES_POS = 'matrix_ones_pos'
 MATRIX_ONES_NEG = 'matrix_ones_neg'
@@ -102,9 +102,9 @@ def matrix_ones_neg(outcome_count: int) -> np.ndarray:
 def matrix_custom_3() -> np.ndarray:
     return np.array(
         [
-            [0, 1, 500],
-            [1, 0, 1],
-            [500, 1, 0],
+            [0, 1, 1],
+            [0.24, 0, 0.24],
+            [1, 1, 0],
         ])
 
 

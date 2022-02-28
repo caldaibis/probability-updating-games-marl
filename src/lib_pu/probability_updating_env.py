@@ -31,7 +31,7 @@ class ProbabilityUpdatingEnv(ParallelEnv):
         self.possible_agents = self.agents[:]
 
         self._agent_selector = agent_selector(self.agents)
-
+        
         self.action_spaces = {
             agent: spaces.Tuple([marl.CustomSimplex(actions) for actions in g.get_action_shape(agent)])
             for agent in pu.AGENTS

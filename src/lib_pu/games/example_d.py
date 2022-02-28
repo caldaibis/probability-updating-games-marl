@@ -38,7 +38,7 @@ class ExampleD(pu_games.Game):
 
     @staticmethod
     def cont_default() -> np.ndarray:
-        return np.array([[1., 0.], [1 / 2, 1 / 2, 0.]])
+        return np.array([[1., 0.], [0., 0, 1.]])
 
     @staticmethod
     def host_default() -> np.ndarray:

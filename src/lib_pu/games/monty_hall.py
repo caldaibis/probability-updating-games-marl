@@ -65,3 +65,11 @@ class MontyHall(pu_games.Game):
     @staticmethod
     def host_always_y2() -> np.ndarray:
         return np.array([[0., 1.]])
+
+    @staticmethod
+    def cont_1() -> np.ndarray:
+        return np.array([[2/3, 1/3], [1/3, 2/3]])
+
+    @staticmethod
+    def host_1() -> np.ndarray:
+        return np.array([[0.51, 0.49]])

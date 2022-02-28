@@ -34,7 +34,6 @@ bool_arg_keys: List[str] = [
 ]
 
 int_arg_keys: List[str] = [
-    'min_total_time_s',
     'max_total_time_s',
 ]
 
@@ -45,19 +44,18 @@ def run(args: Optional[Dict[str, Any]]):
     if not args:
         args = {
             'algorithm': marl.PPO,
-            'game': pu_games.MONTY_HALL,
-            pu.CONT: pu.MATRIX_PREDEFINED_POS[1],
-            pu.HOST: pu.MATRIX_PREDEFINED_NEG[0],
-            'debug_mode': False,
+            'game': pu_games.EXAMPLE_C,
+            pu.CONT: pu.MATRIX_POS[3],
+            pu.HOST: pu.MATRIX_NEG[0],
             'show_example': True,
-            'ray': True,
+            'debug_mode': False,
+            'ray': False,
             'learn': True,
             'show_figure': False,
             'show_eval': True,
             'save_figures': True,
             'save_progress': False,
-            'min_total_time_s': 200,
-            'max_total_time_s': 200,
+            'max_total_time_s': 80,
         }
     else:
         for k in bool_arg_keys:
@@ -65,6 +63,8 @@ def run(args: Optional[Dict[str, Any]]):
         for k in int_arg_keys:
             args[k] = int(args[k])
         
+    print(args)
+    
     # Essential configuration
     losses = {
         pu.CONT: args[pu.CONT],
@@ -82,8 +82,8 @@ def run(args: Optional[Dict[str, Any]]):
         util.example_step(
             game,
             {
-                pu.CONT: game.cont_default(),
-                pu.HOST: game.host_default(),
+                pu.CONT: game.cont_1(),
+                pu.HOST: game.host_1(),
             }
         )
 
@@ -108,7 +108,6 @@ def run(args: Optional[Dict[str, Any]]):
         config = {
             'tune_config': tune_config,
             'model_config': model_config,
-            'min_total_time_s': args['min_total_time_s'],
             'max_total_time_s': args['max_total_time_s'],
             'save_figures': args['save_figures'],
         }

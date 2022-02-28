@@ -39,19 +39,27 @@ class ExampleF(pu_games.Game):
     @staticmethod
     def cont_default() -> np.ndarray:
         return np.array([[1 / 2, 1 / 2], [1 / 2, 1 / 2], [1 / 2, 1 / 2]])
-    
-    @staticmethod
-    def cont_custom_3() -> np.ndarray:
-        return np.array([[0, 1], [1, 0], [0, 1]])
 
     @staticmethod
     def host_default() -> np.ndarray:
         return np.array([[1 / 2, 1 / 2], [1 / 2, 1 / 2], [1 / 2, 1 / 2]])
     
     @staticmethod
-    def host_custom_1() -> np.ndarray:
-        return np.array([[1 / 2, 1 / 2], [1, 0], [0, 1]])
+    def cont_1() -> np.ndarray:
+        return np.array([[1/3, 2/3], [1/3, 2/3], [2/3, 1/3]])
     
     @staticmethod
-    def host_custom_2() -> np.ndarray:
-        return np.array([[1, 0], [0, 1], [0, 1]])
+    def host_1() -> np.ndarray:
+        return np.array([[1/4, 3/4], [1/2, 1/2], [1/4, 3/4]])
+    
+    @staticmethod
+    def host_2() -> np.ndarray:
+        return np.array([[1/3, 2/3], [1/3, 2/3], [2/3, 1/3]])
+
+    @staticmethod
+    def cont_3() -> np.ndarray:
+        return np.array([[1., 0.], [0.0, 1.0], [1.0, 0.0]])
+    
+    @staticmethod
+    def host_3() -> np.ndarray:
+        return np.array([[0.5, 0.5], [1.0, 0.0], [0.0, 1.0]])
