@@ -7,6 +7,7 @@ Welcome to the repository corresponding to the master thesis project "Investigat
 This software has exclusively been run and tested with
 - Windows 11
 - Python 3.8 64-bits
+
 We therefore recommend using these when executing this code. It is possible that other settings may not work.
 
 ## Install
