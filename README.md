@@ -17,7 +17,7 @@ Suppose you have cloned this repository and cd'ed into the repository folder. We
 python3 -m venv env
 ```
 
-Subsequently, you will want to activate your virtual environment. On Windows, you can do this as follows ():
+Subsequently, you will want to activate your virtual environment. On Windows, you can do this as follows:
 ```
 env\Scripts\activate
 ```
