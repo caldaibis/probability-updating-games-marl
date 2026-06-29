@@ -146,4 +146,6 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-figures/example_c/5_logarithmic_logarithmic_neg/actions_per_trial/
+# Project output artifacts
+/figures/
+/output_ray/

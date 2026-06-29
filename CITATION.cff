@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+title: >-
+  Multi-agent reinforcement learning for relaxed
+  probability updating games
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Collin
+    family-names: Aldaibis
+repository-code: >-
+  https://github.com/caldaibis/probability-updating-games-marl
+abstract: >-
+  Implementation accompanying the master thesis
+  "Investigating relaxed probability updating games".
+  It models general-sum probability updating games,
+  exposes them as OpenAI Gym-like environments, and uses
+  Ray Tune and Ray RLlib (PPO and other policy gradient
+  methods) to learn optimal strategies for both the host
+  and the contestant, empirically converging to Nash
+  equilibria.
+keywords:
+  - multi-agent reinforcement learning
+  - probability updating games
+  - Nash equilibrium
+  - PPO
+  - Ray RLlib
+license: MIT

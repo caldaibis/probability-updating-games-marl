@@ -1,14 +1,21 @@
 import subprocess
+import sys
 from typing import Dict, Any, List
 
 import src.lib_pu as pu
 import src.lib_pu.games as pu_games
 import src.lib_marl as marl
-import main
+from src.main import main
 
 
 def output_args(_args: Dict[str, Any]) -> List[str]:
     return [str(_args[key]) for key in main.arg_keys]
+
+
+def call_main(run_args: Dict[str, Any]) -> None:
+    # Use the current interpreter and run main as a module so this works
+    # cross-platform (no hardcoded venv path) and from the repository root.
+    subprocess.call([sys.executable, '-m', 'src.main.main', *output_args(run_args)])
 
 
 def load(game, losses, t):
@@ -28,7 +35,7 @@ def load(game, losses, t):
         'max_total_time_s': t,
     }
     
-    subprocess.call(["venv/Scripts/python", 'src/main/main.py', *output_args(run_args)])
+    call_main(run_args)
 
 
 def learn(n, game, losses, t):
@@ -49,7 +56,7 @@ def learn(n, game, losses, t):
     }
     
     for _ in range(n):
-        subprocess.call(["venv/Scripts/python", 'src/main/main.py', *output_args(run_args)])
+        call_main(run_args)
 
 
 def show_matrices(game):
@@ -69,7 +76,7 @@ def show_matrices(game):
             'save_progress': False,
             'max_total_time_s': 10,
         }
-        subprocess.call(["venv/Scripts/python", 'src/main/main.py', *output_args(run_args)])
+        call_main(run_args)
 
 
 def learn_predefined_matrices(game, t):

@@ -101,7 +101,7 @@ def _show_trial_actions_over_time(trial_id, df: pd.DataFrame, outcomes: List[pu.
             continue
         
         for x in y.outcomes:
-            axs[0].plot(df['time_total_s'], df[f'evaluation/custom_metrics/{pu.CONT}_{y.old_str()}_{x.old_str()}_mean'], label=r"$Q("+x.pretty()+"\mid "+y.pretty()+")$")
+            axs[0].plot(df['time_total_s'], df[f'evaluation/custom_metrics/{pu.CONT}_{y.old_str()}_{x.old_str()}_mean'], label=r"$Q("+x.pretty()+r"\mid "+y.pretty()+")$")
     
     axs[1].plot(df['time_total_s'], df[marl.REWARD_CONT_EVAL], label='Cont expected loss')
     
@@ -138,7 +138,7 @@ def _show_trial_actions_over_time(trial_id, df: pd.DataFrame, outcomes: List[pu.
             continue
         
         for y in x.messages:
-            axs[0].plot(df['time_total_s'], df[f'evaluation/custom_metrics/{pu.HOST}_{x.old_str()}_{y.old_str()}_mean'], label=r"$P("+y.pretty()+"\mid "+x.pretty()+")$")
+            axs[0].plot(df['time_total_s'], df[f'evaluation/custom_metrics/{pu.HOST}_{x.old_str()}_{y.old_str()}_mean'], label=r"$P("+y.pretty()+r"\mid "+x.pretty()+")$")
     
     axs[1].plot(df['time_total_s'], df[marl.REWARD_HOST_EVAL], label='Host expected loss', color='tab:orange')
     
